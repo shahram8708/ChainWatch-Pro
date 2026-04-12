@@ -49,7 +49,7 @@
 
     <div class="col-xl-6">
         <div class="sa-card h-100">
-            <h2 class="h5 mb-3">Email & Gemini Health</h2>
+            <h2 class="h5 mb-3">Email & AI Health</h2>
             <div class="mb-3">
                 <p class="mb-1">Email Status: <strong class="text-{{ 'success' if email_status == 'green' else ('warning' if email_status == 'amber' else 'danger') }}">{{ email_status|upper }}</strong></p>
                 <ul class="small mb-0">
@@ -58,10 +58,10 @@
                 </ul>
             </div>
             <div>
-                <p class="mb-1">Gemini Status: <strong class="text-{{ 'success' if gemini_status == 'green' else ('warning' if gemini_status == 'amber' else 'danger') }}">{{ gemini_status|upper }}</strong></p>
+                <p class="mb-1">AI Status: <strong class="text-{{ 'success' if gemini_status == 'green' else ('warning' if gemini_status == 'amber' else 'danger') }}">{{ gemini_status|upper }}</strong></p>
                 <ul class="small mb-0">
-                    <li>Last Successful Gemini Call: {{ last_gemini_success | format_datetime if last_gemini_success else '-' }}</li>
-                    <li>Last Gemini Failure: {{ last_gemini_failure | format_datetime if last_gemini_failure else '-' }}</li>
+                    <li>Last Successful AI Call: {{ last_gemini_success | format_datetime if last_gemini_success else '-' }}</li>
+                    <li>Last AI Failure: {{ last_gemini_failure | format_datetime if last_gemini_failure else '-' }}</li>
                 </ul>
             </div>
         </div>

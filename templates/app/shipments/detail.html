@@ -224,7 +224,7 @@
                 <div class="ai-summary-card ai-content-card mt-3 position-relative" id="shipment-ai-summary-card" data-shipment-id="{{ shipment.id }}">
                     <span class="ai-tag">AI</span>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h3 class="h6 mb-0"><i class="bi bi-stars me-1"></i>Gemini Disruption Summary</h3>
+                        <h3 class="h6 mb-0"><i class="bi bi-stars me-1"></i>AI Disruption Summary</h3>
                         <div class="d-flex align-items-center gap-2">
                             <small class="text-muted ai-generated-timestamp" id="shipment-ai-generated">Generated {{ ai_disruption_summary.generated_at if ai_disruption_summary and ai_disruption_summary.generated_at else 'just now' }}</small>
                             {% if current_user.role in ['admin', 'manager'] %}
@@ -243,7 +243,7 @@
                     {% if ai_disruption_summary and ai_disruption_summary.formatted_html %}
                         {{ ai_disruption_summary.formatted_html | safe }}
                     {% else %}
-                        <p class="mb-0 small">Google Gemini indicates rising volatility along this lane. Buffer time is advised at customs handoffs and carrier checkpoint windows. Approving an alternate route can reduce late-delivery probability.</p>
+                        <p class="mb-0 small">AI indicates rising volatility along this lane. Buffer time is advised at customs handoffs and carrier checkpoint windows. Approving an alternate route can reduce late-delivery probability.</p>
                     {% endif %}
                     </div>
                     <small class="text-muted d-block mt-2" id="shipment-ai-regeneration-count">Regenerated {{ ai_disruption_summary.regeneration_count if ai_disruption_summary else 0 }} times</small>

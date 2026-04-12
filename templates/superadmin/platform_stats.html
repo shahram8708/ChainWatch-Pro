@@ -35,7 +35,7 @@
     <div class="col-lg-6"><div class="sa-card"><h2 class="h6">New Organisation Registrations (Weekly)</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="newOrgsChart"></canvas></div></div></div>
     <div class="col-lg-4"><div class="sa-card"><h2 class="h6">Subscription Plan Distribution</h2><div class="sa-chart-frame"><canvas id="planDistributionChart"></canvas></div></div></div>
     <div class="col-lg-8"><div class="sa-card"><h2 class="h6">Shipments Created Per Day</h2><div class="sa-chart-frame sa-chart-frame-lg"><canvas id="shipmentsChart"></canvas></div></div></div>
-    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Gemini API Calls Per Day</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="aiCallsChart"></canvas></div></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">AI API Calls Per Day</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="aiCallsChart"></canvas></div></div></div>
     <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Alert Generation Per Day</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="alertsChart"></canvas></div></div></div>
 </div>
 
@@ -112,7 +112,7 @@
 
     makeLine('activeOrgsChart', 'Active Organisations', {{ active_org_series | tojson }}, '#38BDF8', 'rgba(56, 189, 248, 0.25)');
     makeLine('shipmentsChart', 'Shipments', {{ shipments_series | tojson }}, '#22C55E', 'rgba(34, 197, 94, 0.20)');
-    makeLine('aiCallsChart', 'Gemini Calls', {{ ai_series | tojson }}, '#F59E0B', 'rgba(245, 158, 11, 0.25)');
+    makeLine('aiCallsChart', 'AI Calls', {{ ai_series | tojson }}, '#F59E0B', 'rgba(245, 158, 11, 0.25)');
     makeLine('alertsChart', 'Alerts', {{ alerts_series | tojson }}, '#EF4444', 'rgba(239, 68, 68, 0.22)');
 
     const newOrgs = document.getElementById('newOrgsChart');
