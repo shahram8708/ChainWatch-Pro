@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg public-nav fixed-top" aria-label="Public navigation">
     <div class="container">
-        <a class="navbar-brand public-brand d-flex align-items-center" href="/" aria-label="ChainWatch Pro Home">
+        <a class="navbar-brand public-brand d-flex align-items-center" href="{{ url_for('public.home') }}" aria-label="ChainWatch Pro Home">
             <svg width="230" height="42" viewBox="0 0 260 52" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ChainWatch Pro">
                 <g transform="translate(2,7)" stroke="#1B3A6B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M17 7.5L12.8 3.3C9.7 0.2 4.6 0.2 1.5 3.3C-1.6 6.4 -1.6 11.5 1.5 14.6L5.7 18.8C8.8 21.9 13.9 21.9 17 18.8L19.1 16.7"/>
@@ -18,25 +18,34 @@
         <div class="collapse navbar-collapse" id="publicNavMenu">
             <ul class="navbar-nav mx-auto align-items-lg-center gap-lg-2">
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/features' %}active{% endif %}" href="/features">Features</a>
+                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('public.home') }}">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/pricing' %}active{% endif %}" href="/pricing">Pricing</a>
+                    <a class="nav-link {% if request.path == '/features' %}active{% endif %}" href="{{ url_for('public.features') }}">Features</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/about' %}active{% endif %}" href="/about">About</a>
+                    <a class="nav-link {% if request.path == '/pricing' %}active{% endif %}" href="{{ url_for('public.pricing') }}">Pricing</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path.startswith('/blog') %}active{% endif %}" href="/blog">Blog</a>
+                    <a class="nav-link {% if request.path.startswith('/blog') %}active{% endif %}" href="{{ url_for('public.blog') }}">Blog</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/about' %}active{% endif %}" href="{{ url_for('public.about') }}">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/contact' %}active{% endif %}" href="{{ url_for('public.contact') }}">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/demo' %}active{% endif %}" href="{{ url_for('public.demo') }}">Demo</a>
                 </li>
             </ul>
 
             <div class="public-nav-actions ms-lg-3 d-flex flex-column flex-lg-row gap-2 w-100 w-lg-auto">
                 {% if current_user.is_authenticated %}
-                <a class="btn btn-action-blue w-100 w-lg-auto" href="/dashboard">Go to Dashboard</a>
+                <a class="btn btn-action-blue w-100 w-lg-auto" href="{{ url_for('dashboard.index') }}">Go to Dashboard</a>
                 {% else %}
-                <a class="btn btn-outline-navy w-100 w-lg-auto" href="/login">Sign In</a>
-                <a class="btn btn-action-blue w-100 w-lg-auto" href="/register">Start Free Trial</a>
+                <a class="btn btn-outline-navy w-100 w-lg-auto" href="{{ url_for('auth.login') }}">Sign In</a>
+                <a class="btn btn-action-blue w-100 w-lg-auto" href="{{ url_for('auth.register') }}">Start Free Trial</a>
                 {% endif %}
             </div>
         </div>

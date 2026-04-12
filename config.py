@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from datetime import timedelta
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 from dotenv import load_dotenv
 from sqlalchemy.engine import make_url
@@ -49,6 +49,19 @@ def _resolve_sqlite_uri(raw_value: str | None, default_relative_path: str) -> st
     return f"sqlite:///{db_path.as_posix()}"
 
 
+def _normalize_mail_server(raw_value: str | None, default_value: str = "") -> str:
+    candidate = (raw_value or default_value or "").strip()
+    if not candidate:
+        return ""
+
+    if "://" in candidate:
+        parsed = urlparse(candidate)
+        if parsed.hostname:
+            return parsed.hostname.strip()
+
+    return candidate
+
+
 DEFAULT_POSTGRES_URI = "postgresql://chainwatch_user:yourpassword@localhost:5432/chainwatchpro"
 DEFAULT_DEV_SQLITE_URI = _resolve_sqlite_uri(
     os.getenv("DEV_DATABASE_URL") or os.getenv("DEV_SQLITE_PATH"),
@@ -81,7 +94,10 @@ class BaseConfig:
     SESSION_COOKIE_SAMESITE = "Lax"
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
 
-    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.yourprovider.com")
+    MAIL_SERVER = _normalize_mail_server(
+        os.getenv("MAIL_SERVER"),
+        "smtp.yourprovider.com",
+    )
     MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))
     MAIL_USE_TLS = _as_bool(os.getenv("MAIL_USE_TLS"), True)
     MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")

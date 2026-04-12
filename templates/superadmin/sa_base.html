@@ -9,27 +9,56 @@
         min-height: 100vh;
         display: grid;
         grid-template-columns: 280px 1fr;
-        background: #0F1923;
+        background: #f5f5f5;
     }
     .sa-sidebar {
-        background: #1A2634;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 20px 14px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(180deg, #f6f8fb 0%, #eef2f7 100%);
+        border-right: 1px solid #d9d9d9;
+        padding: 20px 14px 14px;
+        overflow: hidden;
     }
     .sa-logo {
-        color: #ffffff;
+        color: #1a1a1a;
         font-weight: 800;
         font-size: 16px;
         letter-spacing: 0.02em;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
+        flex-shrink: 0;
     }
     .sa-nav {
         display: flex;
         flex-direction: column;
         gap: 6px;
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 6px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(55, 106, 173, 0.45) transparent;
+    }
+    .sa-nav::-webkit-scrollbar {
+        width: 10px;
+    }
+    .sa-nav::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 999px;
+    }
+    .sa-nav::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(92, 154, 223, 0.85), rgba(71, 132, 200, 0.85));
+        border: 2px solid rgba(238, 242, 247, 0.95);
+    }
+    .sa-nav::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, rgba(112, 170, 236, 0.95), rgba(82, 143, 210, 0.95));
     }
     .sa-nav a {
-        color: #d6e2f1;
+        color: #333333;
         text-decoration: none;
         padding: 9px 12px;
         border-radius: 8px;
@@ -38,24 +67,47 @@
     }
     .sa-nav a:hover,
     .sa-nav a.active {
-        background: #243447;
-        color: #ffffff;
+        background: #e6edf6;
+        color: #111111;
     }
     .sa-main {
         min-width: 0;
     }
     .sa-topbar {
-        background: #000000;
-        color: #ffffff;
+        background: #ffffff;
+        color: #1a1a1a;
         padding: 14px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid #e0e0e0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         position: sticky;
         top: 0;
-        z-index: 1200;
+        z-index: 1030;
+    }
+    .sa-mobile-only {
+        display: none !important;
+    }
+    .sa-mobile-sidebar {
+        background: linear-gradient(180deg, #f6f8fb 0%, #eef2f7 100%);
+        color: #1a1a1a;
+    }
+    .sa-mobile-sidebar .offcanvas-header {
+        border-bottom: 1px solid #d9d9d9;
+    }
+    .sa-mobile-sidebar .offcanvas-body {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .sa-mobile-sidebar .sa-nav {
+        height: 100%;
+    }
+    .sa-mobile-sidebar .sa-logo {
+        margin-bottom: 0;
+        font-size: 15px;
     }
     .sa-badge-critical {
         background: #D32F2F;
@@ -68,22 +120,130 @@
     }
     .sa-content {
         padding: 24px;
-        color: #E7EDF5;
+        color: #1f2937;
     }
     .sa-card {
-        background: #182637;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
         border-radius: 12px;
         padding: 16px;
-        color: #E7EDF5;
+        color: #1a1a1a;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
     .sa-card .table {
         --bs-table-bg: transparent;
-        --bs-table-color: #d8e3f1;
-        --bs-table-border-color: rgba(255, 255, 255, 0.12);
+        --bs-table-color: #1f2937;
+        --bs-table-border-color: #e0e0e0;
+    }
+    .sa-card .table thead th {
+        background: #f1f3f5;
+        color: #333333;
+        border-bottom: 1px solid #d9d9d9;
+    }
+    .sa-card .table tbody tr:nth-child(odd) {
+        background: #ffffff;
+    }
+    .sa-card .table tbody tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+    .sa-card .table > :not(caption) > * > * {
+        border-color: #e0e0e0;
+    }
+    .sa-card .table tbody tr:hover {
+        background: #eef3f8;
     }
     .sa-card a {
-        color: #89C2FF;
+        color: #0d6efd;
+    }
+    .sa-shell .text-secondary {
+        color: #666666 !important;
+    }
+    .sa-shell .text-light,
+    .sa-shell .text-white {
+        color: #1a1a1a !important;
+    }
+    .sa-shell .btn-outline-light,
+    .sa-shell .btn-outline-secondary {
+        background: #ffffff;
+        border-color: #d1d5db;
+        color: #333333;
+    }
+    .sa-shell .btn-outline-light:hover,
+    .sa-shell .btn-outline-secondary:hover {
+        background: #f3f4f6;
+        border-color: #c4c9d2;
+        color: #1a1a1a;
+    }
+    .sa-shell .btn-outline-warning {
+        background: #ffffff;
+        border-color: #e2b24a;
+        color: #8a5b00;
+    }
+    .sa-shell .btn-outline-warning:hover {
+        background: #fff6e5;
+        border-color: #cf9a2f;
+        color: #6f4900;
+    }
+    .sa-shell .btn-outline-info {
+        background: #ffffff;
+        border-color: #63b8c9;
+        color: #0f6a7a;
+    }
+    .sa-shell .btn-outline-info:hover {
+        background: #eaf8fb;
+        border-color: #4ba7b8;
+        color: #0b5a68;
+    }
+    .sa-shell .list-group-item {
+        border-color: #e0e0e0;
+        color: #333333;
+    }
+    .sa-shell .border-secondary,
+    .sa-shell .border-secondary.border-opacity-25 {
+        border-color: #d9d9d9 !important;
+    }
+    .sa-shell .form-control,
+    .sa-shell .form-select {
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        color: #1a1a1a;
+    }
+    .sa-shell .form-control::placeholder {
+        color: #9aa0a6;
+    }
+    .sa-shell .form-control:focus,
+    .sa-shell .form-select:focus {
+        background: #ffffff;
+        color: #1a1a1a;
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+    }
+    .sa-shell .form-check-input {
+        background-color: #ffffff;
+        border-color: #c9cfd8;
+    }
+    .sa-shell .form-check-input:checked {
+        background-color: #2563eb;
+        border-color: #2563eb;
+    }
+    .sa-shell .pagination .page-link {
+        background: #ffffff;
+        border-color: #d1d5db;
+        color: #1f2937;
+    }
+    .sa-shell .pagination .page-link:hover {
+        background: #f3f4f6;
+        color: #111111;
+    }
+    .sa-shell .pagination .page-item.disabled .page-link {
+        background: #f8f9fa;
+        color: #9ca3af;
+    }
+    .sa-shell .dropdown-menu,
+    .sa-shell .modal-content {
+        background: #ffffff;
+        border-color: #d9d9d9;
+        color: #1a1a1a;
     }
     .btn-sa-danger {
         background: #D32F2F;
@@ -102,6 +262,37 @@
         .sa-sidebar {
             display: none;
         }
+        .sa-mobile-only {
+            display: inline-flex !important;
+        }
+        .sa-topbar {
+            padding: 12px 14px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .sa-topbar .sa-topbar-meta {
+            margin-left: auto;
+        }
+        .sa-content {
+            padding: 18px;
+        }
+    }
+    @media (max-width: 576px) {
+        .sa-topbar .sa-brand-wrap {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .sa-topbar .sa-topbar-meta {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .sa-badge-critical {
+            font-size: 10px;
+            padding: 4px 8px;
+        }
+        .sa-content {
+            padding: 16px;
+        }
     }
 </style>
 {% endblock %}
@@ -111,7 +302,11 @@
     <aside class="sa-sidebar">
         <div class="sa-logo">⚡ ChainWatch Pro - SuperAdmin Panel</div>
         <nav class="sa-nav">
+            {% if session.get('superadmin_impersonating') %}
+            <a href="{{ url_for('superadmin.exit_impersonation') }}" style="color: #ffc107; font-weight: 700;">⚠ Exit Impersonation</a>
+            {% endif %}
             <a href="{{ url_for('superadmin.dashboard') }}" class="{% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('superadmin.re_authenticate') }}" class="{% if request.endpoint == 'superadmin.re_authenticate' %}active{% endif %}">Re-Authenticate</a>
             <a href="{{ url_for('superadmin.organisations') }}" class="{% if request.endpoint in ['superadmin.organisations', 'superadmin.organisation_detail'] %}active{% endif %}">Organisations</a>
             <a href="{{ url_for('superadmin.users') }}" class="{% if request.endpoint == 'superadmin.users' %}active{% endif %}">All Users</a>
             <a href="{{ url_for('superadmin.platform_stats') }}" class="{% if request.endpoint == 'superadmin.platform_stats' %}active{% endif %}">Platform Stats</a>
@@ -124,18 +319,46 @@
         </nav>
     </aside>
 
+    <div class="offcanvas offcanvas-start sa-mobile-sidebar" tabindex="-1" id="saMobileSidebar" aria-labelledby="saMobileSidebarLabel">
+        <div class="offcanvas-header">
+            <div class="sa-logo" id="saMobileSidebarLabel">⚡ ChainWatch Pro - SuperAdmin Panel</div>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <nav class="sa-nav">
+                {% if session.get('superadmin_impersonating') %}
+                <a href="{{ url_for('superadmin.exit_impersonation') }}" style="color: #8a5b00; background: #fff6e5; font-weight: 700;">⚠ Exit Impersonation</a>
+                {% endif %}
+                <a href="{{ url_for('superadmin.dashboard') }}" class="{% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('superadmin.re_authenticate') }}" class="{% if request.endpoint == 'superadmin.re_authenticate' %}active{% endif %}">🔐 Re-Authenticate</a>
+                <a href="{{ url_for('superadmin.organisations') }}" class="{% if request.endpoint in ['superadmin.organisations', 'superadmin.organisation_detail'] %}active{% endif %}">Organisations</a>
+                <a href="{{ url_for('superadmin.users') }}" class="{% if request.endpoint == 'superadmin.users' %}active{% endif %}">All Users</a>
+                <a href="{{ url_for('superadmin.platform_stats') }}" class="{% if request.endpoint == 'superadmin.platform_stats' %}active{% endif %}">Platform Stats</a>
+                <a href="{{ url_for('superadmin.gemini_usage') }}" class="{% if request.endpoint == 'superadmin.gemini_usage' %}active{% endif %}">AI Usage</a>
+                <a href="{{ url_for('superadmin.system_health') }}" class="{% if request.endpoint == 'superadmin.system_health' %}active{% endif %}">System Health</a>
+                <a href="{{ url_for('superadmin.feature_flags') }}" class="{% if request.endpoint == 'superadmin.feature_flags' %}active{% endif %}">Feature Flags</a>
+                <a href="{{ url_for('superadmin.platform_audit_log') }}" class="{% if request.endpoint == 'superadmin.platform_audit_log' %}active{% endif %}">Audit Log</a>
+                <a href="{{ url_for('superadmin.announcement') }}" class="{% if request.endpoint == 'superadmin.announcement' %}active{% endif %}">Announcements</a>
+                <a href="{{ url_for('auth.logout') }}">Back to Normal App -></a>
+            </nav>
+        </div>
+    </div>
+
     <main class="sa-main">
         <header class="sa-topbar">
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3 sa-brand-wrap">
+                <button class="btn btn-outline-secondary btn-sm sa-mobile-toggle sa-mobile-only" type="button" data-bs-toggle="offcanvas" data-bs-target="#saMobileSidebar" aria-controls="saMobileSidebar" aria-label="Open superadmin navigation">
+                    <i class="bi bi-list"></i>
+                </button>
                 <strong>⚡ ChainWatch Pro - SuperAdmin Panel</strong>
                 <span class="sa-badge-critical">SUPERADMIN MODE</span>
             </div>
-            <div class="d-flex align-items-center gap-3 small">
+            <div class="d-flex align-items-center gap-3 small sa-topbar-meta">
                 <span>Logged in as {{ current_user.email }}</span>
                 {% if session.get('superadmin_impersonating') %}
                     <a href="{{ url_for('superadmin.exit_impersonation') }}" class="btn btn-warning btn-sm">Exit Impersonation</a>
                 {% else %}
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Exit to Normal View</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-sm">Exit to Normal View</a>
                 {% endif %}
             </div>
         </header>

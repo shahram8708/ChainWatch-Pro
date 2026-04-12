@@ -7,11 +7,13 @@ import hashlib
 import io
 import logging
 import secrets
+import socket
 import string
 from datetime import datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from smtplib import SMTPException
 from threading import Thread
+from urllib.parse import urlparse
 
 import pytz
 from flask import Response, g
@@ -122,10 +124,48 @@ def hash_token(token: str) -> str:
 def send_async_email(app, msg) -> None:
     """Send email in a background thread without blocking requests."""
 
+    def _normalize_mail_server(value: str | None) -> str:
+        candidate = (value or "").strip()
+        if not candidate:
+            return ""
+
+        if "://" in candidate:
+            parsed = urlparse(candidate)
+            if parsed.hostname:
+                return parsed.hostname.strip()
+
+        return candidate
+
     def _send_message(flask_app, message):
         with flask_app.app_context():
+            mail_server = _normalize_mail_server(flask_app.config.get("MAIL_SERVER"))
+            if not mail_server:
+                logger.warning("Email skipped because MAIL_SERVER is empty.")
+                return
+
+            if mail_server == "smtp.yourprovider.com":
+                logger.warning(
+                    "Email skipped because MAIL_SERVER is still the placeholder value."
+                )
+                return
+
+            flask_app.config["MAIL_SERVER"] = mail_server
+
             try:
                 mail.send(message)
+            except socket.gaierror as exc:
+                logger.error(
+                    "Failed to resolve SMTP host '%s' while sending email (errno=%s). "
+                    "Verify MAIL_SERVER and local DNS/network.",
+                    mail_server,
+                    getattr(exc, "errno", "n/a"),
+                )
+            except OSError as exc:
+                logger.error(
+                    "Network error while sending email via SMTP host '%s': %s",
+                    mail_server,
+                    exc,
+                )
             except SMTPException:
                 logger.exception("SMTPException occurred while sending email message.")
             except Exception:

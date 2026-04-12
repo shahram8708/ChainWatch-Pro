@@ -125,8 +125,12 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if entry.shipment %}
+                        {% if entry.shipment_id %}
+                            {% if entry.shipment %}
                             <a href="{{ url_for('shipments.detail', id=entry.shipment.id) }}">{{ entry.shipment.external_reference or entry.shipment.id }}</a>
+                            {% else %}
+                            <a href="{{ url_for('shipments.detail', id=entry.shipment_id) }}">{{ entry.shipment_id }}</a>
+                            {% endif %}
                         {% else %}
                             -
                         {% endif %}
@@ -153,9 +157,12 @@
                         </div>
 
                         <div class="small text-muted">IP Address: {{ entry.ip_address or '-' }}</div>
-                        <div class="small mt-1">
-                            {% if entry.shipment %}
-                            <a href="{{ url_for('shipments.detail', id=entry.shipment.id) }}">Open Shipment</a>
+                        <div class="small mt-1 d-flex flex-wrap gap-3">
+                            {% if entry.shipment_id %}
+                            <a href="{{ url_for('shipments.detail', id=entry.shipment_id) }}" class="btn btn-link btn-sm p-0">View Shipment -></a>
+                            {% endif %}
+                            {% if entry.alert_id %}
+                            <a href="{{ url_for('alerts.index', selected_alert_id=entry.alert_id) }}" class="btn btn-link btn-sm p-0">View Alert -></a>
                             {% endif %}
                         </div>
                     </td>

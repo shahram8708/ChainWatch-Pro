@@ -23,12 +23,15 @@
             <i class="bi bi-pencil-square fs-5 text-primary"></i>
             <h1 class="h4 mb-0">Edit Shipment</h1>
         </div>
-        <button
-            class="btn btn-outline-danger btn-sm js-archive-shipment"
-            type="button"
-            data-archive-url="{{ url_for('shipments.archive', id=shipment.id) }}"
-            data-shipment-reference="{{ shipment.external_reference }}"
-        >Archive</button>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="btn btn-sm btn-outline-primary">View Shipment Detail -></a>
+            <button
+                class="btn btn-outline-danger btn-sm js-archive-shipment"
+                type="button"
+                data-archive-url="{{ url_for('shipments.archive', id=shipment.id) }}"
+                data-shipment-reference="{{ shipment.external_reference }}"
+            >Archive</button>
+        </div>
     </div>
     <div class="card-body p-4">
         {{ form_errors(form) }}
@@ -76,7 +79,7 @@
             <div class="alert alert-danger d-none mt-3" id="shipment-date-error"></div>
 
             <div class="mt-4 d-flex flex-wrap gap-2 justify-content-between align-items-center">
-                <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="text-muted">Cancel</a>
+                <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="btn btn-outline-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary">Update Shipment</button>
             </div>
         </form>

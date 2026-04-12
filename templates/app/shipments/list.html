@@ -27,27 +27,28 @@
     <h1 class="mb-0">Shipments</h1>
     <div class="d-flex gap-2">
         <a class="btn btn-primary" href="{{ url_for('shipments.new_shipment') }}"><i class="bi bi-plus-lg me-1"></i>New Shipment</a>
-        <a class="btn btn-outline-primary" href="{{ url_for('shipments.import_shipments') }}"><i class="bi bi-upload me-1"></i>Import CSV</a>
+        <a href="{{ url_for('shipments.import_shipments') }}" class="btn btn-outline-secondary"><i class="bi bi-upload me-1"></i>Import CSV</a>
+        <a href="{{ url_for('shipments.import_template') }}" class="btn btn-outline-secondary"><i class="bi bi-download me-1"></i>Download Template</a>
     </div>
 </div>
 
 <section class="stats-strip mb-4">
-    <div class="stats-strip-item">
+    <a href="{{ url_for('shipments.list_shipments') }}" class="stats-strip-item text-decoration-none">
         <span class="stats-strip-label">Total Active</span>
         <strong>{{ stats.total_active }}</strong>
-    </div>
-    <div class="stats-strip-item">
+    </a>
+    <a href="{{ url_for('shipments.list_shipments', status='in_transit') }}" class="stats-strip-item text-decoration-none">
         <span class="stats-strip-label">In Transit</span>
         <strong>{{ stats.in_transit }}</strong>
-    </div>
-    <div class="stats-strip-item">
+    </a>
+    <a href="{{ url_for('shipments.list_shipments', status='delayed') }}" class="stats-strip-item text-decoration-none">
         <span class="stats-strip-label">Delayed</span>
         <strong>{{ stats.delayed }}</strong>
-    </div>
-    <div class="stats-strip-item">
+    </a>
+    <a href="{{ url_for('shipments.list_shipments', status='delivered') }}" class="stats-strip-item text-decoration-none">
         <span class="stats-strip-label">Delivered (30 days)</span>
         <strong>{{ stats.delivered_30d }}</strong>
-    </div>
+    </a>
 </section>
 
 <section class="card filter-bar-card mb-4">

@@ -27,6 +27,14 @@
     {% endif %}
 </div>
 
+{% if report_usage.limit and report_usage.used >= report_usage.limit %}
+<div class="mb-3">
+    <a href="{{ url_for('settings.billing') }}" class="btn btn-sm btn-warning">
+        Upgrade to Export More ->
+    </a>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
     <div class="col-xl-8">
         <article class="card settings-content-card">
@@ -122,7 +130,11 @@
                             <div class="small text-muted">{{ item.generated_at }} • {{ ((item.file_size_bytes or 0) / 1024)|round(1) }} KB</div>
                         </div>
                     </div>
+                    {% if item.status == 'completed' and item.filename %}
                     <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reports.download', filename=item.filename) }}">Download</a>
+                    {% else %}
+                    <span class="badge text-bg-secondary">{{ item.status|default('processing')|title }}</span>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
@@ -282,6 +294,7 @@
                 successState.innerHTML = `
                     <div class="alert alert-success mb-2"><i class="bi bi-check-circle me-1"></i>Your report is ready!</div>
                     <a class="btn btn-primary" href="${payload.download_url}">Download Report</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('audit.index') }}"><i class="bi bi-clock-history me-1"></i>View Audit Log</a>
                     <a class="btn btn-link" href="{{ url_for('reports.index') }}">Generate Another Report</a>
                 `;
                 return;

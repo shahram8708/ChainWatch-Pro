@@ -46,6 +46,27 @@
         <p class="text-muted mb-0">{{ shipment.customer_name or 'Customer not provided' }}</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('shipments.list_shipments') }}" class="btn btn-outline-secondary">Back to Shipments</a>
+        {% if drs_score >= 60 %}
+        <a href="{{ url_for('optimizer.index', shipment_id=shipment.id) }}" class="btn btn-warning">
+            <i class="bi bi-sign-turn-right me-1"></i>Open in Route Optimizer
+        </a>
+        {% endif %}
+        {% if current_user.role in ['admin', 'manager'] %}
+        <button
+            type="button"
+            class="btn btn-outline-primary btn-sm"
+            data-trigger-url="{{ url_for('optimizer.trigger_generation', shipment_id=shipment.id) }}"
+            id="trigger-route-gen-btn"
+        >
+            <i class="bi bi-lightning me-1"></i>Generate Route Alternatives
+        </button>
+        {% endif %}
+        {% if shipment.current_latitude %}
+        <a href="{{ url_for('risk_map.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-globe me-1"></i>View on Risk Map
+        </a>
+        {% endif %}
         <a href="{{ url_for('shipments.edit', id=shipment.id) }}" class="btn btn-outline-primary">Edit Shipment</a>
         <button
             id="archive-shipment-btn"
@@ -62,7 +83,7 @@
         <div class="row g-3">
             <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-geo-alt text-primary"></i><div><small class="text-muted d-block">Origin Port</small><strong>{{ shipment.origin_port_code }}</strong></div></div>
             <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-flag text-danger"></i><div><small class="text-muted d-block">Destination Port</small><strong>{{ shipment.destination_port_code }}</strong></div></div>
-            <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-truck text-primary"></i><div><small class="text-muted d-block">Carrier</small><strong>{{ shipment.carrier.name if shipment.carrier else 'Unassigned' }}</strong></div></div>
+            <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-truck text-primary"></i><div><small class="text-muted d-block">Carrier</small>{% if shipment.carrier %}<a href="{{ url_for('carrier_intel.index', carrier_id=shipment.carrier_id) }}" class="fw-semibold text-decoration-none">{{ shipment.carrier.name }}</a>{% else %}<strong>Unassigned</strong>{% endif %}</div></div>
             <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-diagram-3 text-primary"></i><div><small class="text-muted d-block">Mode</small><strong>{{ shipment.mode | replace('_', ' ') | title }}</strong></div></div>
             <div class="col-lg col-md-12 d-flex align-items-center gap-2"><i class="bi bi-pin-map text-primary"></i><div><small class="text-muted d-block">Current Location</small><strong>{{ shipment.current_location_name or 'Location pending' }}</strong></div></div>
         </div>
@@ -319,10 +340,18 @@
             </div>
             <div class="card-body p-0">
                 {% for alert in recent_alerts %}
-                {{ alert_item(alert) }}
+                <div class="border-bottom">
+                    {{ alert_item(alert) }}
+                    <div class="px-3 pb-2 d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('alerts.index', selected_alert_id=alert.id) }}" class="btn btn-sm btn-outline-primary">View in Alerts Center</a>
+                    </div>
+                </div>
                 {% else %}
                 <div class="p-3 text-muted">No alerts for this shipment.</div>
                 {% endfor %}
+                <div class="p-3 border-top">
+                    <a href="{{ url_for('alerts.index', shipment_id=shipment.id) }}" class="btn btn-sm btn-outline-secondary">View All Alerts for this Shipment</a>
+                </div>
             </div>
         </section>
     </div>
@@ -430,6 +459,74 @@ document.addEventListener("DOMContentLoaded", () => {
             "{{ url_for('shipments.regenerate_disruption_summary', shipment_id=shipment.id) }}",
             "shipment-ai-summary-content"
         );
+    }
+
+    function showRouteToast(message, type = "success") {
+        const toastHostId = "route-gen-toast-host";
+        let toastHost = document.getElementById(toastHostId);
+        if (!toastHost) {
+            toastHost = document.createElement("div");
+            toastHost.id = toastHostId;
+            toastHost.className = "toast-container position-fixed top-0 end-0 p-3";
+            toastHost.style.zIndex = "1080";
+            document.body.appendChild(toastHost);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = `toast align-items-center text-bg-${type === "error" ? "danger" : "success"} border-0`;
+        toast.role = "status";
+        toast.ariaLive = "polite";
+        toast.ariaAtomic = "true";
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        toastHost.appendChild(toast);
+
+        if (window.bootstrap && bootstrap.Toast) {
+            const instance = new bootstrap.Toast(toast, { delay: 3500 });
+            toast.addEventListener("hidden.bs.toast", () => toast.remove());
+            instance.show();
+        } else {
+            window.alert(message);
+            toast.remove();
+        }
+    }
+
+    const triggerButton = document.getElementById("trigger-route-gen-btn");
+    if (triggerButton) {
+        triggerButton.addEventListener("click", async () => {
+            const triggerUrl = triggerButton.getAttribute("data-trigger-url");
+            if (!triggerUrl) {
+                return;
+            }
+
+            const originalHtml = triggerButton.innerHTML;
+            triggerButton.disabled = true;
+            triggerButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating...';
+
+            try {
+                const response = await fetch(triggerUrl, {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+                const payload = await response.json();
+                if (response.ok && payload.success) {
+                    showRouteToast(payload.message || "Route alternatives are being generated.", "success");
+                } else {
+                    showRouteToast(payload.message || "Could not trigger route alternatives.", "error");
+                }
+            } catch (error) {
+                showRouteToast("Could not trigger route alternatives.", "error");
+            } finally {
+                triggerButton.disabled = false;
+                triggerButton.innerHTML = originalHtml;
+            }
+        });
     }
 });
 </script>

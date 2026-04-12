@@ -4,7 +4,7 @@
 
 {% block sa_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 text-white mb-0">Organisation Management</h1>
+    <h1 class="h3 text-dark mb-0">Organisation Management</h1>
 </div>
 
 <div class="sa-card mb-4">
@@ -58,7 +58,7 @@
                 {% for row in org_rows %}
                 {% set org = row.organisation %}
                 <tr>
-                    <td>{{ org.name }}</td>
+                    <td><a href="{{ url_for('superadmin.organisation_detail', org_id=org.id) }}">{{ org.name }}</a></td>
                     <td>{{ org.industry or '-' }}</td>
                     <td>{{ org.subscription_plan|title }}</td>
                     <td>{{ org.subscription_status|title }}</td>
@@ -73,7 +73,13 @@
                     </td>
                     <td>{{ row.last_activity | format_datetime if row.last_activity else '-' }}</td>
                     <td>
-                        <a href="{{ url_for('superadmin.organisation_detail', org_id=org.id) }}" class="btn btn-sm btn-outline-light">View</a>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="{{ url_for('superadmin.organisation_detail', org_id=org.id) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                            <form method="post" action="{{ url_for('superadmin.impersonate_org', org_id=org.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-warning">Impersonate</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}

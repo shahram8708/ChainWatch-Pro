@@ -18,8 +18,9 @@
                     <h1 class="hero-headline">See the Disruption Before It Sees You.</h1>
                     <p class="hero-subheadline">ChainWatch Pro monitors every shipment across all carriers, detecting disruptions 6 to 48 hours before SLA breach and surfacing route alternatives instantly.</p>
                     <div class="hero-cta-row">
-                        <a href="/register" class="btn btn-action-blue btn-lg">Start Free Trial - It's Free</a>
-                        <button type="button" class="btn btn-outline-navy btn-lg" data-bs-toggle="modal" data-bs-target="#demoModal">Watch 2-min Demo</button>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-action-blue btn-lg">Start Free Trial</a>
+                        <a href="{{ url_for('public.demo') }}" class="btn btn-outline-navy btn-lg">Request Demo</a>
+                        <a href="{{ url_for('public.pricing') }}" class="btn btn-outline-navy btn-lg">View Pricing</a>
                     </div>
                     <div class="hero-trust-text">
                         <span>No credit card required</span>
@@ -353,7 +354,7 @@
                         <li><i class="bi bi-check2-circle"></i>2 users</li>
                         <li><i class="bi bi-check2-circle"></i>Email alerts only</li>
                     </ul>
-                    <a href="/register" class="btn btn-outline-navy mt-auto">Start Free Trial</a>
+                    <a href="{{ plans['starter']['cta_url'] }}" class="btn btn-outline-navy mt-auto">{{ plans['starter']['cta_text'] }}</a>
                 </article>
 
                 <article class="pricing-card pricing-card-recommended">
@@ -370,7 +371,7 @@
                         <li><i class="bi bi-check2-circle"></i>10 users</li>
                         <li><i class="bi bi-check2-circle"></i>Email + SMS + webhook alerts</li>
                     </ul>
-                    <a href="/register" class="btn btn-action-blue mt-auto">Start Free Trial</a>
+                    <a href="{{ plans['professional']['cta_url'] }}" class="btn btn-action-blue mt-auto">{{ plans['professional']['cta_text'] }}</a>
                 </article>
 
                 <article class="pricing-card pricing-card-enterprise">
@@ -382,7 +383,7 @@
                         <li><i class="bi bi-check2-circle text-white"></i>Dedicated CSM and SLA-backed support</li>
                         <li><i class="bi bi-check2-circle text-white"></i>SSO/SAML and custom integrations</li>
                     </ul>
-                    <a href="/demo" class="btn btn-outline-light mt-auto">Contact Sales</a>
+                    <a href="{{ plans['enterprise']['cta_url'] }}" class="btn btn-outline-light mt-auto">{{ plans['enterprise']['cta_text'] }}</a>
                 </article>
             </div>
 

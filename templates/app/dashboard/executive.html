@@ -29,6 +29,10 @@
         <p class="text-muted mb-0">Fleet-wide supply chain health and performance intelligence.</p>
     </div>
     <div class="text-end">
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-house me-1"></i>Back to Dashboard
+        </a>
+        <br>
         <div class="small text-muted mb-2">Last 30 Days - as of {{ generated_at | format_datetime }}</div>
         <button type="button" id="refresh-ai-brief-btn" class="btn btn-sm btn-outline-primary">Refresh AI Brief</button>
     </div>
@@ -100,6 +104,9 @@
                 {% if active_disruptions_count == 0 %}
                 <span class="badge text-bg-success mt-2">Fleet Healthy</span>
                 {% endif %}
+                <a href="{{ url_for('shipments.list_shipments', risk='warning') }}" class="btn btn-sm btn-outline-warning mt-2">
+                    View Disrupted Shipments ->
+                </a>
             </div>
         </article>
     </div>
@@ -149,6 +156,7 @@
                 <div class="rerouting-stats-mini mt-3">
                     <div><strong>{{ rerouting_decisions_this_week }}</strong> decisions made</div>
                     <div><strong>{{ rerouting_savings_this_week_inr|format_currency_inr }}</strong> saved</div>
+                    <a href="{{ url_for('optimizer.index') }}" class="btn btn-sm btn-outline-secondary mt-2">Open Route Optimizer -></a>
                 </div>
             </div>
         </article>
@@ -194,7 +202,12 @@
                                 </td>
                                 <td>{{ lane.shipment_count }}</td>
                                 <td>{{ lane.cargo_value_inr|format_currency_inr }}</td>
-                                <td><a href="/risk-map?filter=lane&origin={{ lane.origin_port_code }}&dest={{ lane.destination_port_code }}">View on Map</a></td>
+                                <td>
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="{{ url_for('risk_map.index') }}" class="btn btn-sm btn-outline-danger">View on Map -></a>
+                                        <a href="{{ url_for('shipments.list_shipments', q=lane.origin_port_code) }}" class="btn btn-sm btn-outline-secondary">View Shipments -></a>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                             {% for i in range(top_at_risk_lanes|length, 5) %}
@@ -238,7 +251,9 @@
                                 </td>
                                 <td>{{ carrier.shipment_count }}</td>
                                 <td class="{% if carrier.otd_rate >= 90 %}text-success{% elif carrier.otd_rate >= 80 %}text-warning{% else %}text-danger{% endif %}">{{ '%.1f'|format(carrier.otd_rate) }}%</td>
-                                <td><a href="/carriers?carrier_id={{ carrier.carrier_id }}">View Intelligence</a></td>
+                                <td>
+                                    <a href="{{ url_for('carrier_intel.index', carrier_id=carrier.carrier_id) }}" class="btn btn-sm btn-outline-primary">View Carrier Performance -></a>
+                                </td>
                             </tr>
                             {% endfor %}
                             {% for i in range(top_at_risk_carriers|length, 5) %}

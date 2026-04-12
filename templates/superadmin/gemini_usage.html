@@ -4,7 +4,7 @@
 
 {% block sa_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 text-white mb-0">Gemini API Usage Monitor</h1>
+    <h1 class="h3 text-dark mb-0">Gemini API Usage Monitor</h1>
     <form method="post" action="{{ url_for('superadmin.clear_stale_cache') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-warning" type="submit">Clear Stale Cache</button>
@@ -42,7 +42,10 @@
                 <thead><tr><th>Organisation</th><th>AI Entries</th></tr></thead>
                 <tbody>
                     {% for row in top_orgs_rows %}
-                    <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td></tr>
+                    <tr>
+                        <td><a href="{{ url_for('superadmin.organisation_detail', org_id=row.id) }}">{{ row.name }}</a></td>
+                        <td>{{ row.count }}</td>
+                    </tr>
                     {% else %}
                     <tr><td colspan="2" class="text-center text-secondary py-4">No organisation usage data available.</td></tr>
                     {% endfor %}

@@ -102,7 +102,7 @@
     {% set days_class = 'text-success' %}
 {% endif %}
 
-<tr class="shipment-row" data-shipment-id="{{ shipment.id }}">
+<tr class="shipment-row" data-shipment-id="{{ shipment.id }}" data-row-href="{{ url_for('shipments.detail', id=shipment.id) }}" tabindex="0" role="link" aria-label="Open shipment {{ shipment.external_reference or shipment.id }} details">
     <td>
         <input class="form-check-input row-select-checkbox" type="checkbox" value="{{ shipment.id }}" aria-label="Select shipment {{ shipment.external_reference }}">
     </td>
@@ -153,7 +153,7 @@
 
 
 {% macro shipment_card(shipment, carrier_name='') %}
-<div class="card shipment-card shadow-sm border-0 mb-3" data-shipment-id="{{ shipment.id }}">
+<div class="card shipment-card shadow-sm border-0 mb-3" data-shipment-id="{{ shipment.id }}" data-card-href="{{ url_for('shipments.detail', id=shipment.id) }}" role="link" tabindex="0" aria-label="Open shipment {{ shipment.external_reference or shipment.id }} details">
     <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-2">
             {{ risk_badge(shipment.disruption_risk_score) }}

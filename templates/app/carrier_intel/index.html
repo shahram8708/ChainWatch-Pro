@@ -86,7 +86,10 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            <a href="{{ url_for('carrier_intel.index', period=period, carrier_id=row.carrier_id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                <a href="{{ url_for('shipments.list_shipments', carrier_id=row.carrier_id) }}" class="btn btn-outline-primary btn-sm">View Shipments -></a>
+                                <a href="{{ url_for('carrier_intel.index', period=period, carrier_id=row.carrier_id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -113,7 +116,12 @@
             <h2 class="h4 mb-1">{{ selected_carrier.name }}</h2>
             <span class="badge text-bg-light">{{ selected_carrier.mode | replace('_', ' ') | title }}</span>
         </div>
-        <a href="{{ url_for('carrier_intel.index', period=period) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i> Close</a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('optimizer.index') }}?carrier={{ selected_carrier.id }}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-sign-turn-right me-1"></i>Optimize Shipments for this Carrier
+            </a>
+            <a href="{{ url_for('carrier_intel.index', period=period) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i> Close</a>
+        </div>
     </div>
 
     <div class="row g-3 mb-3">

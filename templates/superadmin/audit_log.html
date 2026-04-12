@@ -3,7 +3,7 @@
 {% block page_title %}Platform Audit Log - SuperAdmin{% endblock %}
 
 {% block sa_content %}
-<h1 class="h3 text-white mb-4">Platform-Wide Audit Log</h1>
+<h1 class="h3 text-dark mb-4">Platform-Wide Audit Log</h1>
 
 <div class="sa-card mb-4">
     <form class="row g-3 align-items-end" method="get">
@@ -39,7 +39,7 @@
         </div>
         <div class="col-md-2 d-grid gap-2">
             <button class="btn btn-primary" type="submit">Apply</button>
-            <a class="btn btn-outline-light" href="{{ url_for('superadmin.platform_audit_log', org_id=filters.org_id, event_type=filters.event_type, actor=filters.actor, start_date=filters.start_date, end_date=filters.end_date, export='csv') }}">Export CSV</a>
+            <a class="btn btn-outline-secondary" href="{{ url_for('superadmin.platform_audit_log', org_id=filters.org_id, event_type=filters.event_type, actor=filters.actor, start_date=filters.start_date, end_date=filters.end_date, export='csv') }}">Export CSV</a>
         </div>
     </form>
 </div>
@@ -50,7 +50,7 @@
             <thead>
                 <tr>
                     <th>Timestamp</th>
-                    <th>Organisation ID</th>
+                    <th>Organisation</th>
                     <th>Event</th>
                     <th>Actor</th>
                     <th>Description</th>
@@ -58,9 +58,20 @@
             </thead>
             <tbody>
                 {% for entry in pagination.items %}
+                {% set org_match = (organisations | selectattr('id', 'equalto', entry.organisation_id) | list | first) %}
                 <tr>
                     <td>{{ entry.created_at | format_datetime }}</td>
-                    <td>{{ entry.organisation_id }}</td>
+                    <td>
+                        {% if entry.organisation_id %}
+                            {% if org_match %}
+                            <a href="{{ url_for('superadmin.organisation_detail', org_id=entry.organisation_id) }}">{{ org_match.name }}</a>
+                            {% else %}
+                            <a href="{{ url_for('superadmin.organisation_detail', org_id=entry.organisation_id) }}">{{ entry.organisation_id }}</a>
+                            {% endif %}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
                     <td>{{ entry.event_type }}</td>
                     <td>{{ entry.actor_label }}</td>
                     <td>{{ entry.description }}</td>

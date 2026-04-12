@@ -2,16 +2,41 @@
 
 {% block page_title %}Platform Stats - SuperAdmin{% endblock %}
 
+{% block head_extra %}
+{{ super() }}
+<style>
+    .sa-chart-frame {
+        position: relative;
+        width: 100%;
+        height: 220px;
+    }
+
+    .sa-chart-frame.sa-chart-frame-sm {
+        height: 180px;
+    }
+
+    .sa-chart-frame.sa-chart-frame-lg {
+        height: 240px;
+    }
+
+    .sa-chart-frame > canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
+{% endblock %}
+
 {% block sa_content %}
-<h1 class="h3 text-white mb-4">Platform Analytics</h1>
+<h1 class="h3 text-dark mb-4">Platform Analytics</h1>
 
 <div class="row g-4 mb-4">
-    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Daily Active Organisations (30d)</h2><canvas id="activeOrgsChart" height="180"></canvas></div></div>
-    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">New Organisation Registrations (Weekly)</h2><canvas id="newOrgsChart" height="180"></canvas></div></div>
-    <div class="col-lg-4"><div class="sa-card"><h2 class="h6">Subscription Plan Distribution</h2><canvas id="planDistributionChart" height="220"></canvas></div></div>
-    <div class="col-lg-8"><div class="sa-card"><h2 class="h6">Shipments Created Per Day</h2><canvas id="shipmentsChart" height="220"></canvas></div></div>
-    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Gemini API Calls Per Day</h2><canvas id="aiCallsChart" height="180"></canvas></div></div>
-    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Alert Generation Per Day</h2><canvas id="alertsChart" height="180"></canvas></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Daily Active Organisations (30d)</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="activeOrgsChart"></canvas></div></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">New Organisation Registrations (Weekly)</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="newOrgsChart"></canvas></div></div></div>
+    <div class="col-lg-4"><div class="sa-card"><h2 class="h6">Subscription Plan Distribution</h2><div class="sa-chart-frame"><canvas id="planDistributionChart"></canvas></div></div></div>
+    <div class="col-lg-8"><div class="sa-card"><h2 class="h6">Shipments Created Per Day</h2><div class="sa-chart-frame sa-chart-frame-lg"><canvas id="shipmentsChart"></canvas></div></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Gemini API Calls Per Day</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="aiCallsChart"></canvas></div></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Alert Generation Per Day</h2><div class="sa-chart-frame sa-chart-frame-sm"><canvas id="alertsChart"></canvas></div></div></div>
 </div>
 
 <div class="row g-4">
@@ -55,10 +80,18 @@
 <script>
 (() => {
     const labels = {{ labels | tojson }};
+    const baseChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        resizeDelay: 150
+    };
 
     const makeLine = (id, datasetLabel, data, border, fillColor) => {
         const ctx = document.getElementById(id);
         if (!ctx) return;
+        const existing = Chart.getChart(ctx);
+        if (existing) existing.destroy();
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -73,7 +106,7 @@
                     pointRadius: 2
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { ...baseChartOptions }
         });
     };
 
@@ -84,25 +117,31 @@
 
     const newOrgs = document.getElementById('newOrgsChart');
     if (newOrgs) {
+        const existing = Chart.getChart(newOrgs);
+        if (existing) existing.destroy();
+
         new Chart(newOrgs, {
             type: 'bar',
             data: {
                 labels: {{ weekly_labels | tojson }},
                 datasets: [{ label: 'New Organisations', data: {{ weekly_counts | tojson }}, backgroundColor: '#60A5FA' }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { ...baseChartOptions }
         });
     }
 
     const plans = document.getElementById('planDistributionChart');
     if (plans) {
+        const existing = Chart.getChart(plans);
+        if (existing) existing.destroy();
+
         new Chart(plans, {
             type: 'doughnut',
             data: {
                 labels: {{ plan_labels | tojson }},
                 datasets: [{ data: {{ plan_counts | tojson }}, backgroundColor: ['#2563EB', '#10B981', '#F97316'] }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { ...baseChartOptions }
         });
     }
 })();

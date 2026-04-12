@@ -3,7 +3,7 @@
 {% block page_title %}Platform Announcements - SuperAdmin{% endblock %}
 
 {% block sa_content %}
-<h1 class="h3 text-white mb-4">Platform Announcement Center</h1>
+<h1 class="h3 text-dark mb-4">Platform Announcement Center</h1>
 
 <div class="row g-4">
     <div class="col-lg-7">
@@ -57,8 +57,8 @@
             <h2 class="h5 mb-3">Delivery Status</h2>
             <p class="small text-secondary">Announcements are sent in batched async jobs with a target rate of 50 emails per minute.</p>
             <ul class="list-group list-group-flush bg-transparent">
-                <li class="list-group-item bg-transparent text-light px-0">Task ID: <strong>{{ task_id or '-' }}</strong></li>
-                <li class="list-group-item bg-transparent text-light px-0">Current Status: <strong>{{ task_status or 'Not queued' }}</strong></li>
+                <li class="list-group-item bg-transparent text-dark px-0">Task ID: <strong>{{ task_id or '-' }}</strong></li>
+                <li class="list-group-item bg-transparent text-dark px-0">Current Status: <strong>{{ task_status or 'Not queued' }}</strong></li>
             </ul>
         </div>
     </div>

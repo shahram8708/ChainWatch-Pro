@@ -8,7 +8,13 @@
         <h1>403</h1>
         <h2>Access denied</h2>
         <p>You do not have permission to access this page.</p>
-        <a href="/dashboard" class="btn btn-primary">Return to dashboard</a>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Back to Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('public.home') }}" class="btn btn-outline-secondary">Go to Home</a>
+            <a href="{{ url_for('public.contact') }}" class="btn btn-outline-primary">Contact Support</a>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -4,7 +4,7 @@
 
 {% block sa_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 text-white mb-0">All Users Management</h1>
+    <h1 class="h3 text-dark mb-0">All Users Management</h1>
 </div>
 
 <div class="sa-card mb-4">
@@ -76,19 +76,27 @@
                     <td>{{ user.full_name }}</td>
                     <td>{{ user.email }}</td>
                     <td>{{ user.role|title }}</td>
-                    <td>{{ user.organisation.name if user.organisation else '-' }}</td>
+                    <td>
+                        {% if user.organisation_id and user.organisation %}
+                        <a href="{{ url_for('superadmin.organisation_detail', org_id=user.organisation_id) }}">{{ user.organisation.name }}</a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
                     <td>{{ 'Active' if user.is_active else 'Inactive' }}</td>
                     <td>{{ user.last_login_at | format_datetime if user.last_login_at else '-' }}</td>
                     <td>{{ user.invited_by_user.full_name if user.invited_by_user else '-' }}</td>
                     <td>{{ user.account_source }}</td>
                     <td>
                         <div class="d-flex flex-wrap gap-1">
-                            <button class="btn btn-sm btn-outline-light reset-password-btn" data-action-url="{{ url_for('superadmin.force_reset_user_password', user_id=user.id) }}">Reset Password</button>
+                            <button class="btn btn-sm btn-outline-secondary reset-password-btn" data-action-url="{{ url_for('superadmin.force_reset_user_password', user_id=user.id) }}">Reset Password</button>
                             {% if user.role not in ['admin', 'superadmin'] %}
                             <button class="btn btn-sm btn-outline-info promote-admin-btn" data-action-url="{{ url_for('superadmin.promote_user_to_admin', user_id=user.id) }}">Promote to Admin</button>
                             {% endif %}
                             {% if user.is_active %}
                             <button class="btn btn-sm btn-outline-secondary deactivate-user-btn" data-action-url="{{ url_for('superadmin.deactivate_user', user_id=user.id) }}">Deactivate</button>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-secondary" type="button" disabled>Inactive</button>
                             {% endif %}
                             {% if user.role != 'superadmin' %}
                             <button class="btn btn-sm btn-outline-warning grant-superadmin-btn" data-action-url="{{ url_for('superadmin.grant_superadmin', user_id=user.id) }}">Grant SuperAdmin</button>

@@ -74,8 +74,22 @@
     </section>
 
     <div class="d-flex flex-wrap gap-2 align-items-center">
-        {% if selected_alert.shipment %}
-        <a class="btn btn-primary" href="{{ url_for('shipments.detail', id=selected_alert.shipment.id) }}">Go to Shipment</a>
+        {% if selected_alert.shipment_id %}
+        <a href="{{ url_for('shipments.detail', id=selected_alert.shipment_id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-box-seam me-1"></i>View Shipment ->
+        </a>
+        {% endif %}
+
+        {% if selected_alert.shipment and selected_alert.shipment.disruption_risk_score >= 60 %}
+        <a href="{{ url_for('optimizer.index', shipment_id=selected_alert.shipment_id) }}" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-sign-turn-right me-1"></i>Open in Optimizer
+        </a>
+        {% endif %}
+
+        {% if selected_alert.shipment and selected_alert.shipment.current_latitude %}
+        <a href="{{ url_for('risk_map.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-globe me-1"></i>View on Risk Map
+        </a>
         {% endif %}
 
         {% if not selected_alert.is_acknowledged %}

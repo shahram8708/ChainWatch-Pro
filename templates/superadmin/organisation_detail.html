@@ -5,15 +5,15 @@
 {% block sa_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 text-white mb-1">{{ organisation.name }}</h1>
+        <h1 class="h3 text-dark mb-1">{{ organisation.name }}</h1>
         <p class="text-secondary mb-0">Detailed tenant management and controls.</p>
     </div>
-    <a href="{{ url_for('superadmin.organisations') }}" class="btn btn-outline-light btn-sm">Back to Organisations</a>
+    <a href="{{ url_for('superadmin.organisations') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Organisations</a>
 </div>
 
 <div class="row g-4 mb-4">
     <div class="col-lg-6">
-        <div class="sa-card h-100">
+        <div class="sa-card ">
             <h2 class="h5 mb-3">Organisation Profile</h2>
             <form method="post" action="{{ url_for('superadmin.edit_organisation', org_id=organisation.id) }}" class="row g-3">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -72,7 +72,7 @@
     </div>
 
     <div class="col-lg-6">
-        <div class="sa-card h-100 mb-3">
+        <div class="sa-card  mb-3">
             <h2 class="h5 mb-3">Usage Stats</h2>
             <div class="row g-2">
                 <div class="col-sm-6"><div class="border rounded p-2">Shipments: {{ usage_stats.shipments }}</div></div>
@@ -82,7 +82,7 @@
             </div>
         </div>
 
-        <div class="sa-card h-100">
+        <div class="sa-card ">
             <h2 class="h5 mb-3">Subscription Override</h2>
             <form method="post" action="{{ url_for('superadmin.override_subscription', org_id=organisation.id) }}" class="row g-2">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -121,11 +121,14 @@
 
 <div class="row g-4 mb-4">
     <div class="col-xl-6">
-        <div class="sa-card h-100">
-            <h2 class="h5 mb-3">Organisation Users</h2>
+        <div class="sa-card ">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Organisation Users</h2>
+                <a href="{{ url_for('superadmin.users', org_id=organisation.id) }}" class="btn btn-sm btn-outline-secondary">View All Users</a>
+            </div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
-                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th><th>Actions</th></tr></thead>
                     <tbody>
                         {% for user in users %}
                         <tr>
@@ -133,9 +136,25 @@
                             <td>{{ user.email }}</td>
                             <td>{{ user.role|title }}</td>
                             <td>{{ user.last_login_at | format_datetime if user.last_login_at else '-' }}</td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <form method="post" action="{{ url_for('superadmin.force_reset_user_password', user_id=user.id) }}" class="js-superadmin-user-action d-inline" data-confirm="Force reset password for {{ user.email }}?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Reset Password</button>
+                                    </form>
+                                    {% if user.is_active %}
+                                    <form method="post" action="{{ url_for('superadmin.deactivate_user', user_id=user.id) }}" class="js-superadmin-user-action d-inline" data-confirm="Deactivate {{ user.email }}?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="badge text-bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </div>
+                            </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="4" class="text-center text-secondary py-4">No users in this organisation.</td></tr>
+                        <tr><td colspan="5" class="text-center text-secondary py-4">No users in this organisation.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -144,7 +163,7 @@
     </div>
 
     <div class="col-xl-6">
-        <div class="sa-card h-100">
+        <div class="sa-card ">
             <h2 class="h5 mb-3">Subscription History</h2>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
@@ -168,8 +187,11 @@
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="sa-card h-100">
-            <h2 class="h5 mb-3">Audit Entries (Last 100)</h2>
+        <div class="sa-card ">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Audit Entries (Last 100)</h2>
+                <a href="{{ url_for('superadmin.platform_audit_log', org_id=organisation.id) }}" class="btn btn-sm btn-outline-light">View Audit Log -></a>
+            </div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead><tr><th>Time</th><th>Event</th><th>Actor</th><th>Description</th></tr></thead>
@@ -191,7 +213,7 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="sa-card h-100">
+        <div class="sa-card ">
             <h2 class="h5 mb-3 text-warning">Danger Zone</h2>
             <form method="post" action="{{ url_for('superadmin.suspend_organisation', org_id=organisation.id) }}" class="mb-4">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -209,4 +231,52 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    const actionForms = document.querySelectorAll('.js-superadmin-user-action');
+    if (!actionForms.length) {
+        return;
+    }
+
+    actionForms.forEach((form) => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const confirmMessage = form.dataset.confirm;
+            if (confirmMessage && !window.confirm(confirmMessage)) {
+                return;
+            }
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || payload.message || 'Action failed');
+                }
+                window.alert(payload.message || 'Action completed');
+                window.location.reload();
+            } catch (error) {
+                window.alert(error.message);
+                if (submitButton) {
+                    submitButton.disabled = false;
+                }
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}

@@ -16,6 +16,12 @@
 
 <h1 class="mb-3">Alert Settings</h1>
 
+<div class="mb-3">
+    <a href="{{ url_for('alerts.index') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-bell me-1"></i>View Active Alerts ->
+    </a>
+</div>
+
 <nav class="nav settings-sub-nav mb-4">
     <a class="nav-link {% if active_settings_tab == 'profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">Profile</a>
     <a class="nav-link {% if active_settings_tab == 'team' %}active{% endif %}" href="{{ url_for('settings.team') }}">Team</a>

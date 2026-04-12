@@ -21,9 +21,15 @@
         <p class="text-muted mb-0">Simulate a future shipment to project its Disruption Risk Score, SLA breach probability, and get an AI-powered booking recommendation before you commit.</p>
     </div>
     {% if subscription_plan == 'starter' %}
-    <div class="d-flex align-items-center gap-2">
-        <span class="badge text-bg-light">{{ planner_used_count }} / 5 simulations used this month</span>
-        <a href="/settings/billing" class="small">Upgrade for unlimited</a>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge text-bg-light">{{ planner_used_count }} / {{ planner_monthly_limit }} simulations used this month</span>
+        {% if planner_used_count >= planner_monthly_limit %}
+        <a href="{{ url_for('settings.billing') }}" class="btn btn-warning">
+            <i class="bi bi-arrow-up-circle me-1"></i>Upgrade Plan for Unlimited Simulations
+        </a>
+        {% else %}
+        <a href="{{ url_for('settings.billing') }}" class="small">Upgrade for unlimited</a>
+        {% endif %}
     </div>
     {% endif %}
 </div>
@@ -369,6 +375,10 @@
             </div>
         </article>
         {% endif %}
+
+        <a href="{{ url_for('shipments.new_shipment') }}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-lg me-1"></i>Create Shipment for this Route
+        </a>
     </div>
 </div>
 {% endif %}

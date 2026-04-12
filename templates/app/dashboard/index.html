@@ -26,6 +26,8 @@
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-primary" href="{{ url_for('shipments.new_shipment') }}"><i class="bi bi-plus-lg me-1"></i>New Shipment</a>
         <a class="btn btn-outline-primary" href="{{ url_for('shipments.import_shipments') }}"><i class="bi bi-upload me-1"></i>Import CSV</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('risk_map.index') }}"><i class="bi bi-globe me-1"></i>Risk Map</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('executive.executive_dashboard') }}"><i class="bi bi-graph-up-arrow me-1"></i>Executive View</a>
     </div>
 </div>
 
@@ -39,6 +41,7 @@
             </div>
             <div class="metric-value skeleton-text" data-metric-value>{{ metrics.active_shipments }}</div>
             <div class="metric-trend trend-neutral"><span>Operational load in real-time</span></div>
+            <a href="{{ url_for('shipments.list_shipments', status='in_transit') }}" class="small text-decoration-none fw-semibold" aria-label="View in-transit shipments">View all -></a>
         </article>
     </div>
     {% endif %}
@@ -52,6 +55,7 @@
             </div>
             <div class="metric-value text-danger skeleton-text" data-metric-value>{{ metrics.critical_count }}</div>
             <div class="metric-trend trend-down"><span>Require immediate attention</span></div>
+            <a href="{{ url_for('alerts.index', severity='critical', acknowledged='false') }}" class="small text-decoration-none fw-semibold" aria-label="View critical unacknowledged alerts">View all -></a>
         </article>
     </div>
     {% endif %}
@@ -65,6 +69,7 @@
             </div>
             <div class="metric-value text-warning skeleton-text" data-metric-value>{{ metrics.warning_count }}</div>
             <div class="metric-trend trend-neutral"><span>Need review soon</span></div>
+            <a href="{{ url_for('alerts.index', severity='warning', acknowledged='false') }}" class="small text-decoration-none fw-semibold" aria-label="View warning unacknowledged alerts">View all -></a>
         </article>
     </div>
     {% endif %}
@@ -90,6 +95,7 @@
                 <i class="bi bi-dash"></i><span>Stable trend</span>
                 {% endif %}
             </div>
+            <a href="{{ url_for('reports.index') }}" class="small text-decoration-none fw-semibold" aria-label="Open performance reports">View all -></a>
         </article>
     </div>
     {% endif %}
@@ -228,6 +234,12 @@
                     {% for alert in recent_alerts %}
                     <div class="dashboard-alert-link" role="link" tabindex="0" data-nav-url="{{ url_for('alerts.index', selected_alert_id=alert.id) }}">
                         {{ alert_item(alert) }}
+                        <div class="px-3 pb-2 d-flex flex-wrap gap-2">
+                            <a href="{{ url_for('alerts.index', selected_alert_id=alert.id) }}" class="btn btn-sm btn-outline-primary">View in Alerts Center</a>
+                            {% if alert.shipment_id %}
+                            <a href="{{ url_for('shipments.detail', id=alert.shipment_id) }}" class="btn btn-sm btn-outline-secondary">View Shipment</a>
+                            {% endif %}
+                        </div>
                     </div>
                     {% else %}
                     <div class="p-4 text-center text-muted">
@@ -235,6 +247,11 @@
                         <p class="mb-0 mt-2">All clear! No active alerts.</p>
                     </div>
                     {% endfor %}
+                </div>
+                <div class="p-3 border-top">
+                    <a href="{{ url_for('alerts.index') }}" class="btn btn-sm btn-outline-primary mt-2">
+                        View All Alerts ->
+                    </a>
                 </div>
             </div>
         </section>

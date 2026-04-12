@@ -6,7 +6,7 @@
 <div class="row justify-content-center">
     <div class="col-lg-5">
         <div class="sa-card">
-            <h1 class="h4 text-white mb-3">Re-authenticate</h1>
+            <h1 class="h4 text-dark mb-3">Re-authenticate</h1>
             <p class="text-secondary">For security, re-enter your password to continue with sensitive SuperAdmin operations.</p>
             <form method="post" action="{{ url_for('superadmin.re_authenticate') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

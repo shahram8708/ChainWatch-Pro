@@ -57,6 +57,7 @@
                 <div class="small text-muted">Last verified: {{ entry.last_tested_at or 'Not tested yet' }}</div>
             </div>
             <div class="d-flex gap-2">
+                <a href="{{ url_for('carrier_intel.index', carrier_id=entry.carrier.id) }}" class="btn btn-sm btn-outline-primary">View Performance -></a>
                 <button class="btn btn-sm btn-outline-primary test-connection-btn" data-carrier-id="{{ entry.carrier.id }}" type="button">Test Connection</button>
                 <button class="btn btn-sm btn-outline-secondary open-connect-form-btn" data-carrier-id="{{ entry.carrier.id }}" type="button">Edit</button>
                 <button class="btn btn-sm btn-outline-danger disconnect-btn" data-carrier-id="{{ entry.carrier.id }}" type="button">Disconnect</button>

@@ -2,6 +2,124 @@
 
 {% block body_class %}app-layout{% endblock %}
 
+{% block head_extra %}
+{{ super() }}
+<style>
+    .app-layout .sidebar {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        height: 100vh;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 34%),
+            linear-gradient(180deg, #1b3a6b 0%, #17345f 55%, #142c52 100%);
+    }
+
+    .app-layout .sidebar-logo {
+        flex-shrink: 0;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .app-layout .sidebar-nav-shell {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+        padding-bottom: 0.65rem;
+    }
+
+    .app-layout .sidebar-nav-shell::before,
+    .app-layout .sidebar-nav-shell::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 14px;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .app-layout .sidebar-nav-shell::before {
+        top: 0;
+        background: linear-gradient(180deg, rgba(19, 45, 85, 0.95), rgba(19, 45, 85, 0));
+    }
+
+    .app-layout .sidebar-nav-shell::after {
+        bottom: 0;
+        background: linear-gradient(0deg, rgba(19, 45, 85, 0.95), rgba(19, 45, 85, 0));
+    }
+
+    .app-layout .sidebar-nav {
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 6px;
+        padding-bottom: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.38) transparent;
+    }
+
+    .app-layout .sidebar-nav::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .app-layout .sidebar-nav::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 999px;
+    }
+
+    .app-layout .sidebar-nav::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, rgba(143, 194, 255, 0.78), rgba(88, 155, 230, 0.78));
+        border: 2px solid rgba(19, 45, 85, 0.9);
+        border-radius: 999px;
+    }
+
+    .app-layout .sidebar-nav::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, rgba(173, 212, 255, 0.92), rgba(108, 171, 239, 0.92));
+    }
+
+    .app-layout .sidebar-user-info {
+        flex-shrink: 0;
+        margin-top: 0;
+        position: relative;
+        z-index: 3;
+        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        backdrop-filter: blur(4px);
+    }
+
+    .app-layout .sidebar-user-meta {
+        min-width: 0;
+    }
+
+    .app-layout .sidebar-user-meta .small {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .app-layout #mobileSidebar .offcanvas-body {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        min-height: 0;
+    }
+
+    .app-layout #mobileSidebar .sidebar-nav-shell {
+        min-height: 0;
+        overflow: hidden;
+        padding-right: 2px;
+    }
+
+    .app-layout #mobileSidebar .sidebar-nav {
+        padding-right: 4px;
+    }
+
+    .app-layout #mobileSidebar .sidebar-user-info {
+        flex-shrink: 0;
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <button class="btn btn-navy mobile-menu-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
     <i class="bi bi-list"></i>
@@ -14,23 +132,26 @@
         </a>
     </div>
 
-    <nav class="nav flex-column sidebar-nav px-2">
-        <a href="/dashboard" class="sidebar-nav-item"><i class="bi bi-house"></i><span>Dashboard</span></a>
-        <a href="{{ url_for('executive.executive_dashboard') }}" class="sidebar-nav-item"><i class="bi bi-graph-up-arrow"></i><span>Executive Dashboard</span></a>
-        <a href="/shipments" class="sidebar-nav-item"><i class="bi bi-box-seam"></i><span>Shipments</span>
-            {% if active_shipment_count > 0 %}<span id="sidebar-shipment-badge" class="badge text-bg-light ms-auto">{{ active_shipment_count }}</span>{% endif %}
-        </a>
-        <a href="/alerts" class="sidebar-nav-item"><i class="bi bi-bell"></i><span>Alerts</span>
-            {% if unread_alert_count > 0 %}<span id="sidebar-alert-badge" class="badge text-bg-danger ms-auto js-alert-badge">{{ unread_alert_count }}</span>{% endif %}
-        </a>
-        <a href="/optimizer" class="sidebar-nav-item"><i class="bi bi-sign-turn-right"></i><span>Route Optimizer</span></a>
-        <a href="/risk-map" class="sidebar-nav-item"><i class="bi bi-globe-central-south-asia"></i><span>Risk Map</span></a>
-        <a href="/carriers" class="sidebar-nav-item"><i class="bi bi-bar-chart-line"></i><span>Carrier Intelligence</span></a>
-        <a href="/planner" class="sidebar-nav-item"><i class="bi bi-calculator"></i><span>Scenario Planner</span></a>
-        <a href="/reports" class="sidebar-nav-item"><i class="bi bi-file-earmark-text"></i><span>Reports</span></a>
-        <a href="/audit-log" class="sidebar-nav-item"><i class="bi bi-clock-history"></i><span>Audit Log</span></a>
-        <a href="/settings/profile" class="sidebar-nav-item"><i class="bi bi-gear"></i><span>Settings</span></a>
-    </nav>
+    <div class="sidebar-nav-shell px-2">
+        <nav class="nav flex-column sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="sidebar-nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}"><i class="bi bi-house"></i><span>Dashboard</span></a>
+            <a href="{{ url_for('executive.executive_dashboard') }}" class="sidebar-nav-item {% if request.endpoint == 'executive.executive_dashboard' %}active{% endif %}"><i class="bi bi-graph-up-arrow"></i><span>Executive Dashboard</span></a>
+            <a href="{{ url_for('shipments.list_shipments') }}" class="sidebar-nav-item {% if request.endpoint in ['shipments.list_shipments', 'shipments.new_shipment', 'shipments.detail', 'shipments.edit', 'shipments.import_shipments'] %}active{% endif %}"><i class="bi bi-box-seam"></i><span>Shipments</span>
+                {% if active_shipment_count > 0 %}<span id="sidebar-shipment-badge" class="badge text-bg-light ms-auto">{{ active_shipment_count }}</span>{% endif %}
+            </a>
+            <a href="{{ url_for('alerts.index') }}" class="sidebar-nav-item {% if request.endpoint in ['alerts.index', 'alerts.detail_partial'] %}active{% endif %}"><i class="bi bi-bell"></i><span>Alerts</span>
+                {% if unread_alert_count > 0 %}<span id="sidebar-alert-badge" class="badge text-bg-danger ms-auto js-alert-badge">{{ unread_alert_count }}</span>{% endif %}
+            </a>
+            <a href="{{ url_for('optimizer.index') }}" class="sidebar-nav-item {% if request.endpoint in ['optimizer.index', 'optimizer.trigger_generation'] %}active{% endif %}"><i class="bi bi-sign-turn-right"></i><span>Route Optimizer</span></a>
+            <a href="{{ url_for('risk_map.index') }}" class="sidebar-nav-item {% if request.endpoint == 'risk_map.index' %}active{% endif %}"><i class="bi bi-globe-central-south-asia"></i><span>Risk Map</span></a>
+            <a href="{{ url_for('carrier_intel.index') }}" class="sidebar-nav-item {% if request.endpoint == 'carrier_intel.index' %}active{% endif %}"><i class="bi bi-bar-chart-line"></i><span>Carrier Intelligence</span></a>
+            <a href="{{ url_for('planner.index') }}" class="sidebar-nav-item {% if request.endpoint == 'planner.index' %}active{% endif %}"><i class="bi bi-calculator"></i><span>Scenario Planner</span></a>
+            <a href="{{ url_for('reports.index') }}" class="sidebar-nav-item {% if request.endpoint in ['reports.index', 'reports.download'] %}active{% endif %}"><i class="bi bi-file-earmark-text"></i><span>Reports</span></a>
+            <a href="{{ url_for('audit.index') }}" class="sidebar-nav-item {% if request.endpoint == 'audit.index' %}active{% endif %}"><i class="bi bi-clock-history"></i><span>Audit Log</span></a>
+            <a href="{{ url_for('settings.profile') }}" class="sidebar-nav-item {% if request.endpoint and request.endpoint.startswith('settings.') %}active{% endif %}"><i class="bi bi-gear"></i><span>Settings</span></a>
+            <a href="{{ url_for('auth.logout') }}" class="sidebar-nav-item sidebar-nav-logout"><i class="bi bi-box-arrow-right"></i><span>Sign Out</span></a>
+        </nav>
+    </div>
 
     {% if current_user.is_authenticated %}
     <div class="sidebar-user-info p-3 border-top border-light border-opacity-25">
@@ -57,19 +178,22 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <nav class="nav flex-column sidebar-nav">
-            <a href="/dashboard" class="sidebar-nav-item"><i class="bi bi-house"></i><span>Dashboard</span></a>
-            <a href="{{ url_for('executive.executive_dashboard') }}" class="sidebar-nav-item"><i class="bi bi-graph-up-arrow"></i><span>Executive Dashboard</span></a>
-            <a href="/shipments" class="sidebar-nav-item"><i class="bi bi-box-seam"></i><span>Shipments</span></a>
-            <a href="/alerts" class="sidebar-nav-item"><i class="bi bi-bell"></i><span>Alerts</span></a>
-            <a href="/optimizer" class="sidebar-nav-item"><i class="bi bi-sign-turn-right"></i><span>Route Optimizer</span></a>
-            <a href="/risk-map" class="sidebar-nav-item"><i class="bi bi-globe-central-south-asia"></i><span>Risk Map</span></a>
-            <a href="/carriers" class="sidebar-nav-item"><i class="bi bi-bar-chart-line"></i><span>Carrier Intelligence</span></a>
-            <a href="/planner" class="sidebar-nav-item"><i class="bi bi-calculator"></i><span>Scenario Planner</span></a>
-            <a href="/reports" class="sidebar-nav-item"><i class="bi bi-file-earmark-text"></i><span>Reports</span></a>
-            <a href="/audit-log" class="sidebar-nav-item"><i class="bi bi-clock-history"></i><span>Audit Log</span></a>
-            <a href="/settings/profile" class="sidebar-nav-item"><i class="bi bi-gear"></i><span>Settings</span></a>
-        </nav>
+        <div class="sidebar-nav-shell">
+            <nav class="nav flex-column sidebar-nav">
+                <a href="{{ url_for('dashboard.index') }}" class="sidebar-nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}"><i class="bi bi-house"></i><span>Dashboard</span></a>
+                <a href="{{ url_for('executive.executive_dashboard') }}" class="sidebar-nav-item {% if request.endpoint == 'executive.executive_dashboard' %}active{% endif %}"><i class="bi bi-graph-up-arrow"></i><span>Executive Dashboard</span></a>
+                <a href="{{ url_for('shipments.list_shipments') }}" class="sidebar-nav-item {% if request.endpoint in ['shipments.list_shipments', 'shipments.new_shipment', 'shipments.detail', 'shipments.edit', 'shipments.import_shipments'] %}active{% endif %}"><i class="bi bi-box-seam"></i><span>Shipments</span></a>
+                <a href="{{ url_for('alerts.index') }}" class="sidebar-nav-item {% if request.endpoint in ['alerts.index', 'alerts.detail_partial'] %}active{% endif %}"><i class="bi bi-bell"></i><span>Alerts</span></a>
+                <a href="{{ url_for('optimizer.index') }}" class="sidebar-nav-item {% if request.endpoint in ['optimizer.index', 'optimizer.trigger_generation'] %}active{% endif %}"><i class="bi bi-sign-turn-right"></i><span>Route Optimizer</span></a>
+                <a href="{{ url_for('risk_map.index') }}" class="sidebar-nav-item {% if request.endpoint == 'risk_map.index' %}active{% endif %}"><i class="bi bi-globe-central-south-asia"></i><span>Risk Map</span></a>
+                <a href="{{ url_for('carrier_intel.index') }}" class="sidebar-nav-item {% if request.endpoint == 'carrier_intel.index' %}active{% endif %}"><i class="bi bi-bar-chart-line"></i><span>Carrier Intelligence</span></a>
+                <a href="{{ url_for('planner.index') }}" class="sidebar-nav-item {% if request.endpoint == 'planner.index' %}active{% endif %}"><i class="bi bi-calculator"></i><span>Scenario Planner</span></a>
+                <a href="{{ url_for('reports.index') }}" class="sidebar-nav-item {% if request.endpoint in ['reports.index', 'reports.download'] %}active{% endif %}"><i class="bi bi-file-earmark-text"></i><span>Reports</span></a>
+                <a href="{{ url_for('audit.index') }}" class="sidebar-nav-item {% if request.endpoint == 'audit.index' %}active{% endif %}"><i class="bi bi-clock-history"></i><span>Audit Log</span></a>
+                <a href="{{ url_for('settings.profile') }}" class="sidebar-nav-item {% if request.endpoint and request.endpoint.startswith('settings.') %}active{% endif %}"><i class="bi bi-gear"></i><span>Settings</span></a>
+                <a href="{{ url_for('auth.logout') }}" class="sidebar-nav-item sidebar-nav-logout"><i class="bi bi-box-arrow-right"></i><span>Sign Out</span></a>
+            </nav>
+        </div>
 
         {% if current_user.is_authenticated %}
         <div class="sidebar-user-info pt-3 mt-3 border-top border-light border-opacity-25">

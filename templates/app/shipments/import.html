@@ -16,6 +16,12 @@
     </ol>
 </nav>
 
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('shipments.import_template') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-download me-1"></i>Download CSV Template
+    </a>
+</div>
+
 <div class="row g-4">
     <div class="col-lg-7">
         <section class="card shadow-sm border-0">
@@ -86,6 +92,12 @@
                         </tbody>
                     </table>
                 </div>
+                {% endif %}
+
+                {% if results and results.created > 0 %}
+                <a href="{{ url_for('shipments.list_shipments') }}" class="btn btn-primary mt-3">
+                    View Imported Shipments ->
+                </a>
                 {% endif %}
             </div>
         </section>

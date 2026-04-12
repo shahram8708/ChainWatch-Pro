@@ -30,10 +30,10 @@
             <div class="col-12 col-md-6 col-lg-3">
                 <h4 class="footer-heading">Product</h4>
                 <ul class="list-unstyled footer-links">
-                    <li><a class="footer-link" href="/dashboard">Dashboard</a></li>
-                    <li><a class="footer-link" href="/features">Features</a></li>
-                    <li><a class="footer-link" href="/pricing">Pricing</a></li>
-                    <li><a class="footer-link" href="/">Integrations</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.home') }}">Home</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.features') }}">Features</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.pricing') }}">Pricing</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.blog') }}">Blog</a></li>
                     <li><a class="footer-link" href="/">Changelog</a></li>
                     <li><a class="footer-link" href="/">API Docs</a></li>
                 </ul>
@@ -42,10 +42,9 @@
             <div class="col-12 col-md-6 col-lg-3">
                 <h4 class="footer-heading">Company</h4>
                 <ul class="list-unstyled footer-links">
-                    <li><a class="footer-link" href="/about">About</a></li>
-                    <li><a class="footer-link" href="/blog">Blog</a></li>
-                    <li><a class="footer-link" href="/contact">Contact</a></li>
-                    <li><a class="footer-link" href="/demo">Demo Request</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.about') }}">About</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.contact') }}">Contact</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.demo') }}">Demo</a></li>
                     <li><a class="footer-link" href="/contact">Careers</a></li>
                     <li><a class="footer-link" href="/contact">Press</a></li>
                 </ul>
@@ -54,12 +53,12 @@
             <div class="col-12 col-md-6 col-lg-3">
                 <h4 class="footer-heading">Legal & Support</h4>
                 <ul class="list-unstyled footer-links">
-                    <li><a class="footer-link" href="/privacy">Privacy Policy</a></li>
-                    <li><a class="footer-link" href="/terms">Terms of Service</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.privacy') }}">Privacy Policy</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.terms') }}">Terms of Service</a></li>
                     <li><a class="footer-link" href="/">Security</a></li>
                     <li><a class="footer-link" href="/">GDPR</a></li>
                     <li><a class="footer-link" href="/">Cookie Policy</a></li>
-                    <li><a class="footer-link" href="/contact">Support</a></li>
+                    <li><a class="footer-link" href="{{ url_for('public.contact') }}">Support</a></li>
                 </ul>
             </div>
         </div>

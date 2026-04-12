@@ -45,8 +45,15 @@
 </div>
 
 <div class="d-grid gap-2">
-    <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="btn btn-primary btn-sm">View Full Detail</a>
+    <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="btn btn-primary btn-sm w-100 mt-2">
+        <i class="bi bi-arrow-right me-1"></i>View Full Shipment Detail
+    </a>
     {% if drs_value >= 60 %}
-    <a href="{{ url_for('optimizer.index', shipment_id=shipment.id) }}" class="btn btn-outline-primary btn-sm">Go to Optimizer</a>
+    <a href="{{ url_for('optimizer.index', shipment_id=shipment.id) }}" class="btn btn-outline-warning btn-sm w-100 mt-1">
+        <i class="bi bi-sign-turn-right me-1"></i>Open in Optimizer
+    </a>
     {% endif %}
+    <a href="{{ url_for('alerts.index', shipment_id=shipment.id) }}" class="btn btn-outline-secondary btn-sm w-100 mt-1">
+        <i class="bi bi-bell me-1"></i>View Alerts
+    </a>
 </div>

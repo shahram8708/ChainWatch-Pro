@@ -209,6 +209,13 @@ def create_app(config_name: str = "development") -> Flask:
     csrf.init_app(app)
     redis_client = init_redis(app)
 
+    logger.info(
+        "Mail configured with server=%s port=%s tls=%s",
+        app.config.get("MAIL_SERVER"),
+        app.config.get("MAIL_PORT"),
+        app.config.get("MAIL_USE_TLS"),
+    )
+
     if app.config.get("USE_REDIS", False):
         if redis_client is None:
             logger.warning("Redis client initialization failed. Caching-backed features will degrade gracefully.")

@@ -659,6 +659,72 @@ const ChainWatchDashboard = (() => {
         refreshSelectionUI();
     }
 
+    function bindShipmentRowNavigation() {
+        const ignoreSelector = "a, button, input, select, textarea, label, .dropdown-menu, [data-bs-toggle]";
+
+        document.querySelectorAll(".shipment-row[data-row-href]").forEach((row) => {
+            const targetUrl = row.getAttribute("data-row-href");
+            if (!targetUrl || row.dataset.rowNavBound === "true") {
+                return;
+            }
+
+            const navigate = () => {
+                window.location.href = targetUrl;
+            };
+
+            row.addEventListener("click", (event) => {
+                if (event.target.closest(ignoreSelector)) {
+                    return;
+                }
+                navigate();
+            });
+
+            row.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter" && event.key !== " ") {
+                    return;
+                }
+                if (event.target.closest(ignoreSelector)) {
+                    return;
+                }
+                event.preventDefault();
+                navigate();
+            });
+
+            row.dataset.rowNavBound = "true";
+        });
+
+        document.querySelectorAll(".shipment-card[data-card-href]").forEach((card) => {
+            const targetUrl = card.getAttribute("data-card-href");
+            if (!targetUrl || card.dataset.cardNavBound === "true") {
+                return;
+            }
+
+            const navigate = () => {
+                window.location.href = targetUrl;
+            };
+
+            card.addEventListener("click", (event) => {
+                if (event.target.closest(ignoreSelector)) {
+                    return;
+                }
+                navigate();
+            });
+
+            card.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter" && event.key !== " ") {
+                    return;
+                }
+                if (event.target.closest(ignoreSelector)) {
+                    return;
+                }
+                event.preventDefault();
+                navigate();
+            });
+
+            card.dataset.cardNavBound = "true";
+        });
+    }
+
     function bindArchiveActions() {
         let pendingArchiveUrl = "";
 
@@ -1082,6 +1148,7 @@ const ChainWatchDashboard = (() => {
             applySortUIFromURL(url);
             updateActiveFilterBadge();
             bindRowSelectionHandlers();
+            bindShipmentRowNavigation();
             bindArchiveActions();
             bindEmptyStateClearButtons();
             bindDashboardRecentAlertLinks();
@@ -1229,6 +1296,7 @@ const ChainWatchDashboard = (() => {
         bindSortableHeaders();
         bindFilterAutoSubmit();
         bindRowSelectionHandlers();
+        bindShipmentRowNavigation();
         bindExportCSVButton();
         bindArchiveActions();
         bindHistoryPopstate();

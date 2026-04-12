@@ -121,20 +121,24 @@ def _require_recent_superadmin_elevation():
     if _is_recent_superadmin_elevation(15):
         return None
 
+    # Redirecting back to a POST-only endpoint causes a 405 after re-auth.
+    # For non-GET actions, prefer the referring management page instead.
+    next_url = request.url if request.method == "GET" else (request.referrer or url_for("superadmin.dashboard"))
+
     if _response_wants_json():
         return (
             jsonify(
                 {
                     "success": False,
                     "reauth_required": True,
-                    "reauth_url": url_for("superadmin.re_authenticate", next=request.url),
+                    "reauth_url": url_for("superadmin.re_authenticate", next=next_url),
                 }
             ),
             401,
         )
 
     flash("Please re-authenticate before performing this sensitive action.", "warning")
-    return redirect(url_for("superadmin.re_authenticate", next=request.url))
+    return redirect(url_for("superadmin.re_authenticate", next=next_url))
 
 
 def _org_admin_user(organisation_id) -> User | None:
@@ -576,6 +580,12 @@ def suspend_organisation(org_id: uuid.UUID):
 
     flash(f"Organisation {organisation.name} has been suspended.", "warning")
     return redirect(url_for("superadmin.organisation_detail", org_id=organisation.id))
+
+
+@superadmin_bp.get("/organisations/<uuid:org_id>/delete")
+def delete_organisation_get(org_id: uuid.UUID):
+    flash("Hard delete must be submitted from the confirmation form.", "warning")
+    return redirect(url_for("superadmin.organisation_detail", org_id=org_id))
 
 
 @superadmin_bp.post("/organisations/<uuid:org_id>/delete")
@@ -1043,14 +1053,18 @@ def gemini_usage():
         .all()
     )
 
-    top_orgs_rows = (
-        db.session.query(Organisation.name, func.count(AIGeneratedContent.id).label("count"))
+    top_orgs_rows_query = (
+        db.session.query(Organisation.id, Organisation.name, func.count(AIGeneratedContent.id).label("count"))
         .join(AIGeneratedContent, AIGeneratedContent.organisation_id == Organisation.id)
         .group_by(Organisation.id, Organisation.name)
         .order_by(func.count(AIGeneratedContent.id).desc())
         .limit(10)
         .all()
     )
+    top_orgs_rows = [
+        {"id": row[0], "name": row[1], "count": int(row[2])}
+        for row in top_orgs_rows_query
+    ]
 
     return render_template(
         "superadmin/gemini_usage.html",

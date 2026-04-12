@@ -36,13 +36,13 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     {{ render_checkbox(form.remember_me, 'Remember me') }}
-                    <a href="/forgot-password" class="small fw-semibold">Forgot password?</a>
+                    <a href="{{ url_for('auth.forgot_password') }}" class="small fw-semibold">Forgot Password?</a>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Sign In to ChainWatch Pro</button>
             </form>
 
             <p class="text-center mt-4 mb-0 text-muted">
-                Don't have an account? <a href="/register" class="fw-semibold">Start your 14-day free trial</a>
+                Don't have an account? <a href="{{ url_for('auth.register') }}" class="fw-semibold">Start your 14-day free trial</a>
             </p>
         </div>
     </main>
