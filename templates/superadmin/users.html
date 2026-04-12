@@ -1,0 +1,210 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}All Users - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-white mb-0">All Users Management</h1>
+</div>
+
+<div class="sa-card mb-4">
+    <form class="row g-3 align-items-end" method="get">
+        <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <input class="form-control" type="text" name="q" value="{{ filters.q }}" placeholder="Name or email">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Organisation</label>
+            <select class="form-select" name="org_id">
+                <option value="">All</option>
+                {% for org in organisations %}
+                <option value="{{ org.id }}" {% if filters.org_id == org.id|string %}selected{% endif %}>{{ org.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Role</label>
+            <select class="form-select" name="role">
+                <option value="">All</option>
+                {% for role in ['superadmin', 'admin', 'manager', 'viewer'] %}
+                <option value="{{ role }}" {% if filters.role == role %}selected{% endif %}>{{ role|title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status">
+                <option value="">All</option>
+                <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Account Source</label>
+            <select class="form-select" name="account_source">
+                <option value="">All</option>
+                {% for source in ['self_registered', 'manual_invite', 'csv_bulk_import', 'superadmin_created'] %}
+                <option value="{{ source }}" {% if filters.account_source == source %}selected{% endif %}>{{ source }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-1 d-grid">
+            <button class="btn btn-primary" type="submit">Go</button>
+        </div>
+    </form>
+</div>
+
+<div class="sa-card">
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Organisation</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Invited By</th>
+                    <th>Account Source</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in pagination.items %}
+                <tr>
+                    <td>{{ user.full_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role|title }}</td>
+                    <td>{{ user.organisation.name if user.organisation else '-' }}</td>
+                    <td>{{ 'Active' if user.is_active else 'Inactive' }}</td>
+                    <td>{{ user.last_login_at | format_datetime if user.last_login_at else '-' }}</td>
+                    <td>{{ user.invited_by_user.full_name if user.invited_by_user else '-' }}</td>
+                    <td>{{ user.account_source }}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            <button class="btn btn-sm btn-outline-light reset-password-btn" data-action-url="{{ url_for('superadmin.force_reset_user_password', user_id=user.id) }}">Reset Password</button>
+                            {% if user.role not in ['admin', 'superadmin'] %}
+                            <button class="btn btn-sm btn-outline-info promote-admin-btn" data-action-url="{{ url_for('superadmin.promote_user_to_admin', user_id=user.id) }}">Promote to Admin</button>
+                            {% endif %}
+                            {% if user.is_active %}
+                            <button class="btn btn-sm btn-outline-secondary deactivate-user-btn" data-action-url="{{ url_for('superadmin.deactivate_user', user_id=user.id) }}">Deactivate</button>
+                            {% endif %}
+                            {% if user.role != 'superadmin' %}
+                            <button class="btn btn-sm btn-outline-warning grant-superadmin-btn" data-action-url="{{ url_for('superadmin.grant_superadmin', user_id=user.id) }}">Grant SuperAdmin</button>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-danger revoke-superadmin-btn" data-action-url="{{ url_for('superadmin.revoke_superadmin', user_id=user.id) }}">Revoke SuperAdmin</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" class="text-center text-secondary py-4">No users found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('superadmin.users', page=pagination.prev_num, q=filters.q, org_id=filters.org_id, role=filters.role, status=filters.status, account_source=filters.account_source) }}">Previous</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('superadmin.users', page=pagination.next_num, q=filters.q, org_id=filters.org_id, role=filters.role, status=filters.status, account_source=filters.account_source) }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    const postFormData = async (url, data) => {
+        const formData = new FormData();
+        Object.entries(data || {}).forEach(([key, value]) => formData.append(key, value));
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            if (payload.reauth_required && payload.reauth_url) {
+                window.location.href = payload.reauth_url;
+                return;
+            }
+            throw new Error(payload.error || payload.message || 'Action failed');
+        }
+        alert(payload.message || 'Action completed');
+        window.location.reload();
+    };
+
+    document.querySelectorAll('.reset-password-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Force password reset for this user?')) return;
+            try {
+                await postFormData(btn.dataset.actionUrl, {});
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+
+    document.querySelectorAll('.grant-superadmin-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const reason = prompt('Enter reason for granting SuperAdmin access:');
+            if (!reason) return;
+            try {
+                await postFormData(btn.dataset.actionUrl, { reason, confirm: 'on' });
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+
+    document.querySelectorAll('.promote-admin-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Promote this user to admin within their organisation?')) return;
+            try {
+                await postFormData(btn.dataset.actionUrl, {});
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+
+    document.querySelectorAll('.deactivate-user-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Deactivate this user account?')) return;
+            try {
+                await postFormData(btn.dataset.actionUrl, {});
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+
+    document.querySelectorAll('.revoke-superadmin-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Revoke SuperAdmin access for this user?')) return;
+            try {
+                await postFormData(btn.dataset.actionUrl, {});
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page pricing-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="pricing-hero">
+        <div class="container">
+            <h1 class="section-heading mb-2">Pricing That Scales With Your Operations.</h1>
+            <p class="section-subheading">Transparent pricing, no hidden platform fees, and a 14-day Professional trial to validate value before committing. Payment processing is securely handled with Razorpay in INR.</p>
+
+            <div class="mt-4">
+                <div class="plan-toggle-wrap" data-plan-toggle data-target-section="#pricingSectionMain">
+                    <button class="plan-toggle-btn active" type="button" data-plan-value="monthly">Monthly</button>
+                    <button class="plan-toggle-btn" type="button" data-plan-value="annual">Annual</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricingSectionMain" class="public-section pricing-section" style="padding-top: 16px;">
+        <div class="container">
+            <div class="pricing-grid">
+                <article class="pricing-card">
+                    <span class="small text-uppercase fw-semibold text-muted">Starter</span>
+                    <div class="pricing-price">
+                        <span class="price-monthly">₹12,499/month</span>
+                        <span class="price-annual">₹1,19,990/year</span>
+                    </div>
+                    <p class="small text-muted mb-1 monthly-only">Billed monthly</p>
+                    <p class="small text-muted mb-1 annual-only">Billed annually</p>
+                    <span class="save-badge annual-only mb-2">Save 20%</span>
+                    <p class="small">For small logistics teams getting started with proactive monitoring</p>
+                    <a href="/register" class="btn btn-outline-navy mb-3">Start Free Trial</a>
+                    <hr>
+                    <h3 class="h6 mb-2">What's included:</h3>
+                    <ul class="pricing-feature-list mb-3">
+                        <li><i class="bi bi-check2-circle"></i>Up to 50 active shipments monitored</li>
+                        <li><i class="bi bi-check2-circle"></i>3 carrier integrations</li>
+                        <li><i class="bi bi-check2-circle"></i>2 user seats</li>
+                        <li><i class="bi bi-check2-circle"></i>Email alerts only</li>
+                        <li><i class="bi bi-check2-circle"></i>Basic route optimization (manual review)</li>
+                        <li><i class="bi bi-check2-circle"></i>Scenario planner (5 simulations/month)</li>
+                        <li><i class="bi bi-check2-circle"></i>3-month data retention</li>
+                        <li><i class="bi bi-check2-circle"></i>5 PDF report exports/month</li>
+                        <li><i class="bi bi-check2-circle"></i>Basic carrier OTD% chart</li>
+                        <li><i class="bi bi-check2-circle"></i>Email support (48-hour response)</li>
+                    </ul>
+                    <ul class="pricing-x-list mb-0">
+                        <li><i class="bi bi-x-circle"></i>SMS & webhook alerts</li>
+                        <li><i class="bi bi-x-circle"></i>Auto-generated route alternatives</li>
+                        <li><i class="bi bi-x-circle"></i>Audit log</li>
+                        <li><i class="bi bi-x-circle"></i>API access</li>
+                        <li><i class="bi bi-x-circle"></i>Custom dashboards</li>
+                    </ul>
+                </article>
+
+                <article class="pricing-card pricing-card-recommended">
+                    <span class="pricing-badge">Most Popular</span>
+                    <span class="small text-uppercase fw-semibold text-muted">Professional</span>
+                    <div class="pricing-price">
+                        <span class="price-monthly">₹33,299/month</span>
+                        <span class="price-annual">₹3,19,670/year</span>
+                    </div>
+                    <p class="small text-muted mb-1 monthly-only">Billed monthly</p>
+                    <p class="small text-muted mb-1 annual-only">Billed annually</p>
+                    <span class="save-badge annual-only mb-2">Save 20%</span>
+                    <p class="small">For growing operations teams managing multi-carrier, multi-lane shipments</p>
+                    <a href="/register" class="btn btn-action-blue mb-3">Start Free Trial</a>
+                    <hr>
+                    <h3 class="h6 mb-2">What's included:</h3>
+                    <ul class="pricing-feature-list mb-3">
+                        <li><i class="bi bi-check2-circle"></i>Up to 500 active shipments</li>
+                        <li><i class="bi bi-check2-circle"></i>15 carrier integrations</li>
+                        <li><i class="bi bi-check2-circle"></i>10 user seats</li>
+                        <li><i class="bi bi-check2-circle"></i>Email + SMS + Webhook alerts</li>
+                        <li><i class="bi bi-check2-circle"></i>Auto-generated route alternatives (3 options/disruption)</li>
+                        <li><i class="bi bi-check2-circle"></i>Full scenario planner (unlimited)</li>
+                        <li><i class="bi bi-check2-circle"></i>12-month data retention</li>
+                        <li><i class="bi bi-check2-circle"></i>Unlimited PDF exports</li>
+                        <li><i class="bi bi-check2-circle"></i>Full carrier analytics with trend charts</li>
+                        <li><i class="bi bi-check2-circle"></i>Audit log with export</li>
+                        <li><i class="bi bi-check2-circle"></i>Read-only API access</li>
+                        <li><i class="bi bi-check2-circle"></i>Priority email support (24-hour)</li>
+                    </ul>
+                    <ul class="pricing-x-list mb-0">
+                        <li><i class="bi bi-x-circle"></i>Auto-execution of reroutes</li>
+                        <li><i class="bi bi-x-circle"></i>Custom executive dashboards</li>
+                        <li><i class="bi bi-x-circle"></i>SSO/SAML</li>
+                        <li><i class="bi bi-x-circle"></i>Dedicated CSM</li>
+                    </ul>
+                </article>
+
+                <article class="pricing-card pricing-card-enterprise">
+                    <span class="small text-uppercase fw-semibold text-white-50">Enterprise</span>
+                    <div class="pricing-price text-white">Custom Pricing</div>
+                    <p class="small text-white-50">Contact our sales team</p>
+                    <p class="small text-white">For large-scale operations requiring enterprise security, compliance, and custom integrations</p>
+                    <a href="/demo" class="btn btn-outline-light mb-3">Contact Sales</a>
+                    <hr class="border-light border-opacity-25">
+                    <h3 class="h6 mb-2 text-white">Everything in Professional, plus:</h3>
+                    <ul class="pricing-feature-list mb-0 text-white">
+                        <li><i class="bi bi-check2-circle text-white"></i>Unlimited shipments + carriers + users</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Auto-execution of approved reroutes</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Custom executive dashboards</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Full read/write API access</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>SSO/SAML (Okta, Azure AD, Google Workspace)</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>36-month data retention</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Scheduled automated reports</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Dedicated Customer Success Manager</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>SLA guarantee (99.9% uptime)</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Custom carrier API integrations</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>On-site onboarding assistance</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Penetration test reports on request</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white pt-4">
+        <div class="container">
+            <h2 class="section-heading text-center mb-4">Full Feature Comparison</h2>
+            <div class="table-responsive">
+                <table class="table feature-comparison-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Starter</th>
+                            <th>Professional</th>
+                            <th>Enterprise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="feature-group-row"><td colspan="4">Shipment Monitoring</td></tr>
+                        <tr><td>Active shipments monitored</td><td>50</td><td>500</td><td>Unlimited</td></tr>
+                        <tr><td>Historical data retention</td><td>3 months</td><td>12 months</td><td>36 months</td></tr>
+
+                        <tr class="feature-group-row"><td colspan="4">Carrier Integrations</td></tr>
+                        <tr><td>Carrier connections</td><td>3</td><td>15</td><td>Unlimited</td></tr>
+                        <tr><td>Custom carrier APIs</td><td><span class="text-danger">✕</span></td><td><span class="text-danger">✕</span></td><td><span class="text-success">✓</span></td></tr>
+
+                        <tr class="feature-group-row"><td colspan="4">User Management</td></tr>
+                        <tr><td>User seats</td><td>2</td><td>10</td><td>Unlimited</td></tr>
+                        <tr><td>SSO / SAML</td><td><span class="text-danger">✕</span></td><td><span class="text-danger">✕</span></td><td><span class="text-success">✓</span></td></tr>
+
+                        <tr class="feature-group-row"><td colspan="4">Alert & Notifications</td></tr>
+                        <tr><td>Alert channels</td><td>Email only</td><td>Email + SMS + Webhook</td><td>All channels + custom workflows</td></tr>
+                        <tr><td>Alert policy controls</td><td>Basic</td><td>Advanced</td><td>Advanced + role governance</td></tr>
+
+                        <tr class="feature-group-row"><td colspan="4">Route Optimization</td></tr>
+                        <tr><td>Recommendation engine</td><td>Manual review</td><td>3 AI-ranked options</td><td>Unlimited + auto-execution</td></tr>
+                        <tr><td>Scenario planner runs</td><td>5 / month</td><td>Unlimited</td><td>Unlimited</td></tr>
+
+                        <tr class="feature-group-row"><td colspan="4">Analytics & Reporting</td></tr>
+                        <tr><td>PDF exports</td><td>5 / month</td><td>Unlimited</td><td>Unlimited + scheduled</td></tr>
+                        <tr><td>Carrier analytics depth</td><td>Basic OTD%</td><td>Trend + lane analysis</td><td>Custom executive analytics</td></tr>
+
+                        <tr class="feature-group-row"><td colspan="4">Security & Compliance</td></tr>
+                        <tr><td>Audit log</td><td><span class="text-danger">✕</span></td><td><span class="text-success">✓</span></td><td><span class="text-success">✓</span></td></tr>
+                        <tr><td>Pen-test and security reviews</td><td><span class="text-danger">✕</span></td><td>On request</td><td>Included</td></tr>
+
+                        <tr class="feature-group-row"><td colspan="4">Support</td></tr>
+                        <tr><td>Response SLA</td><td>48-hour</td><td>24-hour</td><td>Dedicated CSM + SLA-backed support</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section pt-4">
+        <div class="container">
+            <div class="overage-box">
+                <h3 class="h5 mb-3">Beyond your plan limits:</h3>
+                <ul class="mb-0">
+                    <li>Additional shipments: ₹208 per shipment per month (Starter overage)</li>
+                    <li>Additional carrier integrations: ₹2,083 per integration per month</li>
+                    <li>SMS alert credits: ₹4.17 per SMS beyond included quota</li>
+                    <li>Additional user seats: ₹1,250 per user per month</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white pt-4">
+        <div class="container">
+            <h2 class="section-heading text-center mb-4">Frequently Asked Questions</h2>
+            <div class="accordion faq-accordion" id="pricingFaq">
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq1"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1Body" aria-expanded="true" aria-controls="faq1Body">What happens after my 14-day free trial?</button></h3>
+                    <div id="faq1Body" class="accordion-collapse collapse show" aria-labelledby="faq1" data-bs-parent="#pricingFaq"><div class="accordion-body">Your trial runs on Professional features for 14 days with no card required. If no payment method is added before the trial ends, your account automatically transitions to Starter capability so your data remains accessible while advanced features pause.</div></div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq2"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2Body" aria-expanded="false" aria-controls="faq2Body">Can I switch plans anytime?</button></h3>
+                    <div id="faq2Body" class="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#pricingFaq"><div class="accordion-body">Yes. You can upgrade or downgrade at any point. Upgrades take effect immediately with prorated billing. Downgrades apply from the next billing cycle so your team has time to adjust workflows and seat allocations.</div></div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq3"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3Body" aria-expanded="false" aria-controls="faq3Body">Is my data secure? Where is it stored?</button></h3>
+                    <div id="faq3Body" class="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#pricingFaq"><div class="accordion-body">Data is encrypted in transit and at rest, access is role-based, and audit trails are maintained for sensitive actions. Primary infrastructure is hosted in India with GDPR-aligned privacy controls for global customers.</div></div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq4"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4Body" aria-expanded="false" aria-controls="faq4Body">What payment methods do you accept?</button></h3>
+                    <div id="faq4Body" class="accordion-collapse collapse" aria-labelledby="faq4" data-bs-parent="#pricingFaq"><div class="accordion-body">All subscriptions are billed in INR through Razorpay. We support major credit cards, corporate cards, UPI, net banking, and approved bank transfer invoicing for eligible annual contracts.</div></div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq5"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5Body" aria-expanded="false" aria-controls="faq5Body">Do you offer refunds?</button></h3>
+                    <div id="faq5Body" class="accordion-collapse collapse" aria-labelledby="faq5" data-bs-parent="#pricingFaq"><div class="accordion-body">Monthly subscriptions are generally non-refundable once a billing period starts. Annual agreements may include tailored commercial terms. If there is a billing issue, our team investigates and resolves case-by-case with full transparency.</div></div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq6"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6Body" aria-expanded="false" aria-controls="faq6Body">Can I integrate with my existing TMS or ERP?</button></h3>
+                    <div id="faq6Body" class="accordion-collapse collapse" aria-labelledby="faq6" data-bs-parent="#pricingFaq"><div class="accordion-body">Yes. Professional includes read-only API access and Enterprise includes full read/write APIs plus custom integration support. Teams commonly connect ChainWatch Pro with TMS, ERP, BI, and customer communication systems.</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section cta-section-dark">
+        <div class="container position-relative text-center">
+            <h2 class="section-heading text-white">Ready to move from reactive to proactive logistics?</h2>
+            <p class="section-subheading text-white-50">Launch your Professional trial in minutes and evaluate disruption intelligence on your own shipment flows.</p>
+            <a href="/register" class="btn btn-action-blue btn-lg">Start Free Trial</a>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

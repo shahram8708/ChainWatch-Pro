@@ -1,0 +1,52 @@
+{% from "macros/charts.html" import drs_circular_gauge %}
+
+{% set mode_label = shipment.mode | replace('_', ' ') | title %}
+{% if shipment.mode in ['ocean_fcl', 'ocean_lcl'] %}
+    {% set mode_icon = 'bi-water' %}
+{% elif shipment.mode == 'air' %}
+    {% set mode_icon = 'bi-airplane' %}
+{% elif shipment.mode == 'road' %}
+    {% set mode_icon = 'bi-truck' %}
+{% elif shipment.mode == 'rail' %}
+    {% set mode_icon = 'bi-train-front' %}
+{% else %}
+    {% set mode_icon = 'bi-diagram-3' %}
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-start mb-2" data-drs="{{ '%.2f' | format(drs_value) }}">
+    <h3 class="h6 mb-0">{{ shipment.external_reference or shipment.id }}</h3>
+    <span class="badge {% if risk_level == 'critical' %}text-bg-danger{% elif risk_level == 'warning' %}text-bg-warning{% elif risk_level == 'watch' %}text-bg-secondary{% else %}text-bg-success{% endif %}">
+        {{ risk_level | title }}
+    </span>
+</div>
+
+<div class="mb-2">
+    <span class="badge text-bg-light">{{ shipment.status | replace('_', ' ') | title }}</span>
+</div>
+
+<div class="small text-muted mb-2">{{ shipment.origin_port_code }} <i class="bi bi-arrow-right"></i> {{ shipment.destination_port_code }}</div>
+<div class="small mb-3"><i class="bi {{ mode_icon }}"></i> {{ shipment.carrier.name if shipment.carrier else 'Unassigned Carrier' }} <span class="text-muted">({{ mode_label }})</span></div>
+
+<div class="d-flex justify-content-center mb-3">
+    {{ drs_circular_gauge(drs_value, size=100, stroke_width=10, show_label=False, label='DRS') }}
+</div>
+
+<div class="small mb-2"><i class="bi bi-geo-alt"></i> {{ shipment.current_location_name or 'Location pending' }}</div>
+<div class="small mb-3">
+    <i class="bi bi-calendar-event"></i>
+    ETA: {{ shipment.estimated_arrival | format_datetime }}
+    {% if days_remaining < 0 %}
+    <span class="text-danger">(Overdue {{ days_remaining | abs }}d)</span>
+    {% elif days_remaining <= 2 %}
+    <span class="text-warning">({{ days_remaining }}d remaining)</span>
+    {% else %}
+    <span class="text-success">({{ days_remaining }}d remaining)</span>
+    {% endif %}
+</div>
+
+<div class="d-grid gap-2">
+    <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="btn btn-primary btn-sm">View Full Detail</a>
+    {% if drs_value >= 60 %}
+    <a href="{{ url_for('optimizer.index', shipment_id=shipment.id) }}" class="btn btn-outline-primary btn-sm">Go to Optimizer</a>
+    {% endif %}
+</div>

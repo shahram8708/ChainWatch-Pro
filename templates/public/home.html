@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page home-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="hero-section public-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6">
+                    <span class="hero-eyebrow">🚀 Trusted by 500+ Logistics Teams</span>
+                    <h1 class="hero-headline">See the Disruption Before It Sees You.</h1>
+                    <p class="hero-subheadline">ChainWatch Pro monitors every shipment across all carriers, detecting disruptions 6 to 48 hours before SLA breach and surfacing route alternatives instantly.</p>
+                    <div class="hero-cta-row">
+                        <a href="/register" class="btn btn-action-blue btn-lg">Start Free Trial - It's Free</a>
+                        <button type="button" class="btn btn-outline-navy btn-lg" data-bs-toggle="modal" data-bs-target="#demoModal">Watch 2-min Demo</button>
+                    </div>
+                    <div class="hero-trust-text">
+                        <span>No credit card required</span>
+                        <span>14-day free trial</span>
+                        <span>Cancel anytime</span>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dashboard-mockup-card fade-in-up">
+                        <div class="mockup-top-row">
+                            <div class="mockup-stat-card">
+                                <div class="value">247</div>
+                                <div class="label">Total Active</div>
+                            </div>
+                            <div class="mockup-stat-card critical">
+                                <div class="value">3</div>
+                                <div class="label">Critical Alerts</div>
+                            </div>
+                            <div class="mockup-stat-card warning">
+                                <div class="value">12</div>
+                                <div class="label">Warnings</div>
+                            </div>
+                            <div class="mockup-stat-card success">
+                                <div class="value">94.2% ↑</div>
+                                <div class="label">Fleet OTD</div>
+                            </div>
+                        </div>
+                        <div class="mockup-table">
+                            <div class="mockup-table-row">
+                                <span>SHP-29418 (Shenzhen -> Hamburg)</span>
+                                <span>ETA: +18h</span>
+                                <span class="mockup-risk-badge critical">DRS 84</span>
+                            </div>
+                            <div class="mockup-table-row">
+                                <span>SHP-29497 (Nhava Sheva -> Rotterdam)</span>
+                                <span>ETA: +7h</span>
+                                <span class="mockup-risk-badge warning">DRS 67</span>
+                            </div>
+                            <div class="mockup-table-row">
+                                <span>SHP-29511 (Bengaluru -> Dubai)</span>
+                                <span>On schedule</span>
+                                <span class="mockup-risk-badge green">DRS 22</span>
+                            </div>
+                        </div>
+                        <div class="mockup-map">
+                            <span class="mockup-map-dot critical"></span>
+                            <span class="mockup-map-dot warning"></span>
+                            <span class="mockup-map-dot green"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="social-proof-bar">
+        <div class="container text-center">
+            <p class="social-proof-title mb-0">Trusted by operations teams at:</p>
+            <div class="logo-strip">
+                <span class="logo-item">GlobalFreight Co.</span>
+                <span class="logo-item">AsiaLink Logistics</span>
+                <span class="logo-item">ManuTech Industries</span>
+                <span class="logo-item">SwiftCommerce</span>
+                <span class="logo-item">PacificShip 3PL</span>
+                <span class="logo-item">EuroRoute Forwarding</span>
+            </div>
+            <p class="social-proof-metric mb-0">500+ teams | 40+ carrier integrations | 40 countries | 2.4M+ shipments monitored</p>
+        </div>
+    </section>
+
+    <section class="public-section bg-white">
+        <div class="container text-center">
+            <h2 class="section-heading">Your supply chain is flying blind.</h2>
+            <p class="section-subheading mb-5">Most disruptions are discovered through customer complaints, not proactive detection.</p>
+            <div class="row g-4 text-start">
+                <div class="col-lg-4">
+                    <article class="problem-card fade-in-up">
+                        <span class="problem-icon"><i class="bi bi-eye-slash"></i></span>
+                        <h3 class="h4">You're always the last to know.</h3>
+                        <p class="mb-0">When teams check twelve carrier portals every morning, they inherit a guaranteed delay in awareness. By the time an exception appears in a spreadsheet, the shipment has often already drifted past recovery options. The result is preventable service breach and avoidable escalation pressure.</p>
+                    </article>
+                </div>
+                <div class="col-lg-4">
+                    <article class="problem-card fade-in-up">
+                        <span class="problem-icon"><i class="bi bi-graph-down-arrow"></i></span>
+                        <h3 class="h4">Manual monitoring doesn't scale.</h3>
+                        <p class="mb-0">Human attention is finite, but shipment volume is not. As operations teams grow lane coverage and customer commitments, one missed alert can expose freight, inventory, and contract value simultaneously. A single major miss can cost ₹40 lakh or more in direct and indirect impact.</p>
+                    </article>
+                </div>
+                <div class="col-lg-4">
+                    <article class="problem-card fade-in-up">
+                        <span class="problem-icon"><i class="bi bi-cash-stack"></i></span>
+                        <h3 class="h4">Reactive logistics costs more than you think.</h3>
+                        <p class="mb-0">Premium emergency freight is visible, but it is only part of the bill. SLA penalties, customer churn risk, and internal firefighting overhead compound over time. Proactive detection turns those costs into controlled decisions before urgency pricing and reputational damage accumulate.</p>
+                    </article>
+                </div>
+            </div>
+
+            <div class="problem-callout text-start mt-4">
+                <p class="mb-1">Supply chain disruptions cost the global economy ₹330 trillion annually. The average company experiences a disruption lasting 1+ month every 3.7 years, costing nearly 45% of annual EBITDA.</p>
+                <small>Source: McKinsey, 2021</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section how-works-section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-heading">From blind spots to complete visibility in under 10 minutes.</h2>
+            </div>
+            <div class="step-flow">
+                <article class="step-card fade-in-up">
+                    <div class="d-flex align-items-center">
+                        <span class="step-number">1</span>
+                        <i class="bi bi-plug step-icon"></i>
+                    </div>
+                    <h3 class="h4 mt-2">Connect Your Carriers</h3>
+                    <p class="mb-0">Link your existing carrier accounts or upload historical shipment CSVs. ChainWatch Pro supports 40+ global carriers and all major shipping modes.</p>
+                </article>
+                <article class="step-card fade-in-up">
+                    <div class="d-flex align-items-center">
+                        <span class="step-number">2</span>
+                        <i class="bi bi-broadcast step-icon"></i>
+                    </div>
+                    <h3 class="h4 mt-2">AI Monitors 24/7</h3>
+                    <p class="mb-0">Our disruption detection engine continuously scores every active shipment using weather, port congestion, geopolitical events, and carrier performance signals.</p>
+                </article>
+                <article class="step-card fade-in-up">
+                    <div class="d-flex align-items-center">
+                        <span class="step-number">3</span>
+                        <i class="bi bi-lightning-charge step-icon"></i>
+                    </div>
+                    <h3 class="h4 mt-2">Act Before Disruption Hits</h3>
+                    <p class="mb-0">Receive proactive alerts 6-48 hours before SLA breach and approve AI-ranked route alternatives with clear cost-time tradeoff analysis in one click.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-heading">Everything you need to run proactive logistics.</h2>
+                <p class="section-subheading">Eight powerful modules, one unified platform.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap text-action-blue"><i class="bi bi-boxes"></i></span>
+                        <h3 class="h4">Unified Shipment Tracking</h3>
+                        <p>Monitor every shipment in one timeline across all carriers and modes with normalized milestones and exception visibility.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap" style="color: var(--color-critical-red);"><i class="bi bi-exclamation-triangle"></i></span>
+                        <h3 class="h4">AI Disruption Detection Engine</h3>
+                        <p>Google Gemini-powered scoring models identify risk trajectories early and prioritize the shipments with highest business impact.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap" style="color: var(--color-success);"><i class="bi bi-sign-turn-right"></i></span>
+                        <h3 class="h4">Dynamic Route Optimization</h3>
+                        <p>Compare route alternatives by ETA confidence, incremental cost, and service impact before approving rerouting actions.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap" style="color: var(--color-warning-orange);"><i class="bi bi-bell"></i></span>
+                        <h3 class="h4">Proactive Alert System</h3>
+                        <p>Route critical risk updates through email, SMS, and webhooks with customizable thresholds by team and lane priorities.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap text-navy"><i class="bi bi-bar-chart-line"></i></span>
+                        <h3 class="h4">Carrier Performance Intelligence</h3>
+                        <p>Benchmark carrier reliability by lane and period to improve allocation strategy and support evidence-based contract reviews.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap" style="color: var(--color-watch-amber);"><i class="bi bi-calculator"></i></span>
+                        <h3 class="h4">Shipment Scenario Planner</h3>
+                        <p>Model disruptions before they happen and compare cost and service implications of alternative intervention policies.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap text-navy"><i class="bi bi-speedometer2"></i></span>
+                        <h3 class="h4">Executive Intelligence Dashboard</h3>
+                        <p>Translate operational noise into portfolio-level KPIs and weekly executive snapshots focused on risk and recovery.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <article class="feature-card fade-in-up">
+                        <span class="feature-icon-wrap text-secondary"><i class="bi bi-journal-text"></i></span>
+                        <h3 class="h4">Full Audit Trail & Decision Log</h3>
+                        <p>Capture every exception, recommendation, and approval with timestamps for accountability, compliance, and process learning.</p>
+                        <a href="/features" class="feature-link">Learn more -></a>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section metrics-strip">
+        <div class="container">
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-number-wrap">
+                        <span class="metric-prefix fs-2 fw-bold">6-</span><span class="metric-number" data-target="48">48</span>
+                    </div>
+                    <p class="metric-subtitle">Hours early disruption detection before SLA breach</p>
+                    <span class="metric-divider"></span>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-number" data-target="87%">87%</div>
+                    <p class="metric-subtitle">Reduction in SLA breaches reported by customers</p>
+                    <span class="metric-divider"></span>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-number" data-target="500+">500+</div>
+                    <p class="metric-subtitle">Logistics teams actively monitoring on ChainWatch Pro</p>
+                    <span class="metric-divider"></span>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-number" data-target="40+">40+</div>
+                    <p class="metric-subtitle">Global carrier integrations supported</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-heading">Trusted by logistics professionals worldwide.</h2>
+            </div>
+
+            <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-pause="hover">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <article class="testimonial-card mx-auto" style="max-width: 900px;">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="testimonial-avatar avatar-blue">MC</span>
+                                <div>
+                                    <h3 class="h5 mb-0">Marcus Chen</h3>
+                                    <p class="mb-0 text-muted">Supply Chain Operations Manager, TechFlow Electronics</p>
+                                    <small class="text-muted">Mid-size electronics manufacturer</small>
+                                </div>
+                            </div>
+                            <p class="testimonial-quote">"Before ChainWatch Pro, our planners spent every morning jumping across portals and still missed important deviations. We caught a Singapore port congestion event 14 hours earlier than our old process and rerouted priority inventory before customer commitments slipped. Morning monitoring now takes minutes instead of half a day."</p>
+                            <div class="star-row mb-2">★★★★★</div>
+                            <span class="testimonial-metric">Reduced SLA breaches by 73% in 90 days</span>
+                        </article>
+                    </div>
+                    <div class="carousel-item">
+                        <article class="testimonial-card mx-auto" style="max-width: 900px;">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="testimonial-avatar avatar-green">PN</span>
+                                <div>
+                                    <h3 class="h5 mb-0">Priya Nair</h3>
+                                    <p class="mb-0 text-muted">Senior Account Manager, SwiftLink 3PL</p>
+                                    <small class="text-muted">Third-party logistics provider</small>
+                                </div>
+                            </div>
+                            <p class="testimonial-quote">"We manage more than 2,000 monthly shipments across 30 client accounts, and manual exception workflows were no longer sustainable. ChainWatch Pro gave us one control tower with role-based alerts and route recommendations our team could trust. We now communicate risks proactively instead of after escalation calls start."</p>
+                            <div class="star-row mb-2">★★★★★</div>
+                            <span class="testimonial-metric">2,000+ monthly shipments monitored with one team</span>
+                        </article>
+                    </div>
+                    <div class="carousel-item">
+                        <article class="testimonial-card mx-auto" style="max-width: 900px;">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="testimonial-avatar avatar-orange">SO</span>
+                                <div>
+                                    <h3 class="h5 mb-0">Sandra Okonkwo</h3>
+                                    <p class="mb-0 text-muted">Director of Operations, DirectShip Commerce</p>
+                                    <small class="text-muted">D2C e-commerce brand</small>
+                                </div>
+                            </div>
+                            <p class="testimonial-quote">"Customer expectations in D2C are unforgiving, and our support volume was being driven by late shipment surprises. With carrier benchmarking and proactive warnings, we adjusted allocation and reduced avoidable delays significantly. WISMO contact volume dropped by 52% while our operations team gained far better control."</p>
+                            <div class="star-row mb-2">★★★★★</div>
+                            <span class="testimonial-metric">Reduced WISMO contacts by 52%</span>
+                        </article>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricingSection" class="public-section pricing-section" style="background: var(--color-neutral-gray);">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="section-heading">Simple, transparent pricing.</h2>
+                <p class="section-subheading mb-3">Start free for 14 days. No credit card required.</p>
+                <div class="plan-toggle-wrap" data-plan-toggle data-target-section="#pricingSection">
+                    <button class="plan-toggle-btn active" type="button" data-plan-value="monthly">Monthly</button>
+                    <button class="plan-toggle-btn" type="button" data-plan-value="annual">Annual</button>
+                </div>
+            </div>
+
+            <div class="pricing-grid">
+                <article class="pricing-card">
+                    <h3 class="h4">Starter</h3>
+                    <div class="pricing-price">
+                        <span class="price-monthly">₹12,499<span class="fs-6">/month</span></span>
+                        <span class="price-annual">₹1,19,990<span class="fs-6">/year</span></span>
+                    </div>
+                    <span class="save-badge annual-only">Save 20%</span>
+                    <ul class="pricing-feature-list mt-3 mb-3">
+                        <li><i class="bi bi-check2-circle"></i>Up to 50 active shipments</li>
+                        <li><i class="bi bi-check2-circle"></i>3 carrier integrations</li>
+                        <li><i class="bi bi-check2-circle"></i>2 users</li>
+                        <li><i class="bi bi-check2-circle"></i>Email alerts only</li>
+                    </ul>
+                    <a href="/register" class="btn btn-outline-navy mt-auto">Start Free Trial</a>
+                </article>
+
+                <article class="pricing-card pricing-card-recommended">
+                    <span class="pricing-badge">Most Popular</span>
+                    <h3 class="h4">Professional</h3>
+                    <div class="pricing-price">
+                        <span class="price-monthly">₹33,299<span class="fs-6">/month</span></span>
+                        <span class="price-annual">₹3,19,670<span class="fs-6">/year</span></span>
+                    </div>
+                    <span class="save-badge annual-only">Save 20%</span>
+                    <ul class="pricing-feature-list mt-3 mb-3">
+                        <li><i class="bi bi-check2-circle"></i>Up to 500 active shipments</li>
+                        <li><i class="bi bi-check2-circle"></i>15 carrier integrations</li>
+                        <li><i class="bi bi-check2-circle"></i>10 users</li>
+                        <li><i class="bi bi-check2-circle"></i>Email + SMS + webhook alerts</li>
+                    </ul>
+                    <a href="/register" class="btn btn-action-blue mt-auto">Start Free Trial</a>
+                </article>
+
+                <article class="pricing-card pricing-card-enterprise">
+                    <h3 class="h4 text-white">Enterprise</h3>
+                    <div class="pricing-price text-white">Custom Pricing</div>
+                    <ul class="pricing-feature-list mt-3 mb-3">
+                        <li><i class="bi bi-check2-circle text-white"></i>Unlimited shipments and carriers</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Unlimited users and governance controls</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>Dedicated CSM and SLA-backed support</li>
+                        <li><i class="bi bi-check2-circle text-white"></i>SSO/SAML and custom integrations</li>
+                    </ul>
+                    <a href="/demo" class="btn btn-outline-light mt-auto">Contact Sales</a>
+                </article>
+            </div>
+
+            <p class="text-center mt-4 mb-0"><a href="/pricing" class="feature-link">See full pricing details -></a></p>
+        </div>
+    </section>
+
+    <section class="public-section cta-section-dark">
+        <div class="container position-relative">
+            <h2 class="section-heading text-white">Start monitoring your shipments in under 10 minutes.</h2>
+            <p class="section-subheading text-white-50">Join 500+ logistics teams who switched from reactive to proactive supply chain management.</p>
+            <form class="cta-email-form" action="/register" method="get">
+                <input type="email" class="form-control" name="email" placeholder="Enter your work email" required>
+                <button type="submit" class="btn btn-action-blue">Start Free Trial</button>
+            </form>
+            <div class="trust-badges-row mt-3">
+                <span class="trust-badge">✓ SSL Secured</span>
+                <span class="trust-badge">✓ GDPR Compliant</span>
+                <span class="trust-badge">✓ No Credit Card Required</span>
+            </div>
+            <p class="mt-3 mb-0"><a href="/demo" class="text-white text-decoration-none fw-semibold">Or book a personalized demo -></a></p>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+
+<div class="modal fade" id="demoModal" tabindex="-1" aria-labelledby="demoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="demoModalLabel">2-Minute Platform Walkthrough</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="demo-video-placeholder">
+                    <div class="demo-video-poster"></div>
+                    <div class="demo-video-overlay-grid"></div>
+                    <div class="demo-play-btn">
+                        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+                <p class="text-muted small mt-3 mb-0">Demo preview interface. Full live walkthrough available in personalized sessions.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block body_class %}app-layout{% endblock %}
+
+{% block content %}
+<button class="btn btn-navy mobile-menu-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+    <i class="bi bi-list"></i>
+</button>
+
+<aside class="sidebar d-none d-lg-flex flex-column">
+    <div class="sidebar-logo p-3">
+        <a href="/dashboard" class="text-decoration-none text-white d-flex align-items-center gap-2">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="ChainWatch Pro" class="sidebar-logo-image">
+        </a>
+    </div>
+
+    <nav class="nav flex-column sidebar-nav px-2">
+        <a href="/dashboard" class="sidebar-nav-item"><i class="bi bi-house"></i><span>Dashboard</span></a>
+        <a href="{{ url_for('executive.executive_dashboard') }}" class="sidebar-nav-item"><i class="bi bi-graph-up-arrow"></i><span>Executive Dashboard</span></a>
+        <a href="/shipments" class="sidebar-nav-item"><i class="bi bi-box-seam"></i><span>Shipments</span>
+            {% if active_shipment_count > 0 %}<span id="sidebar-shipment-badge" class="badge text-bg-light ms-auto">{{ active_shipment_count }}</span>{% endif %}
+        </a>
+        <a href="/alerts" class="sidebar-nav-item"><i class="bi bi-bell"></i><span>Alerts</span>
+            {% if unread_alert_count > 0 %}<span id="sidebar-alert-badge" class="badge text-bg-danger ms-auto js-alert-badge">{{ unread_alert_count }}</span>{% endif %}
+        </a>
+        <a href="/optimizer" class="sidebar-nav-item"><i class="bi bi-sign-turn-right"></i><span>Route Optimizer</span></a>
+        <a href="/risk-map" class="sidebar-nav-item"><i class="bi bi-globe-central-south-asia"></i><span>Risk Map</span></a>
+        <a href="/carriers" class="sidebar-nav-item"><i class="bi bi-bar-chart-line"></i><span>Carrier Intelligence</span></a>
+        <a href="/planner" class="sidebar-nav-item"><i class="bi bi-calculator"></i><span>Scenario Planner</span></a>
+        <a href="/reports" class="sidebar-nav-item"><i class="bi bi-file-earmark-text"></i><span>Reports</span></a>
+        <a href="/audit-log" class="sidebar-nav-item"><i class="bi bi-clock-history"></i><span>Audit Log</span></a>
+        <a href="/settings/profile" class="sidebar-nav-item"><i class="bi bi-gear"></i><span>Settings</span></a>
+    </nav>
+
+    {% if current_user.is_authenticated %}
+    <div class="sidebar-user-info p-3 border-top border-light border-opacity-25">
+        <div class="d-flex align-items-center gap-2">
+            <div class="avatar-circle" aria-hidden="true">
+                {% if current_user.profile_photo_url %}
+                <img src="{{ current_user.profile_photo_url }}" alt="{{ current_user.full_name }} profile photo">
+                {% else %}
+                {{ current_user.initials }}
+                {% endif %}
+            </div>
+            <div class="sidebar-user-meta">
+                <div class="text-white small fw-semibold">{{ current_user.full_name }}</div>
+                <span class="badge role-badge">{{ current_user.role|title }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</aside>
+
+<div class="offcanvas offcanvas-start bg-navy text-white" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">ChainWatch Pro</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <nav class="nav flex-column sidebar-nav">
+            <a href="/dashboard" class="sidebar-nav-item"><i class="bi bi-house"></i><span>Dashboard</span></a>
+            <a href="{{ url_for('executive.executive_dashboard') }}" class="sidebar-nav-item"><i class="bi bi-graph-up-arrow"></i><span>Executive Dashboard</span></a>
+            <a href="/shipments" class="sidebar-nav-item"><i class="bi bi-box-seam"></i><span>Shipments</span></a>
+            <a href="/alerts" class="sidebar-nav-item"><i class="bi bi-bell"></i><span>Alerts</span></a>
+            <a href="/optimizer" class="sidebar-nav-item"><i class="bi bi-sign-turn-right"></i><span>Route Optimizer</span></a>
+            <a href="/risk-map" class="sidebar-nav-item"><i class="bi bi-globe-central-south-asia"></i><span>Risk Map</span></a>
+            <a href="/carriers" class="sidebar-nav-item"><i class="bi bi-bar-chart-line"></i><span>Carrier Intelligence</span></a>
+            <a href="/planner" class="sidebar-nav-item"><i class="bi bi-calculator"></i><span>Scenario Planner</span></a>
+            <a href="/reports" class="sidebar-nav-item"><i class="bi bi-file-earmark-text"></i><span>Reports</span></a>
+            <a href="/audit-log" class="sidebar-nav-item"><i class="bi bi-clock-history"></i><span>Audit Log</span></a>
+            <a href="/settings/profile" class="sidebar-nav-item"><i class="bi bi-gear"></i><span>Settings</span></a>
+        </nav>
+
+        {% if current_user.is_authenticated %}
+        <div class="sidebar-user-info pt-3 mt-3 border-top border-light border-opacity-25">
+            <div class="d-flex align-items-center gap-2">
+                <div class="avatar-circle" aria-hidden="true">
+                    {% if current_user.profile_photo_url %}
+                    <img src="{{ current_user.profile_photo_url }}" alt="{{ current_user.full_name }} profile photo">
+                    {% else %}
+                    {{ current_user.initials }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-meta">
+                    <div class="text-white small fw-semibold">{{ current_user.full_name }}</div>
+                    <span class="badge role-badge">{{ current_user.role|title }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<main class="main-content">
+    <header class="top-header d-flex align-items-center justify-content-between px-3 px-md-4">
+        <div class="org-name text-muted small fw-semibold">{{ current_org.name if current_org else 'ChainWatch Pro Workspace' }}</div>
+        <div class="global-search flex-grow-1 px-3 d-none d-lg-block" data-global-search>
+            <div class="input-group search-input-wrap">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search shipments, alerts, carriers..."
+                    aria-label="Search"
+                    autocomplete="off"
+                    data-global-search-input
+                >
+            </div>
+            <div class="global-search-results d-none" data-global-search-results role="listbox" aria-label="Global search results"></div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <a href="/alerts" class="notification-icon position-relative text-decoration-none">
+                <i class="bi bi-bell fs-5 text-navy"></i>
+                {% if unread_alert_count > 0 %}
+                <span id="header-alert-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger js-alert-badge">{{ unread_alert_count }}</span>
+                {% endif %}
+            </a>
+
+            {% if current_user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn user-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open user menu">
+                    <span class="avatar-circle sm" aria-hidden="true">
+                        {% if current_user.profile_photo_url %}
+                        <img src="{{ current_user.profile_photo_url }}" alt="{{ current_user.full_name }} profile photo">
+                        {% else %}
+                        {{ current_user.initials }}
+                        {% endif %}
+                    </span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li class="px-3 py-2">
+                        <div class="fw-semibold">{{ current_user.full_name }}</div>
+                        <div class="text-muted small">{{ current_user.email }}</div>
+                        <span class="badge role-badge mt-1">{{ current_user.role|title }}</span>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/settings/profile">Profile Settings</a></li>
+                    <li><a class="dropdown-item" href="/settings/billing">Billing</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="/logout">Sign Out</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if session.get('superadmin_impersonating') %}
+    <div class="superadmin-impersonation-banner">
+        <div class="container-fluid d-flex align-items-center justify-content-between py-2 px-4">
+            <span>
+                <strong>⚠ SuperAdmin Mode:</strong>
+                You are currently viewing ChainWatch Pro as
+                <strong>{{ current_org.name if current_org else 'Unknown Organisation' }}</strong> /
+                <strong>{{ current_user.email }}</strong>
+            </span>
+            <a href="{{ url_for('superadmin.exit_impersonation') }}" class="btn btn-sm btn-warning">
+                Exit Impersonation ->
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <section class="app-content container-fluid py-4">
+        {% block app_content %}{% endblock %}
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

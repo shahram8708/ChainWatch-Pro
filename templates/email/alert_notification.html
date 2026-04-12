@@ -1,0 +1,34 @@
+{% extends "email/email_base.html" %}
+
+{% block content %}
+{% set severity_color = {
+    'critical': '#D32F2F',
+    'warning': '#FF8C00',
+    'watch': '#F59E0B',
+    'info': '#0077CC'
+} %}
+<p style="margin:0 0 12px;">Hi {{ user.first_name }},</p>
+<p style="margin:0 0 14px;">A new alert needs your attention in ChainWatch Pro.</p>
+<p style="margin:0 0 14px;">
+    <span style="display:inline-block;padding:4px 10px;border-radius:999px;background:{{ severity_color.get(alert.severity, '#0077CC') }};color:#ffffff;font-size:12px;font-weight:600;text-transform:uppercase;">{{ alert.severity }}</span>
+</p>
+<p style="margin:0 0 8px;"><strong>{{ alert.title }}</strong></p>
+<p style="margin:0 0 12px;color:#555577;">{{ alert.description }}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 18px;border:1px solid #e6ecf5;border-radius:8px;">
+    <tr>
+        <td style="padding:10px 12px;font-size:13px;line-height:1.5;">
+            <div><strong>Affected shipment:</strong> {{ shipment.external_reference or shipment.id }}</div>
+            <div><strong>Route:</strong> {{ shipment.origin_port_code }} to {{ shipment.destination_port_code }}</div>
+            <div><strong>DRS score:</strong> {{ alert.drs_at_alert if alert.drs_at_alert is not none else shipment.disruption_risk_score }}</div>
+            <div><strong>Recommended action:</strong> Review rerouting options and update stakeholders immediately.</div>
+        </td>
+    </tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+        <td>
+            <a href="{{ view_url }}" style="display:inline-block;background:#0077CC;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">View in ChainWatch Pro</a>
+        </td>
+    </tr>
+</table>
+{% endblock %}

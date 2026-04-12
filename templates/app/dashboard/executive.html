@@ -1,0 +1,398 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Executive Dashboard - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+{% set exposure = financial_exposure_inr|float %}
+{% if exposure >= 10000000 %}
+    {% set exposure_label = "₹ " ~ ('%.2f'|format(exposure / 10000000)) ~ " Cr" %}
+{% elif exposure >= 100000 %}
+    {% set exposure_label = "₹ " ~ ('%.2f'|format(exposure / 100000)) ~ " L" %}
+{% else %}
+    {% set exposure_label = exposure|format_currency_inr %}
+{% endif %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Executive Dashboard</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Executive Dashboard</h1>
+        <p class="text-muted mb-0">Fleet-wide supply chain health and performance intelligence.</p>
+    </div>
+    <div class="text-end">
+        <div class="small text-muted mb-2">Last 30 Days - as of {{ generated_at | format_datetime }}</div>
+        <button type="button" id="refresh-ai-brief-btn" class="btn btn-sm btn-outline-primary">Refresh AI Brief</button>
+    </div>
+</div>
+
+<section class="executive-ai-brief-card ai-content-card mb-4" id="executive-ai-brief-card">
+    <div class="ai-brief-header mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge text-bg-primary px-3 py-2">AI</span>
+            <strong>ChainWatch AI Intelligence Brief</strong>
+            {% if ai_brief_served_stale and ai_brief_stale_warning %}
+            <span class="badge text-bg-warning" id="executive-ai-stale-warning">{{ ai_brief_stale_warning }}</span>
+            {% else %}
+            <span class="badge text-bg-warning d-none" id="executive-ai-stale-warning"></span>
+            {% endif %}
+        </div>
+        <div class="small text-muted ai-generated-timestamp" id="ai-brief-timestamp">Generated {{ generated_at | format_datetime }}</div>
+    </div>
+
+    <div id="ai-brief-content">
+        {% if ai_brief_html %}
+            {{ ai_brief_html | safe }}
+        {% else %}
+            <p class="text-muted fst-italic mb-2">AI brief temporarily unavailable. Showing data-driven summary.</p>
+            <p class="mb-1">Fleet OTD is {{ '%.2f'|format(fleet_otd_rate) }}% with {{ active_disruptions_count }} active warning or critical disruptions.</p>
+            <p class="mb-1">Average DRS is {{ '%.2f'|format(average_drs) }} and current cargo exposure is {{ exposure_label }}.</p>
+            <p class="mb-0">{{ rerouting_decisions_this_week }} rerouting decisions were approved this week with estimated savings of {{ rerouting_savings_this_week_inr|format_currency_inr }}.</p>
+        {% endif %}
+    </div>
+
+    <small class="text-muted d-block mt-2" id="executive-ai-regeneration-count">Regenerated {{ ai_brief_regeneration_count | default(0) }} times</small>
+
+    <div class="ai-powered-label">Powered by Google Gemini</div>
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <article class="card executive-kpi-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h2 class="h6 mb-0">Fleet OTD Rate</h2>
+                    {% if fleet_otd_rate >= 90 %}
+                    <span class="badge text-bg-success">Healthy</span>
+                    {% elif fleet_otd_rate >= 80 %}
+                    <span class="badge text-bg-warning">Watch</span>
+                    {% else %}
+                    <span class="badge text-bg-danger">Critical</span>
+                    {% endif %}
+                </div>
+                <div class="metric-value mt-2">{{ '%.1f'|format(fleet_otd_rate) }}%</div>
+                <div class="metric-trend {% if fleet_otd_trend == 'up' %}trend-up{% elif fleet_otd_trend == 'down' %}trend-down{% else %}trend-neutral{% endif %}">
+                    {% if fleet_otd_trend == 'up' %}↑{% elif fleet_otd_trend == 'down' %}↓{% else %}→{% endif %}
+                    {{ '%+.1f'|format(fleet_otd_delta) }}% vs last month
+                </div>
+                <p class="text-muted small mb-0">On-Time Delivery Rate (Last 30 Days)</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <article class="card executive-kpi-card h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-0">Active Disruptions</h2>
+                <div class="metric-value mt-2 {% if active_disruptions_count > 0 %}text-danger{% else %}text-success{% endif %}">
+                    {{ active_disruptions_count }}
+                </div>
+                <p class="text-muted small mb-1">at Warning or Critical DRS</p>
+                <div class="small text-muted">{{ '%.1f'|format(active_disruptions_percentage) }}% of active fleet</div>
+                {% if active_disruptions_count == 0 %}
+                <span class="badge text-bg-success mt-2">Fleet Healthy</span>
+                {% endif %}
+            </div>
+        </article>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <article class="card executive-kpi-card h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-0">Average DRS</h2>
+                <div class="metric-value mt-2 {% if average_drs >= 81 %}text-danger{% elif average_drs >= 61 %}text-warning{% elif average_drs >= 31 %}text-warning-emphasis{% else %}text-success{% endif %}">
+                    {{ '%.1f'|format(average_drs) }}
+                </div>
+                <p class="text-muted small mb-2">Average fleet disruption risk score</p>
+                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ average_drs|int }}">
+                    <div class="progress-bar {% if average_drs >= 81 %}bg-danger{% elif average_drs >= 61 %}bg-warning{% elif average_drs >= 31 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ average_drs }}%;"></div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <article class="card executive-kpi-card h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-0">Financial Exposure</h2>
+                <div class="financial-exposure-value mt-2 {% if exposure > 10000000 %}text-danger{% elif exposure > 1000000 %}text-warning{% else %}text-success{% endif %}">{{ exposure_label }}</div>
+                <p class="text-muted small mb-0">Cargo value at Warning/Critical risk</p>
+            </div>
+        </article>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-5">
+        <article class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Fleet Health Distribution</h2>
+                <div style="height: 260px;">
+                    <canvas id="fleet-health-doughnut" height="260"></canvas>
+                </div>
+
+                <div class="mt-3 d-grid gap-2">
+                    <div class="d-flex justify-content-between small"><span><span class="audit-event-dot event-type-billing"></span> On Track</span><strong>{{ fleet_health_data.green }}</strong></div>
+                    <div class="d-flex justify-content-between small"><span><span class="audit-event-dot" style="background:#F59E0B"></span> Watch</span><strong>{{ fleet_health_data.watch }}</strong></div>
+                    <div class="d-flex justify-content-between small"><span><span class="audit-event-dot event-type-team"></span> Warning</span><strong>{{ fleet_health_data.warning }}</strong></div>
+                    <div class="d-flex justify-content-between small"><span><span class="audit-event-dot event-type-security"></span> Critical</span><strong>{{ fleet_health_data.critical }}</strong></div>
+                </div>
+
+                <div class="rerouting-stats-mini mt-3">
+                    <div><strong>{{ rerouting_decisions_this_week }}</strong> decisions made</div>
+                    <div><strong>{{ rerouting_savings_this_week_inr|format_currency_inr }}</strong> saved</div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <div class="col-xl-7">
+        <article class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">OTD% Trend - Last 30 Days</h2>
+                <div style="height: 260px;">
+                    <canvas id="otd-trend-executive" height="260"></canvas>
+                </div>
+                <div class="d-flex flex-wrap gap-3 mt-3 small text-muted" id="otd-mini-stats"></div>
+            </div>
+        </article>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-6">
+        <article class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Highest Risk Lanes</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Lane</th>
+                                <th>Avg DRS</th>
+                                <th>Shipments</th>
+                                <th>Cargo Value (INR)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lane in top_at_risk_lanes %}
+                            <tr>
+                                <td>{{ lane.origin_port_code }} → {{ lane.destination_port_code }}</td>
+                                <td>
+                                    <span class="badge {% if lane.avg_drs >= 81 %}text-bg-danger{% elif lane.avg_drs >= 61 %}text-bg-warning{% elif lane.avg_drs >= 31 %}text-bg-secondary{% else %}text-bg-success{% endif %}">
+                                        {{ '%.1f'|format(lane.avg_drs) }}
+                                    </span>
+                                </td>
+                                <td>{{ lane.shipment_count }}</td>
+                                <td>{{ lane.cargo_value_inr|format_currency_inr }}</td>
+                                <td><a href="/risk-map?filter=lane&origin={{ lane.origin_port_code }}&dest={{ lane.destination_port_code }}">View on Map</a></td>
+                            </tr>
+                            {% endfor %}
+                            {% for i in range(top_at_risk_lanes|length, 5) %}
+                            <tr>
+                                <td colspan="5" class="text-muted">No additional lane data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <div class="col-xl-6">
+        <article class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">At-Risk Carriers</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Carrier</th>
+                                <th>Avg DRS</th>
+                                <th>Active Shipments</th>
+                                <th>OTD Rate</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for carrier in top_at_risk_carriers %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ carrier.carrier_name }}</div>
+                                    <small class="text-muted">{{ carrier.mode|replace('_', ' ')|title }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge {% if carrier.avg_drs >= 81 %}text-bg-danger{% elif carrier.avg_drs >= 61 %}text-bg-warning{% elif carrier.avg_drs >= 31 %}text-bg-secondary{% else %}text-bg-success{% endif %}">
+                                        {{ '%.1f'|format(carrier.avg_drs) }}
+                                    </span>
+                                </td>
+                                <td>{{ carrier.shipment_count }}</td>
+                                <td class="{% if carrier.otd_rate >= 90 %}text-success{% elif carrier.otd_rate >= 80 %}text-warning{% else %}text-danger{% endif %}">{{ '%.1f'|format(carrier.otd_rate) }}%</td>
+                                <td><a href="/carriers?carrier_id={{ carrier.carrier_id }}">View Intelligence</a></td>
+                            </tr>
+                            {% endfor %}
+                            {% for i in range(top_at_risk_carriers|length, 5) %}
+                            <tr>
+                                <td colspan="5" class="text-muted">No additional carrier data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+    </div>
+</div>
+
+<article class="card drs-distribution-card">
+    <div class="card-body">
+        <h2 class="h5 mb-3">DRS Score Distribution</h2>
+        <div style="height: 180px;">
+            <canvas id="drs-distribution-chart" height="150"></canvas>
+        </div>
+    </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const fleetHealthData = {{ fleet_health_data | tojson }};
+const executiveOTDData = {{ otd_trend_data | tojson }};
+const drsDistributionData = {{ drs_distribution_data | tojson }};
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const chartsModule = await import("{{ url_for('static', filename='js/charts.js') }}");
+    await chartsModule.initFleetHealthDoughnut("fleet-health-doughnut", fleetHealthData);
+
+    const mappedOTD = executiveOTDData.map((item) => ({ period: item.date_label, otd_rate: item.otd_rate }));
+    await chartsModule.initOTDTrendChart("otd-trend-executive", mappedOTD);
+
+    const statsHost = document.getElementById("otd-mini-stats");
+    if (statsHost && executiveOTDData.length > 0) {
+        const sorted = [...executiveOTDData].sort((a, b) => a.otd_rate - b.otd_rate);
+        const lowest = sorted[0];
+        const highest = sorted[sorted.length - 1];
+        const current = executiveOTDData[executiveOTDData.length - 1];
+        statsHost.innerHTML = `
+            <div><strong>Highest OTD Day:</strong> ${highest.date_label} (${highest.otd_rate.toFixed(1)}%)</div>
+            <div><strong>Lowest OTD Day:</strong> ${lowest.date_label} (${lowest.otd_rate.toFixed(1)}%)</div>
+            <div><strong>Current vs Target:</strong> ${current.otd_rate.toFixed(1)}% / 90.0%</div>
+        `;
+    }
+
+    const drsCanvas = document.getElementById("drs-distribution-chart");
+    if (drsCanvas) {
+        new Chart(drsCanvas, {
+            type: "bar",
+            data: {
+                labels: drsDistributionData.map((item) => item.label),
+                datasets: [{
+                    label: "Shipment Count",
+                    data: drsDistributionData.map((item) => item.count),
+                    backgroundColor: ["#00A86B", "#F59E0B", "#FF8C00", "#D32F2F"],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    const refreshButton = document.getElementById("refresh-ai-brief-btn");
+    const aiContent = document.getElementById("ai-brief-content");
+    const aiTimestamp = document.getElementById("ai-brief-timestamp");
+
+    function initRegenerateButton(buttonElement, endpoint, contentContainerId) {
+        buttonElement.addEventListener("click", async function() {
+            const originalText = this.innerHTML;
+
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Regenerating...';
+            this.disabled = true;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById(contentContainerId).innerHTML = data.content_html;
+
+                    const timestampEl = buttonElement.closest(".ai-content-card")
+                                                      .querySelector(".ai-generated-timestamp");
+                    if (timestampEl) {
+                        timestampEl.textContent = "Just regenerated";
+                    }
+
+                    const regenCountEl = document.getElementById("executive-ai-regeneration-count");
+                    if (regenCountEl) {
+                        regenCountEl.textContent = `Regenerated ${data.regeneration_count || 0} times`;
+                    }
+
+                    const staleBadge = document.getElementById("executive-ai-stale-warning");
+                    if (staleBadge) {
+                        if (data.served_stale && data.stale_warning) {
+                            staleBadge.textContent = data.stale_warning;
+                            staleBadge.classList.remove("d-none");
+                        } else {
+                            staleBadge.classList.add("d-none");
+                        }
+                    }
+
+                    buttonElement.innerHTML = "✓ Updated";
+                    buttonElement.classList.add("btn-success");
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.disabled = false;
+                        buttonElement.classList.remove("btn-success");
+                    }, 2000);
+                } else {
+                    buttonElement.innerHTML = "✗ Failed - Try again";
+                    buttonElement.disabled = false;
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error("Regenerate failed:", error);
+                buttonElement.innerHTML = originalText;
+                buttonElement.disabled = false;
+            }
+        });
+    }
+
+    if (refreshButton && aiContent) {
+        initRegenerateButton(
+            refreshButton,
+            "{{ url_for('executive.refresh_brief') }}",
+            "ai-brief-content"
+        );
+    }
+});
+</script>
+{% endblock %}

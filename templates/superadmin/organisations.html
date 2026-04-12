@@ -1,0 +1,102 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}Organisations - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-white mb-0">Organisation Management</h1>
+</div>
+
+<div class="sa-card mb-4">
+    <form class="row g-3 align-items-end" method="get">
+        <div class="col-md-4">
+            <label class="form-label">Search Organisation</label>
+            <input type="text" class="form-control" name="q" value="{{ filters.q }}" placeholder="Org name">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Plan</label>
+            <select class="form-select" name="plan">
+                <option value="">All plans</option>
+                <option value="starter" {% if filters.plan == 'starter' %}selected{% endif %}>Starter</option>
+                <option value="professional" {% if filters.plan == 'professional' %}selected{% endif %}>Professional</option>
+                <option value="enterprise" {% if filters.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status">
+                <option value="">All status</option>
+                <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="trial" {% if filters.status == 'trial' %}selected{% endif %}>Trial</option>
+                <option value="expired" {% if filters.status == 'expired' %}selected{% endif %}>Expired</option>
+                <option value="cancelled" {% if filters.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn btn-primary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+<div class="sa-card">
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Org Name</th>
+                    <th>Industry</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Users</th>
+                    <th>Active Shipments</th>
+                    <th>Trial Ends / Joined</th>
+                    <th>Last Activity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in org_rows %}
+                {% set org = row.organisation %}
+                <tr>
+                    <td>{{ org.name }}</td>
+                    <td>{{ org.industry or '-' }}</td>
+                    <td>{{ org.subscription_plan|title }}</td>
+                    <td>{{ org.subscription_status|title }}</td>
+                    <td>{{ row.users_count }}</td>
+                    <td>{{ row.active_shipments_count }}</td>
+                    <td>
+                        {% if org.trial_ends_at %}
+                            {{ org.trial_ends_at | format_datetime }}
+                        {% else %}
+                            {{ org.created_at | format_datetime }}
+                        {% endif %}
+                    </td>
+                    <td>{{ row.last_activity | format_datetime if row.last_activity else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('superadmin.organisation_detail', org_id=org.id) }}" class="btn btn-sm btn-outline-light">View</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center text-secondary py-4">No organisations found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('superadmin.organisations', page=pagination.prev_num, q=filters.q, plan=filters.plan, status=filters.status) }}">Previous</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('superadmin.organisations', page=pagination.next_num, q=filters.q, plan=filters.plan, status=filters.status) }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

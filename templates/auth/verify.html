@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Email | ChainWatch Pro{% endblock %}
+{% block body_class %}auth-page verify-page{% endblock %}
+
+{% block content %}
+<div class="verify-wrapper">
+    <div class="verify-card shadow-sm">
+        {% if status == 'pending' %}
+            <div class="verify-icon bg-light-blue text-action-blue"><i class="bi bi-envelope-check"></i></div>
+            <h2 class="mt-3">Check your email</h2>
+            <p class="text-muted">We've sent a verification link to <strong>{{ email }}</strong>.</p>
+            <p class="small text-muted mb-4">The verification link expires in 24 hours for your security.</p>
+            <a href="{{ url_for('auth.resend_verification', email=email) }}" class="btn btn-primary w-100 mb-2">Resend verification email</a>
+            <a href="/login" class="btn btn-outline-secondary w-100">Back to login</a>
+        {% elif status == 'invalid' %}
+            <div class="verify-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-exclamation-triangle"></i></div>
+            <h2 class="mt-3">Invalid verification link</h2>
+            <p class="text-muted">This verification link is invalid or has already been used.</p>
+            <a href="{{ url_for('auth.resend_verification', email=email) }}" class="btn btn-primary w-100">Request new link</a>
+        {% elif status == 'expired' %}
+            <div class="verify-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-clock-history"></i></div>
+            <h2 class="mt-3">Verification link expired</h2>
+            <p class="text-muted">This verification link has expired. Please request a new one.</p>
+            <a href="{{ url_for('auth.resend_verification', email=email) }}" class="btn btn-primary w-100 mb-2">Resend verification email</a>
+            <a href="/login" class="btn btn-outline-secondary w-100">Back to login</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

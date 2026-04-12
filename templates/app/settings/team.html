@@ -1,0 +1,468 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Team Management - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+{% set user_meter = usage.get('users', {}) %}
+{% set users_used = user_meter.get('used', 0) %}
+{% set users_limit = user_meter.get('limit') %}
+{% set users_pct = user_meter.get('percentage', 0) %}
+{% set plan_name = (usage.get('plan') or 'starter')|title %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Team</li>
+    </ol>
+</nav>
+
+        <h1 class="mb-3">Team Management</h1>
+
+        <nav class="nav settings-sub-nav mb-4">
+            <a class="nav-link {% if active_settings_tab == 'profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">Profile</a>
+            <a class="nav-link {% if active_settings_tab == 'team' %}active{% endif %}" href="{{ url_for('settings.team') }}">Team</a>
+            <a class="nav-link {% if active_settings_tab == 'integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">Integrations</a>
+            <a class="nav-link {% if active_settings_tab == 'alerts' %}active{% endif %}" href="{{ url_for('settings.alerts') }}">Alerts</a>
+            <a class="nav-link {% if active_settings_tab == 'billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">Billing</a>
+        </nav>
+
+        {% if users_limit is not none and users_pct >= 100 %}
+        <div class="alert alert-danger">User seat limit reached. <a href="{{ url_for('settings.billing') }}">Upgrade your plan</a> to add more members.</div>
+        {% elif users_limit is not none and users_pct >= 80 %}
+        <div class="alert alert-warning">You're using {{ users_used }} of {{ users_limit }} user seats. <a href="{{ url_for('settings.billing') }}">Upgrade your plan</a> to add more team members.</div>
+        {% endif %}
+
+        {% if bulk_import_result %}
+            {% set created_count = bulk_import_result.get('users_created', 0) %}
+            {% set seat_skipped = bulk_import_result.get('rows_skipped_due_to_seat_limit', 0) %}
+            {% set validation_errors = bulk_import_result.get('validation_errors', []) %}
+            {% set error_count = validation_errors|length %}
+            {% set total_skipped = seat_skipped + error_count %}
+            {% if bulk_import_result.get('success') and total_skipped == 0 %}
+                {% set border_color = '#00A86B' %}
+            {% elif bulk_import_result.get('success') %}
+                {% set border_color = '#FF8C00' %}
+            {% else %}
+                {% set border_color = '#D32F2F' %}
+            {% endif %}
+            <article class="settings-content-card mb-4" style="border-top: 4px solid {{ border_color }};">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">Import Complete - {{ created_count }} users added, {{ total_skipped }} skipped</h2>
+                        <p class="text-muted mb-0">Review details below and re-upload only failed rows if needed.</p>
+                    </div>
+                    {% if error_count > 0 %}
+                    <a href="{{ url_for('settings.bulk_import_error_report') }}" class="btn btn-sm btn-outline-secondary">Download error report</a>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge text-bg-success px-3 py-2">&#10003; {{ created_count }} Created</span>
+                    <span class="badge text-bg-warning px-3 py-2">&#9888; {{ seat_skipped }} Skipped (seat limit)</span>
+                    <span class="badge text-bg-danger px-3 py-2">&#10007; {{ error_count }} Errors</span>
+                </div>
+
+                {% if seat_skipped > 0 %}
+                    {% set seat_info = bulk_import_result.get('seat_limit_info', {}) %}
+                    <div class="alert alert-warning mb-3">
+                        Your plan allows {{ seat_info.get('limit', users_limit) if seat_info.get('limit') is not none else 'unlimited' }} users total.
+                        {{ seat_skipped }} rows were skipped because your plan limit was reached.
+                        <a href="{{ url_for('settings.billing') }}">Upgrade to Professional</a> to add more team members.
+                    </div>
+                {% endif %}
+
+                {% if error_count > 0 %}
+                <div class="accordion" id="bulkImportErrorsAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="bulkImportErrorsHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bulkImportErrorsCollapse" aria-expanded="false" aria-controls="bulkImportErrorsCollapse">
+                                Show {{ error_count }} rows with errors
+                            </button>
+                        </h2>
+                        <div id="bulkImportErrorsCollapse" class="accordion-collapse collapse" aria-labelledby="bulkImportErrorsHeading" data-bs-parent="#bulkImportErrorsAccordion">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Row #</th>
+                                                <th>Email</th>
+                                                <th>Error Reason</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in validation_errors %}
+                                            <tr>
+                                                <td>{{ item.get('row') }}</td>
+                                                <td>{{ item.get('email') }}</td>
+                                                <td>{{ item.get('error') }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </article>
+        {% endif %}
+
+        <article class="settings-content-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Team Members</h2>
+                <span class="badge text-bg-light border">{{ users_used }} / {{ users_limit if users_limit is not none else 'Unlimited' }} seats used</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set admin_count = team_members|selectattr('role', 'equalto', 'admin')|list|length %}
+                        {% for member in team_members %}
+                        <tr data-user-row="{{ member.id }}">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle sm">{{ member.initials }}</div>
+                                    <div>
+                                        <div class="fw-semibold">{{ member.full_name }}</div>
+                                        <small class="text-muted">{{ member.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if member.role == 'admin' %}role-badge-admin{% elif member.role == 'manager' %}role-badge-manager{% else %}role-badge-viewer{% endif %}">{{ member.role|title }}</span>
+                            </td>
+                            <td>
+                                {% if member.must_change_password %}
+                                <span class="badge text-bg-warning">Pending Invite</span>
+                                {% else %}
+                                <span class="badge text-bg-success">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if member.last_login_at %}
+                                {{ member.last_login_at | format_datetime }}
+                                {% else %}
+                                <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if member.id == current_user.id %}
+                                    <span class="badge text-bg-secondary">You</span>
+                                {% elif current_user.role == 'admin' %}
+                                    <div class="btn-group btn-group-sm mb-1">
+                                        <button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" type="button">Change Role</button>
+                                        <ul class="dropdown-menu">
+                                            {% for role in ['admin', 'manager', 'viewer'] %}
+                                            <li><button class="dropdown-item role-change-btn" data-user-id="{{ member.id }}" data-role="{{ role }}" type="button">{{ role|title }}</button></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% if not (member.role == 'admin' and admin_count == 1) %}
+                                    <button class="btn btn-sm btn-outline-danger remove-user-btn" data-user-id="{{ member.id }}" type="button">Remove</button>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if pending_invites %}
+            <hr>
+            <h3 class="h6 text-muted mb-3">Pending Invitations</h3>
+            <div class="list-group list-group-flush">
+                {% for invite in pending_invites %}
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                    <div>
+                        <div class="fw-semibold">{{ invite.email }}</div>
+                        <div class="small text-muted mb-1">{{ invite.role|title }} • invited {{ invite.invitation_sent_at | format_datetime if invite.invitation_sent_at else invite.created_at | format_datetime }}</div>
+                        <div class="d-flex flex-wrap gap-2 small">
+                            <span class="badge text-bg-light border">
+                                {% if invite.account_source == 'csv_bulk_import' %}CSV Import{% else %}Manually Invited{% endif %}
+                            </span>
+                            <span class="text-muted">Invited by: {{ invite.invited_by_user.full_name if invite.invited_by_user else current_user.full_name }}</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary resend-invite-btn" data-user-id="{{ invite.id }}" type="button">Resend Invite</button>
+                        <button class="btn btn-sm btn-link text-danger cancel-invite-btn" data-user-id="{{ invite.id }}" type="button">Cancel</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </article>
+
+        <article class="settings-content-card mb-4">
+            <h2 class="h5 mb-3">Invite a New Team Member</h2>
+            <form method="post" action="{{ url_for('settings.invite_team_member') }}">
+                {{ invite_form.csrf_token }}
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Email</label>
+                        {{ invite_form.email(class_='form-control', disabled=(users_limit is not none and users_used >= users_limit)) }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Role</label>
+                        {{ invite_form.role(class_='form-select', disabled=(users_limit is not none and users_used >= users_limit)) }}
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" type="submit" {% if users_limit is not none and users_used >= users_limit %}disabled{% endif %}>Send Invitation</button>
+                <div class="small text-muted mt-2">Each invited member receives an email with login credentials and must change password on first sign-in.</div>
+            </form>
+        </article>
+
+        <article class="settings-content-card mb-4">
+            <h2 class="h5 mb-3">Bulk Import Team Members</h2>
+            {% if current_user.role != 'admin' %}
+            <div class="alert alert-info mb-0">Only organisation admins can run bulk team CSV imports.</div>
+            {% else %}
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <h3 class="h6">Upload a CSV to add multiple team members at once</h3>
+                    <ol class="ps-3 mb-3">
+                        <li class="mb-2">
+                            Download the CSV template
+                            <a href="{{ url_for('settings.download_team_csv_template') }}" class="btn btn-sm btn-outline-primary ms-2">Download Template</a>
+                        </li>
+                        <li class="mb-2">Fill in your team members' details (first_name, last_name, email, role are required)</li>
+                        <li>Upload your completed CSV</li>
+                    </ol>
+
+                    <form method="post" action="{{ url_for('settings.bulk_import_team_members') }}" enctype="multipart/form-data" id="bulkImportForm">
+                        {{ bulk_import_form.csrf_token }}
+                        <div class="dropzone-upload mb-3" id="teamCsvDropzone">
+                            <div class="dropzone-upload-inner w-100">
+                                <i class="bi bi-upload fs-3 text-primary"></i>
+                                <p class="mb-2" id="teamCsvFileLabel">Drag and drop your CSV file here, or click below to browse.</p>
+                                {{ bulk_import_form.csv_file(class_='form-control', accept='.csv') }}
+                                {% if bulk_import_form.csv_file.errors %}
+                                    {% for error in bulk_import_form.csv_file.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            {{ bulk_import_form.confirm_seat_limit(class_='form-check-input') }}
+                            <label class="form-check-label" for="{{ bulk_import_form.confirm_seat_limit.id }}">
+                                {{ bulk_import_form.confirm_seat_limit.label.text }}
+                            </label>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Import Team Members -></button>
+                        <div class="small text-muted mt-2">Each imported member will receive an email with their login credentials.</div>
+                    </form>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h3 class="h6 mb-3">CSV Format Guide</h3>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Column</th>
+                                            <th>Required</th>
+                                            <th>Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>first_name</td><td>&#9989;</td><td>Priya</td></tr>
+                                        <tr><td>last_name</td><td>&#9989;</td><td>Nair</td></tr>
+                                        <tr><td>email</td><td>&#9989;</td><td>priya@company.com</td></tr>
+                                        <tr><td>role</td><td>&#9989;</td><td>manager</td></tr>
+                                        <tr><td>job_title</td><td>Optional</td><td>Logistics Lead</td></tr>
+                                        <tr><td>phone</td><td>Optional</td><td>+919876543210</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="small text-muted mb-2">role must be manager or viewer (lowercase). Admins can only be assigned after account creation.</p>
+                            <p class="small text-muted mb-0">
+                                Your {{ plan_name }} plan allows {{ users_limit if users_limit is not none else 'unlimited' }} users.
+                                You currently have {{ users_used }} active users,
+                                so you can import up to {{ remaining_seats }} more.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </article>
+
+        <article class="settings-content-card">
+            <h2 class="h5 mb-3">Role Permissions</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Permission</th>
+                            <th>Admin</th>
+                            <th>Manager</th>
+                            <th>Viewer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>View Shipments</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Create/Edit Shipments</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+                        <tr><td>Approve Reroutes</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+                        <tr><td>Acknowledge Alerts</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+                        <tr><td>View Reports</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Manage Team</td><td>Yes</td><td>Limited</td><td>No</td></tr>
+                        <tr><td>Manage Billing</td><td>Yes</td><td>No</td><td>No</td></tr>
+                        <tr><td>Manage Integrations</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </article>
+        {% endblock %}
+
+        {% block scripts %}
+        {{ super() }}
+        <script>
+        (() => {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+            const handleJsonResponse = async (response, fallbackMessage) => {
+                let payload = {};
+                try {
+                    payload = await response.json();
+                } catch (error) {
+                    payload = {};
+                }
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || payload.message || fallbackMessage);
+                }
+                return payload;
+            };
+
+            document.querySelectorAll('.remove-user-btn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('Remove this team member?')) return;
+                    const userId = btn.dataset.userId;
+                    try {
+                        const response = await fetch(`/settings/team/${userId}/remove`, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': csrfToken }
+                        });
+                        await handleJsonResponse(response, 'Unable to remove team member.');
+                        document.querySelector(`[data-user-row="${userId}"]`)?.remove();
+                    } catch (error) {
+                        alert(error.message);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.role-change-btn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    const userId = btn.dataset.userId;
+                    const role = btn.dataset.role;
+                    try {
+                        const response = await fetch(`/settings/team/${userId}/role`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({ role })
+                        });
+                        await handleJsonResponse(response, 'Unable to update role.');
+                        window.location.reload();
+                    } catch (error) {
+                        alert(error.message);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.resend-invite-btn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    const userId = btn.dataset.userId;
+                    btn.disabled = true;
+                    try {
+                        const response = await fetch(`/settings/team/${userId}/resend-invite`, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': csrfToken }
+                        });
+                        const payload = await handleJsonResponse(response, 'Unable to resend invitation.');
+                        alert(payload.message || 'Invitation resent successfully.');
+                    } catch (error) {
+                        alert(error.message);
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+            });
+
+            document.querySelectorAll('.cancel-invite-btn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('Cancel this pending invitation?')) return;
+                    const userId = btn.dataset.userId;
+                    btn.disabled = true;
+                    try {
+                        const response = await fetch(`/settings/team/${userId}/cancel-invite`, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': csrfToken }
+                        });
+                        await handleJsonResponse(response, 'Unable to cancel invitation.');
+                        window.location.reload();
+                    } catch (error) {
+                        alert(error.message);
+                        btn.disabled = false;
+                    }
+                });
+            });
+
+            const dropzone = document.getElementById('teamCsvDropzone');
+            const fileInput = document.getElementById('{{ bulk_import_form.csv_file.id }}');
+            const fileLabel = document.getElementById('teamCsvFileLabel');
+
+            if (dropzone && fileInput && fileLabel) {
+                const updateLabel = () => {
+                    const fileName = fileInput.files && fileInput.files.length ? fileInput.files[0].name : '';
+                    fileLabel.textContent = fileName || 'Drag and drop your CSV file here, or click below to browse.';
+                };
+
+                fileInput.addEventListener('change', updateLabel);
+
+                ['dragenter', 'dragover'].forEach((eventName) => {
+                    dropzone.addEventListener(eventName, (event) => {
+                        event.preventDefault();
+                        dropzone.classList.add('drag-over');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach((eventName) => {
+                    dropzone.addEventListener(eventName, (event) => {
+                        event.preventDefault();
+                        dropzone.classList.remove('drag-over');
+                    });
+                });
+
+                dropzone.addEventListener('drop', (event) => {
+                    const files = event.dataTransfer?.files;
+                    if (!files || !files.length) return;
+                    fileInput.files = files;
+                    updateLabel();
+                });
+            }
+        })();
+        </script>
+        {% endblock %}

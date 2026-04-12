@@ -1,0 +1,84 @@
+{% macro metric_sparkline(chart_id, title='', subtitle='') %}
+<div class="chart-shell">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <div>
+            {% if title %}<h4 class="h6 mb-0">{{ title }}</h4>{% endif %}
+            {% if subtitle %}<p class="text-muted small mb-0">{{ subtitle }}</p>{% endif %}
+        </div>
+    </div>
+    <canvas id="{{ chart_id }}" class="w-100" height="90" aria-label="{{ title }}"></canvas>
+</div>
+{% endmacro %}
+
+
+{% macro chart_empty_state(message='No chart data available yet.') %}
+<div class="chart-empty-state text-center py-4">
+    <div class="mb-2"><i class="bi bi-graph-down-arrow fs-4 text-muted"></i></div>
+    <p class="text-muted mb-0">{{ message }}</p>
+</div>
+{% endmacro %}
+
+
+{% macro drs_circular_gauge(score, size=120, stroke_width=12, show_label=True, label='DRS') %}
+{% set value = (score or 0) | float %}
+{% if value < 0 %}{% set value = 0 %}{% endif %}
+{% if value > 100 %}{% set value = 100 %}{% endif %}
+
+{% if value >= 81 %}
+    {% set color = '#D32F2F' %}
+    {% set risk_label = 'Critical' %}
+{% elif value >= 61 %}
+    {% set color = '#FF8C00' %}
+    {% set risk_label = 'Warning' %}
+{% elif value >= 31 %}
+    {% set color = '#F59E0B' %}
+    {% set risk_label = 'Watch' %}
+{% else %}
+    {% set color = '#00A86B' %}
+    {% set risk_label = 'On Track' %}
+{% endif %}
+
+{% set center = size / 2 %}
+{% set radius = (size / 2) - stroke_width - 2 %}
+{% set pi = 3.141592653589793 %}
+{% set circumference = 2 * pi * radius %}
+{% set arc_length = circumference * (220 / 360) %}
+{% set fill_length = arc_length * (value / 100) %}
+
+<svg
+    viewBox="0 0 {{ size }} {{ size }}"
+    width="{{ size }}"
+    height="{{ size }}"
+    role="img"
+    aria-label="Disruption risk gauge"
+>
+    <circle
+        cx="{{ center }}"
+        cy="{{ center }}"
+        r="{{ radius }}"
+        fill="none"
+        stroke="#E4E9F2"
+        stroke-width="{{ stroke_width }}"
+        stroke-linecap="round"
+        transform="rotate(160 {{ center }} {{ center }})"
+        stroke-dasharray="{{ '%.2f %.2f' | format(arc_length, circumference) }}"
+    ></circle>
+    <circle
+        cx="{{ center }}"
+        cy="{{ center }}"
+        r="{{ radius }}"
+        fill="none"
+        stroke="{{ color }}"
+        stroke-width="{{ stroke_width }}"
+        stroke-linecap="round"
+        transform="rotate(160 {{ center }} {{ center }})"
+        stroke-dasharray="{{ '%.2f %.2f' | format(fill_length, circumference) }}"
+    ></circle>
+    <text x="{{ center }}" y="{{ center - 2 }}" text-anchor="middle" style="font-size: {{ (size * 0.19) | round(0, 'floor') }}px; font-weight: 800; fill: #1A1A2E;">{{ '%.1f' | format(value) }}</text>
+    {% if show_label %}
+    <text x="{{ center }}" y="{{ center + (size * 0.14) }}" text-anchor="middle" style="font-size: {{ (size * 0.09) | round(0, 'floor') }}px; font-weight: 700; fill: {{ color }};">{{ risk_label }}</text>
+    {% else %}
+    <text x="{{ center }}" y="{{ center + (size * 0.14) }}" text-anchor="middle" style="font-size: {{ (size * 0.09) | round(0, 'floor') }}px; font-weight: 700; fill: #555577;">{{ label }}</text>
+    {% endif %}
+</svg>
+{% endmacro %}

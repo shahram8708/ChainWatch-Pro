@@ -1,0 +1,386 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Performance Reports - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Performance Reports</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Performance Reports</h1>
+        <p class="text-muted mb-0">Generate and export supply chain performance reports in PDF or Excel format.</p>
+    </div>
+    {% if current_user.organisation.subscription_plan == 'starter' %}
+    <div class="badge text-bg-warning fs-6 p-2">
+        {{ report_usage.used }} / 5 report exports used this month
+        <a href="{{ url_for('settings.billing') }}" class="ms-2 text-dark">Upgrade for unlimited</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-8">
+        <article class="card settings-content-card">
+            <h2 class="h5 mb-3">Configure Report</h2>
+
+            <form id="report-generation-form" action="{{ url_for('reports.generate') }}" method="post">
+                {{ form.csrf_token }}
+
+                <div class="report-type-grid mb-3">
+                    {% for report_key, report_config in report_types.items() %}
+                    <button
+                        class="report-type-card {% if loop.first %}selected{% endif %}"
+                        type="button"
+                        data-report-type="{{ report_key }}"
+                    >
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-file-earmark-bar-graph fs-5 text-primary"></i>
+                            <strong>{{ report_config.name }}</strong>
+                        </div>
+                        <p class="small text-muted mb-1">{{ report_config.description }}</p>
+                        <div class="small text-muted">Estimated generation time: 10-30 seconds</div>
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <div class="d-none">{{ form.report_type(id='report-type-input') }}</div>
+
+                <div class="row g-3 mb-2 align-items-center">
+                    <div class="col-md-5">
+                        <label class="form-label" for="{{ form.start_date.id }}">From</label>
+                        {{ form.start_date(class_='form-control', id='report-start-date', value=default_start_date.strftime('%Y-%m-%d')) }}
+                    </div>
+                    <div class="col-md-2 text-center text-muted pt-4">
+                        <i class="bi bi-calendar-range"></i>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="{{ form.end_date.id }}">To</label>
+                        {{ form.end_date(class_='form-control', id='report-end-date', value=today_date.strftime('%Y-%m-%d')) }}
+                    </div>
+                </div>
+
+                <div class="small text-muted mb-3" id="report-range-label"></div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <button type="button" class="report-format-card selected w-100 text-start" data-output-format="pdf">
+                            <div class="fw-semibold"><i class="bi bi-filetype-pdf me-1 text-danger"></i>PDF Report</div>
+                            <div class="small text-muted">Professional formatting, suitable for sharing</div>
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="report-format-card w-100 text-start" data-output-format="excel">
+                            <div class="fw-semibold"><i class="bi bi-filetype-xlsx me-1 text-success"></i>Excel Spreadsheet</div>
+                            <div class="small text-muted">Raw data tables, suitable for further analysis</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-none">{{ form.output_format(id='output-format-input') }}</div>
+
+                <button type="submit" id="generate-report-btn" class="btn btn-primary w-100">Generate Report →</button>
+                <div class="small text-muted mt-2">Report generation typically takes 10-30 seconds.</div>
+            </form>
+
+            <section class="report-progress-card mt-3 d-none" id="report-progress-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong id="report-progress-title">Generating your report...</strong>
+                    <button type="button" class="btn btn-sm btn-link" id="cancel-report-progress">Cancel</button>
+                </div>
+                <div class="progress mb-2">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                </div>
+                <div class="small text-muted" id="report-progress-status"></div>
+            </section>
+
+            <section class="report-success-state mt-3 d-none" id="report-success-state"></section>
+        </article>
+    </div>
+
+    <div class="col-xl-4">
+        <article class="card settings-content-card">
+            <h2 class="h5 mb-3">Recent Reports</h2>
+
+            {% if recent_reports %}
+            <div id="recent-reports-list">
+                {% for item in recent_reports %}
+                <div class="report-list-item {% if loop.index > 10 %}d-none report-list-extra{% endif %}">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi {% if item.output_format == 'excel' %}bi-filetype-xlsx text-success{% else %}bi-filetype-pdf text-danger{% endif %} fs-5"></i>
+                        <div>
+                            <div class="fw-semibold">{{ report_types.get(item.report_type, {}).get('name', item.report_type|replace('_', ' ')|title) }}</div>
+                            <div class="small text-muted">{{ item.start_date }} to {{ item.end_date }}</div>
+                            <div class="small text-muted">{{ item.generated_at }} • {{ ((item.file_size_bytes or 0) / 1024)|round(1) }} KB</div>
+                        </div>
+                    </div>
+                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reports.download', filename=item.filename) }}">Download</a>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if recent_reports|length > 10 %}
+            <button class="btn btn-sm btn-outline-secondary mt-2" id="expand-reports-btn">Show all {{ recent_reports|length }} reports</button>
+            {% endif %}
+            {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-file-earmark-text fs-2 d-block mb-2"></i>
+                No reports generated yet. Configure and generate your first report.
+            </div>
+            {% endif %}
+        </article>
+    </div>
+</div>
+
+<article class="card report-preview-card">
+    <div class="card-body">
+        <h2 class="h5 mb-2">Report Preview</h2>
+        <div class="small text-muted mb-3">Data Preview - This is a sample of what will appear in the full report.</div>
+        <div id="report-preview-content" class="preview-skeleton">
+            <div class="placeholder-glow">
+                <span class="placeholder col-12 mb-2"></span>
+                <span class="placeholder col-10 mb-2"></span>
+                <span class="placeholder col-8"></span>
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const reportTypeInput = document.getElementById('report-type-input');
+    const outputFormatInput = document.getElementById('output-format-input');
+    const startDateInput = document.getElementById('report-start-date');
+    const endDateInput = document.getElementById('report-end-date');
+    const rangeLabel = document.getElementById('report-range-label');
+    const previewHost = document.getElementById('report-preview-content');
+
+    const generationForm = document.getElementById('report-generation-form');
+    const generateBtn = document.getElementById('generate-report-btn');
+    const progressCard = document.getElementById('report-progress-card');
+    const progressStatus = document.getElementById('report-progress-status');
+    const successState = document.getElementById('report-success-state');
+    const cancelProgressBtn = document.getElementById('cancel-report-progress');
+
+    let pollTimer = null;
+    let previewTimer = null;
+
+    function updateRangeLabel() {
+        if (!startDateInput.value || !endDateInput.value) {
+            rangeLabel.textContent = '';
+            return;
+        }
+        const start = new Date(startDateInput.value + 'T00:00:00');
+        const end = new Date(endDateInput.value + 'T00:00:00');
+        const days = Math.max(1, Math.floor((end - start) / 86400000) + 1);
+        rangeLabel.textContent = `Reporting period: ${start.toLocaleDateString()} to ${end.toLocaleDateString()} - ${days} days`;
+    }
+
+    function selectReportType(type) {
+        document.querySelectorAll('.report-type-card').forEach((card) => {
+            card.classList.toggle('selected', card.dataset.reportType === type);
+        });
+        reportTypeInput.value = type;
+        schedulePreview();
+    }
+
+    function selectOutputFormat(format) {
+        document.querySelectorAll('.report-format-card').forEach((card) => {
+            card.classList.toggle('selected', card.dataset.outputFormat === format);
+        });
+        outputFormatInput.value = format;
+    }
+
+    async function loadPreview() {
+        if (!reportTypeInput.value || !startDateInput.value || !endDateInput.value) {
+            return;
+        }
+
+        previewHost.innerHTML = '<div class="placeholder-glow"><span class="placeholder col-12 mb-2"></span><span class="placeholder col-10 mb-2"></span><span class="placeholder col-8"></span></div>';
+
+        const url = `/reports/preview/${encodeURIComponent(reportTypeInput.value)}?start_date=${encodeURIComponent(startDateInput.value)}&end_date=${encodeURIComponent(endDateInput.value)}`;
+        try {
+            const response = await fetch(url, { headers: { 'X-CSRFToken': csrfToken } });
+            const payload = await response.json();
+            if (!payload.success) {
+                previewHost.innerHTML = `<div class="text-danger small">${payload.error || 'Unable to load preview.'}</div>`;
+                return;
+            }
+
+            const preview = payload.preview || {};
+            const rows = preview.rows || preview.shipment_detail || preview.carrier_performance || [];
+            const summary = preview.summary || {};
+
+            let summaryHtml = '<table class="table table-sm mb-3"><tbody>';
+            Object.keys(summary).forEach((key) => {
+                summaryHtml += `<tr><th class="text-muted">${key.replaceAll('_', ' ')}</th><td>${summary[key]}</td></tr>`;
+            });
+            summaryHtml += '</tbody></table>';
+
+            let rowsHtml = '';
+            if (rows.length > 0) {
+                const keys = Object.keys(rows[0]).slice(0, 6);
+                rowsHtml += '<div class="table-responsive"><table class="table table-sm"><thead><tr>';
+                keys.forEach((key) => { rowsHtml += `<th>${key.replaceAll('_', ' ')}</th>`; });
+                rowsHtml += '</tr></thead><tbody>';
+                rows.slice(0, 10).forEach((row) => {
+                    rowsHtml += '<tr>';
+                    keys.forEach((key) => { rowsHtml += `<td>${row[key] ?? '-'}</td>`; });
+                    rowsHtml += '</tr>';
+                });
+                rowsHtml += '</tbody></table></div>';
+            } else {
+                rowsHtml = '<div class="text-muted small">No preview rows available for the selected range.</div>';
+            }
+
+            previewHost.innerHTML = summaryHtml + rowsHtml;
+        } catch (error) {
+            previewHost.innerHTML = '<div class="text-danger small">Failed to fetch report preview.</div>';
+        }
+    }
+
+    function schedulePreview() {
+        if (previewTimer) {
+            clearTimeout(previewTimer);
+        }
+        previewTimer = setTimeout(loadPreview, 800);
+    }
+
+    function stopPolling() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    async function pollStatus(jobId) {
+        try {
+            const response = await fetch(`/api/v1/reports/${encodeURIComponent(jobId)}/status`);
+            const payload = await response.json();
+
+            if (payload.status === 'processing' || payload.status === 'pending') {
+                progressStatus.textContent = `Generating your report... ${payload.progress || 0}%`;
+                return;
+            }
+
+            stopPolling();
+            if (payload.status === 'completed' && payload.download_url) {
+                progressCard.classList.add('d-none');
+                successState.classList.remove('d-none');
+                successState.innerHTML = `
+                    <div class="alert alert-success mb-2"><i class="bi bi-check-circle me-1"></i>Your report is ready!</div>
+                    <a class="btn btn-primary" href="${payload.download_url}">Download Report</a>
+                    <a class="btn btn-link" href="{{ url_for('reports.index') }}">Generate Another Report</a>
+                `;
+                return;
+            }
+
+            progressCard.classList.add('d-none');
+            successState.classList.remove('d-none');
+            successState.innerHTML = `
+                <div class="alert alert-danger mb-2">Report generation failed: ${payload.error || 'Unknown error'}</div>
+                <button type="button" class="btn btn-outline-danger" id="retry-report-btn">Try Again</button>
+            `;
+            document.getElementById('retry-report-btn')?.addEventListener('click', () => {
+                successState.classList.add('d-none');
+                generationForm.classList.remove('d-none');
+            });
+        } catch (error) {
+            stopPolling();
+            progressStatus.textContent = 'Unable to fetch report status right now.';
+        }
+    }
+
+    generationForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        successState.classList.add('d-none');
+        progressCard.classList.remove('d-none');
+        progressStatus.textContent = `Preparing ${reportTypeInput.value.replaceAll('_', ' ')} report...`;
+        generateBtn.disabled = true;
+
+        try {
+            const formData = new FormData(generationForm);
+            const response = await fetch(generationForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const payload = await response.json();
+            if (!payload.success) {
+                progressCard.classList.add('d-none');
+                successState.classList.remove('d-none');
+                successState.innerHTML = `<div class="alert alert-danger mb-0">${payload.error || 'Could not start report generation.'}</div>`;
+                return;
+            }
+
+            const jobId = payload.job_id;
+            pollStatus(jobId);
+            pollTimer = setInterval(() => pollStatus(jobId), 3000);
+        } catch (error) {
+            progressCard.classList.add('d-none');
+            successState.classList.remove('d-none');
+            successState.innerHTML = '<div class="alert alert-danger mb-0">Failed to start report generation.</div>';
+        } finally {
+            generateBtn.disabled = false;
+        }
+    });
+
+    cancelProgressBtn?.addEventListener('click', () => {
+        stopPolling();
+        progressCard.classList.add('d-none');
+        successState.classList.add('d-none');
+    });
+
+    document.querySelectorAll('.report-type-card').forEach((card) => {
+        card.addEventListener('click', () => selectReportType(card.dataset.reportType));
+    });
+
+    document.querySelectorAll('.report-format-card').forEach((card) => {
+        card.addEventListener('click', () => selectOutputFormat(card.dataset.outputFormat));
+    });
+
+    startDateInput?.addEventListener('change', () => {
+        updateRangeLabel();
+        schedulePreview();
+    });
+    endDateInput?.addEventListener('change', () => {
+        updateRangeLabel();
+        schedulePreview();
+    });
+
+    const expandReportsBtn = document.getElementById('expand-reports-btn');
+    expandReportsBtn?.addEventListener('click', () => {
+        document.querySelectorAll('.report-list-extra').forEach((row) => row.classList.remove('d-none'));
+        expandReportsBtn.disabled = true;
+    });
+
+    if (!reportTypeInput.value) {
+        const firstCard = document.querySelector('.report-type-card');
+        if (firstCard) {
+            selectReportType(firstCard.dataset.reportType);
+        }
+    } else {
+        selectReportType(reportTypeInput.value);
+    }
+
+    if (!outputFormatInput.value) {
+        selectOutputFormat('pdf');
+    }
+
+    updateRangeLabel();
+    schedulePreview();
+})();
+</script>
+{% endblock %}

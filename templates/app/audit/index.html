@@ -1,0 +1,194 @@
+{% extends "app_base.html" %}
+{% from "macros/pagination.html" import pagination_widget %}
+
+{% block page_title %}Audit Log - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Audit Log</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Audit Log</h1>
+        <p class="text-muted mb-0">A complete, tamper-evident record of all actions taken in your ChainWatch Pro workspace.</p>
+    </div>
+    <a
+        class="btn btn-outline-primary"
+        href="{{ url_for('audit.index', event_type=active_filters.event_type, actor=active_filters.actor, shipment_id=active_filters.shipment_id, start_date=active_filters.start_date, end_date=active_filters.end_date, export='csv') }}"
+    >
+        Export CSV
+    </a>
+</div>
+
+<article class="card settings-content-card mb-3">
+    <form method="get" action="{{ url_for('audit.index') }}" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Event Type</label>
+            <select class="form-select" name="event_type">
+                <option value="">All Event Types</option>
+                {% for event_type in event_types_for_filter %}
+                <option value="{{ event_type }}" {% if active_filters.event_type == event_type %}selected{% endif %}>{{ event_type|replace('_', ' ')|title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Actor</label>
+            <input class="form-control" name="actor" value="{{ active_filters.actor }}" placeholder="Email">
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">From</label>
+            <input class="form-control" type="date" name="start_date" value="{{ active_filters.start_date }}">
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">To</label>
+            <input class="form-control" type="date" name="end_date" value="{{ active_filters.end_date }}">
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Shipment</label>
+            <input class="form-control" name="shipment_id" value="{{ active_filters.shipment_id }}" placeholder="Reference or UUID">
+        </div>
+
+        <div class="col-lg-1 col-md-6 d-grid">
+            <button class="btn btn-primary" type="submit">Apply</button>
+        </div>
+
+        <div class="col-12 small text-muted d-flex justify-content-between">
+            <span>Showing {{ audit_entries|length }} of {{ total_count }} total events</span>
+            <a href="{{ url_for('audit.index') }}">Clear Filters</a>
+        </div>
+    </form>
+</article>
+
+<article class="card settings-content-card">
+    <div class="table-responsive">
+        <table class="table audit-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Event Type</th>
+                    <th>Actor</th>
+                    <th>Shipment</th>
+                    <th>Description</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in audit_entries %}
+                {% set et = (entry.event_type or '').lower() %}
+                {% if 'security' in et or 'password' in et or 'login' in et %}
+                    {% set dot_class = 'event-type-security' %}
+                {% elif 'shipment' in et or 'alert' in et or 'route' in et %}
+                    {% set dot_class = 'event-type-shipment' %}
+                {% elif 'subscription' in et or 'billing' in et or 'report' in et %}
+                    {% set dot_class = 'event-type-billing' %}
+                {% elif 'team' in et or 'role' in et or 'invite' in et %}
+                    {% set dot_class = 'event-type-team' %}
+                {% else %}
+                    {% set dot_class = 'event-type-system' %}
+                {% endif %}
+
+                <tr>
+                    <td>{{ entry.created_at | format_datetime }}</td>
+                    <td>
+                        <span class="audit-event-dot {{ dot_class }}"></span>
+                        {{ entry.event_type|replace('_', ' ')|title }}
+                    </td>
+                    <td>
+                        {% if entry.actor_user %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar-circle sm" aria-hidden="true">
+                                    {% if entry.actor_user.profile_photo_url %}
+                                    <img src="{{ entry.actor_user.profile_photo_url }}" alt="{{ entry.actor_user.full_name }} profile photo">
+                                    {% else %}
+                                    {{ entry.actor_user.initials }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div>{{ entry.actor_label }}</div>
+                                    <small class="text-muted">{{ entry.actor_user.role|title }}</small>
+                                </div>
+                            </div>
+                        {% else %}
+                            <span class="text-muted fst-italic">System</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.shipment %}
+                            <a href="{{ url_for('shipments.detail', id=entry.shipment.id) }}">{{ entry.shipment.external_reference or entry.shipment.id }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td title="{{ entry.description }}">
+                        {{ (entry.description[:80] ~ '...') if entry.description and entry.description|length > 80 else entry.description }}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#audit-row-{{ loop.index }}" aria-expanded="false">View</button>
+                    </td>
+                </tr>
+                <tr class="audit-row-expanded collapse" id="audit-row-{{ loop.index }}">
+                    <td colspan="6">
+                        <div class="mb-2"><strong>Full Description:</strong> {{ entry.description }}</div>
+
+                        <div class="audit-metadata-list mb-2">
+                            {% if entry.metadata_json %}
+                                {% for key, value in entry.metadata_json.items() %}
+                                <div><span>{{ key }}:</span> <strong>{{ value }}</strong></div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-muted">No metadata captured.</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="small text-muted">IP Address: {{ entry.ip_address or '-' }}</div>
+                        <div class="small mt-1">
+                            {% if entry.shipment %}
+                            <a href="{{ url_for('shipments.detail', id=entry.shipment.id) }}">Open Shipment</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <i class="bi bi-journal-x fs-2 d-block mb-2 text-muted"></i>
+                        <div>No audit events match your current filters.</div>
+                        <a href="{{ url_for('audit.index') }}">Clear filters</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        {{ pagination_widget(
+            pagination,
+            'audit.index',
+            event_type=active_filters.event_type,
+            actor=active_filters.actor,
+            shipment_id=active_filters.shipment_id,
+            start_date=active_filters.start_date,
+            end_date=active_filters.end_date
+        ) }}
+    </div>
+
+    {% if pagination %}
+    <div class="small text-muted text-center mt-2">
+        Page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} total records)
+    </div>
+    {% endif %}
+</article>
+{% endblock %}

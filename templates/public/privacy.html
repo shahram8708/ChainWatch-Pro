@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page legal-page-wrap{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="legal-page">
+        <div class="container" style="max-width: 920px;">
+            <article class="legal-card">
+                <h1>Privacy Policy</h1>
+                <p class="text-muted">Effective date: April 11, 2026</p>
+                <p>ChainWatch Pro Private Limited ("ChainWatch Pro", "we", "us", "our") provides a B2B SaaS platform for supply chain disruption intelligence and route optimization. This Privacy Policy explains what data we collect, how we use it, and the rights available to users and customer organizations.</p>
+
+                <h2>1. Data We Collect</h2>
+                <p>We collect data necessary to provide and secure the service, including account details (name, work email, role, organization), operational data (shipment milestones, route information, carrier metadata, event logs), and system data (IP addresses, browser/device information, audit events, and usage telemetry). We may also collect contact and support records when you submit inquiries through our website.</p>
+
+                <h2>2. How We Use Data</h2>
+                <ul>
+                    <li>Deliver platform functionality including monitoring, risk scoring, and recommendations</li>
+                    <li>Authenticate users and enforce access controls</li>
+                    <li>Send service communications, alerts, and support responses</li>
+                    <li>Improve product quality, reliability, and security</li>
+                    <li>Comply with legal obligations and contractual commitments</li>
+                </ul>
+
+                <h2>3. Legal Basis and Processing Roles</h2>
+                <p>For customer account data, ChainWatch Pro typically acts as a data processor and the customer organization acts as the data controller. For website analytics, marketing inquiries, and billing records, ChainWatch Pro may act as a data controller where applicable law requires.</p>
+
+                <h2>4. Data Retention</h2>
+                <p>Retention depends on your subscription plan and contractual terms. Operational data is retained according to plan limits (for example 3, 12, or 36 months), unless a longer retention period is required by law, contract, or active legal process. Security and audit records may be retained longer for compliance and fraud prevention.</p>
+
+                <h2>5. Third-Party Services</h2>
+                <p>We rely on trusted third-party service providers to operate portions of our platform, including:</p>
+                <ul>
+                    <li><strong>Razorpay</strong> for payment processing and subscription billing in INR</li>
+                    <li><strong>Twilio</strong> for SMS alert delivery (when enabled)</li>
+                    <li><strong>Google</strong> services, including Gemini-powered AI capabilities and productivity infrastructure</li>
+                </ul>
+                <p>These providers process data under their own privacy and security obligations. We evaluate providers for security and contractual safeguards.</p>
+
+                <h2>6. Security Measures</h2>
+                <p>We use layered controls including encrypted transport, role-based access, tenant isolation, and audit logging for sensitive actions. No system is completely risk-free, but we apply commercially reasonable safeguards aligned with modern SaaS security practices.</p>
+
+                <h2>7. International Data Transfers</h2>
+                <p>Primary hosting is in India. If data is processed in other jurisdictions by approved service providers, we apply contractual and technical safeguards to protect personal data and maintain compliance with applicable laws.</p>
+
+                <h2>8. User Rights (GDPR and Similar Laws)</h2>
+                <p>Where applicable, data subjects may request access, correction, deletion, restriction, objection, and portability rights. Requests submitted through a customer account should generally be routed through the customer administrator (data controller). We support controller instructions within contractual and legal limits.</p>
+
+                <h2>9. Cookies and Tracking</h2>
+                <p>We use essential cookies and similar technologies to maintain sessions, protect against abuse, and understand service usage patterns. We do not sell personal data.</p>
+
+                <h2>10. Contact for Privacy Requests</h2>
+                <p>For data protection questions or rights requests, contact <a href="mailto:privacy@chainwatchpro.com">privacy@chainwatchpro.com</a>. You may also write to us at ChainWatch Pro Private Limited, Ahmedabad, India. We respond within applicable legal timeframes.</p>
+
+                <h2>11. Updates to This Policy</h2>
+                <p>We may update this policy periodically to reflect product, legal, or operational changes. Material updates will be communicated through in-product notice, email, or website announcement where appropriate.</p>
+            </article>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

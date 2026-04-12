@@ -1,0 +1,23 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}Re-authenticate - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="sa-card">
+            <h1 class="h4 text-white mb-3">Re-authenticate</h1>
+            <p class="text-secondary">For security, re-enter your password to continue with sensitive SuperAdmin operations.</p>
+            <form method="post" action="{{ url_for('superadmin.re_authenticate') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ next_url }}">
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input class="form-control" type="password" name="password" required>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">Confirm Identity</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Risk Heat Map - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" >
+{% endblock %}
+
+{% block app_content %}
+<div class="risk-map-layout">
+    <div id="risk-heat-map" style="width: 100%; height: 100%;"></div>
+
+    <div class="map-filter-panel" id="map-filter-panel">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0">Filters</h2>
+            <button class="btn btn-sm btn-outline-secondary" id="toggle-filter-panel" type="button"><i class="bi bi-chevron-up"></i></button>
+        </div>
+
+        <div id="map-filter-panel-content">
+            <div class="mb-3">
+                <div class="small fw-semibold mb-2">Mode</div>
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-sm btn-primary" data-mode-filter="all">All</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-mode-filter="ocean">Ocean</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-mode-filter="air">Air</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-mode-filter="road">Road</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-mode-filter="rail">Rail</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-mode-filter="multimodal">Multimodal</button>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="small fw-semibold mb-2">Risk Level</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="risk-critical" data-risk-filter="critical" checked>
+                    <label class="form-check-label" for="risk-critical"><span class="map-legend-dot" style="background:#D32F2F"></span> Critical</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="risk-warning" data-risk-filter="warning" checked>
+                    <label class="form-check-label" for="risk-warning"><span class="map-legend-dot" style="background:#FF8C00"></span> Warning</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="risk-watch" data-risk-filter="watch" checked>
+                    <label class="form-check-label" for="risk-watch"><span class="map-legend-dot" style="background:#F59E0B"></span> Watch</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="risk-green" data-risk-filter="green" checked>
+                    <label class="form-check-label" for="risk-green"><span class="map-legend-dot" style="background:#00A86B"></span> On Track</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="small fw-semibold mb-2" for="carrier-filter-select">Carrier</label>
+                <select id="carrier-filter-select" class="form-select form-select-sm">
+                    <option value="all">All Carriers</option>
+                    {% for carrier_name in distinct_carriers %}
+                    <option value="{{ carrier_name }}">{{ carrier_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-link btn-sm p-0" id="reset-map-filters" type="button">Reset Filters</button>
+                <span class="small text-muted" id="map-filter-mode-indicator">Mode: All</span>
+            </div>
+            <div class="map-stats-bar mt-2" id="map-stats-bar">Showing {{ total_active_shipments }} of {{ total_active_shipments }} active shipments</div>
+        </div>
+    </div>
+
+    <div class="map-overlay-toggles">
+        <h2 class="h6 mb-2">Map Overlays</h2>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="toggle-active-shipments" checked>
+            <label class="form-check-label" for="toggle-active-shipments">Active Shipments</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="toggle-port-congestion">
+            <label class="form-check-label" for="toggle-port-congestion">Port Congestion Zones</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="toggle-weather-alerts">
+            <label class="form-check-label" for="toggle-weather-alerts">Weather Alerts</label>
+        </div>
+    </div>
+
+    <div class="map-legend-card">
+        <div class="small fw-semibold mb-2">Legend</div>
+        <div class="map-legend-item"><span class="map-legend-dot" style="background:#D32F2F"></span> Critical</div>
+        <div class="map-legend-item"><span class="map-legend-dot" style="background:#FF8C00"></span> Warning</div>
+        <div class="map-legend-item"><span class="map-legend-dot" style="background:#F59E0B"></span> Watch</div>
+        <div class="map-legend-item mb-2"><span class="map-legend-dot" style="background:#00A86B"></span> On Track</div>
+
+        <div class="small text-muted mb-1">Port Congestion</div>
+        <div style="height: 8px; border-radius: 999px; background: linear-gradient(90deg, #00A86B, #FF8C00, #D32F2F);"></div>
+        <div class="d-flex justify-content-between small text-muted mb-2"><span>Low</span><span>High</span></div>
+
+        <div class="small text-muted">Weather Alert</div>
+        <div class="d-flex align-items-center gap-1 small"><span class="weather-alert-marker">⚠</span> Active weather hazard</div>
+    </div>
+
+    <aside id="shipment-slide-panel" class="shipment-slide-panel">
+        <div class="slide-panel-header p-3 border-bottom">
+            <h3 class="h6 mb-0" id="shipment-slide-panel-title">Shipment Summary</h3>
+            <button class="btn btn-sm btn-outline-secondary" id="close-shipment-panel" type="button"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div id="shipment-slide-panel-body" class="p-3">
+            <p class="text-muted mb-0">Click a shipment marker to load details.</p>
+        </div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" ></script>
+<script>
+const shipmentMapData = {{ shipment_map_data | tojson }};
+const portCongestionData = {{ port_congestion_data | tojson }};
+const weatherAlertData = {{ weather_alert_data | tojson }};
+const portCongestionFeedUrl = "{{ url_for('risk_map.port_congestion_feed') }}";
+const weatherAlertFeedUrl = "{{ url_for('risk_map.weather_alert_feed') }}";
+</script>
+<script type="module">
+import { initRiskHeatMap } from "{{ url_for('static', filename='js/map.js') }}";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initRiskHeatMap(
+        "risk-heat-map",
+        shipmentMapData,
+        portCongestionData,
+        weatherAlertData,
+        {
+            portCongestionFeedUrl,
+            weatherAlertFeedUrl,
+        }
+    );
+});
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}Gemini Usage - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-white mb-0">Gemini API Usage Monitor</h1>
+    <form method="post" action="{{ url_for('superadmin.clear_stale_cache') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-warning" type="submit">Clear Stale Cache</button>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="sa-card"><div class="text-secondary small">Total Cached Entries</div><div class="h3 mb-0">{{ total_cached_entries }}</div></div></div>
+    <div class="col-md-3"><div class="sa-card"><div class="text-secondary small">Estimated Cache Hit Rate</div><div class="h3 mb-0">{{ cache_hit_rate }}%</div></div></div>
+    <div class="col-md-3"><div class="sa-card"><div class="text-secondary small">Regenerated (24h)</div><div class="h3 mb-0">{{ regenerated_today }}</div></div></div>
+    <div class="col-md-3"><div class="sa-card"><div class="text-secondary small">Stale Threshold</div><div class="h6 mb-0">Before {{ stale_cutoff | format_datetime }}</div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Cache Entries by Content Type</h2>
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Content Type</th><th>Count</th></tr></thead>
+                <tbody>
+                    {% for row in by_type %}
+                    <tr><td>{{ row.content_type }}</td><td>{{ row.count }}</td></tr>
+                    {% else %}
+                    <tr><td colspan="2" class="text-center text-secondary py-4">No AI cache entries found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Top Organisations by AI Generation</h2>
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Organisation</th><th>AI Entries</th></tr></thead>
+                <tbody>
+                    {% for row in top_orgs_rows %}
+                    <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td></tr>
+                    {% else %}
+                    <tr><td colspan="2" class="text-center text-secondary py-4">No organisation usage data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="sa-card">
+    <h2 class="h5 mb-3">Oldest Stale Entries</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Organisation ID</th><th>Content Type</th><th>Content Key</th><th>Updated At</th><th>Stale Flag</th></tr></thead>
+            <tbody>
+                {% for item in oldest_stale_entries %}
+                <tr>
+                    <td>{{ item.organisation_id }}</td>
+                    <td>{{ item.content_type }}</td>
+                    <td>{{ item.content_key }}</td>
+                    <td>{{ item.updated_at | format_datetime }}</td>
+                    <td>{{ 'Yes' if item.is_stale else 'No' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-secondary py-4">No stale entries older than seven days.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page features-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="feature-hero">
+        <div class="container text-center">
+            <h1>Every Feature You Need for Proactive Supply Chain Management.</h1>
+            <p class="mx-auto" style="max-width: 760px;">ChainWatch Pro unifies tracking, disruption intelligence, and route execution workflows into one platform built for real logistics complexity. Your team gets shared situational awareness, faster decisions, and measurable reliability improvement across every carrier and lane.</p>
+            <a href="/register" class="btn btn-action-blue btn-lg mt-3">Start Free Trial</a>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6">
+                    <div class="ui-mockup">
+                        <div class="mockup-table">
+                            <div class="mockup-table-row"><span>SHP-29110</span><span>In Transit</span><span class="mockup-risk-badge green">DRS 22</span></div>
+                            <div class="mockup-table-row"><span>SHP-29127</span><span>Port Hold</span><span class="mockup-risk-badge warning">DRS 64</span></div>
+                            <div class="mockup-table-row"><span>SHP-29142</span><span>Customs Delay</span><span class="mockup-risk-badge critical">DRS 85</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <span class="feature-number">01</span>
+                    <h2>Unified Shipment Tracking</h2>
+                    <p>Bring all shipments into one timeline regardless of carrier or mode. ChainWatch Pro normalizes milestone semantics so your team can interpret exceptions quickly without cross-checking portals.</p>
+                    <p>With a single source of status truth, daily operations meetings shift from data gathering to decision making. Managers can spot aging exceptions and escalation bottlenecks without manual reconciliation.</p>
+                    <ul>
+                        <li>Cross-carrier milestone normalization</li>
+                        <li>Unified ETA and SLA status view</li>
+                        <li>Role-based queues for planners and managers</li>
+                        <li>Exception aging and ownership tracking</li>
+                        <li>Bulk filters by lane, mode, customer, and risk</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Teams reduce morning status compilation time by up to 68% after consolidating carrier views.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section alt-bg">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6 order-lg-2">
+                    <div class="ui-mockup">
+                        <div class="gauge-wrap">
+                            <div>
+                                <small class="text-muted">Congestion Signal</small>
+                                <div class="gauge-bar"><span class="gauge-fill red"></span></div>
+                            </div>
+                            <div>
+                                <small class="text-muted">Weather Signal</small>
+                                <div class="gauge-bar"><span class="gauge-fill orange"></span></div>
+                            </div>
+                            <div>
+                                <small class="text-muted">Carrier Reliability</small>
+                                <div class="gauge-bar"><span class="gauge-fill green"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 order-lg-1">
+                    <span class="feature-number">02</span>
+                    <h2>AI Disruption Detection Engine</h2>
+                    <p>The detection engine continuously evaluates each shipment through a multi-signal disruption risk score. It combines carrier performance baselines with real-time context from weather, congestion, and geopolitical events.</p>
+                    <p>Rather than waiting for hard delays to appear, your team sees risk trajectories and confidence bands early enough to act. This creates measurable lead time for intervention and customer communication.</p>
+                    <ul>
+                        <li>Continuous DRS scoring with explainable inputs</li>
+                        <li>Signal-level breakdown for fast diagnosis</li>
+                        <li>Lane-specific model calibration and tuning</li>
+                        <li>Early-warning windows 6-48 hours ahead</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Customers report 87% fewer SLA breaches after activating proactive DRS workflows.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6">
+                    <div class="ui-mockup">
+                        <div class="route-option-card">
+                            <strong>Option A - Fastest</strong>
+                            <div class="small text-muted">ETA gain: 21h | Cost: +₹82,000 | Confidence: 91%</div>
+                        </div>
+                        <div class="route-option-card">
+                            <strong>Option B - Balanced</strong>
+                            <div class="small text-muted">ETA gain: 14h | Cost: +₹43,000 | Confidence: 88%</div>
+                        </div>
+                        <div class="route-option-card">
+                            <strong>Option C - Cost Optimized</strong>
+                            <div class="small text-muted">ETA gain: 8h | Cost: +₹18,000 | Confidence: 79%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <span class="feature-number">03</span>
+                    <h2>Dynamic Route Optimization</h2>
+                    <p>When disruption risk rises, ChainWatch Pro generates route alternatives ranked by speed, confidence, and incremental cost impact. Operators can compare options in one screen and approve the best path for each business context.</p>
+                    <p>This avoids panic-driven rerouting and helps teams preserve margin while maintaining service commitments. Every recommendation includes assumptions and deadline context for transparent decision-making.</p>
+                    <ul>
+                        <li>AI-ranked route options per disrupted shipment</li>
+                        <li>Cost/time/confidence side-by-side comparisons</li>
+                        <li>Execution deadline countdown for urgent actions</li>
+                        <li>Decision notes and export-ready audit trails</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Faster option evaluation reduces intervention decision latency from hours to minutes.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section alt-bg">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6 order-lg-2">
+                    <div class="ui-mockup">
+                        <div class="d-flex flex-column gap-2">
+                            <div class="p-2 rounded bg-danger-subtle">Critical: SHP-29142 predicted SLA breach in 11h</div>
+                            <div class="p-2 rounded bg-warning-subtle">Warning: SHP-28990 risk rising due to terminal congestion</div>
+                            <div class="p-2 rounded bg-info-subtle">Digest: 14 lane-level exceptions grouped by account</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 order-lg-1">
+                    <span class="feature-number">04</span>
+                    <h2>Proactive Alert System</h2>
+                    <p>Configure alert delivery based on risk severity and stakeholder role. Critical exceptions can trigger immediate actions while lower-severity events can be grouped into digest workflows to reduce alert fatigue.</p>
+                    <p>With structured escalation rules, alerts become operationally useful rather than noisy notifications. Teams align on thresholds, response owners, and communication SLAs.</p>
+                    <ul>
+                        <li>Email, SMS, and webhook channels</li>
+                        <li>Thresholds by DRS warning and critical levels</li>
+                        <li>Immediate, hourly, or daily notification cadences</li>
+                        <li>Escalation trails for accountability</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Smart alert routing improves acknowledgment speed and reduces missed critical events.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6">
+                    <div class="ui-mockup">
+                        <div class="d-flex align-items-end gap-2" style="height: 170px;">
+                            <div class="bg-primary-subtle border rounded w-100" style="height: 48%;"></div>
+                            <div class="bg-primary-subtle border rounded w-100" style="height: 70%;"></div>
+                            <div class="bg-primary-subtle border rounded w-100" style="height: 84%;"></div>
+                            <div class="bg-primary-subtle border rounded w-100" style="height: 57%;"></div>
+                        </div>
+                        <small class="text-muted">Lane-level OTD trend and reliability breakdown by carrier</small>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <span class="feature-number">05</span>
+                    <h2>Carrier Performance Intelligence</h2>
+                    <p>Evaluate carrier performance with lane-aware metrics instead of global averages. Understand which partners deliver reliably under real network conditions and where intervention burden is concentrated.</p>
+                    <p>By linking performance insights to allocation strategy, teams can improve service predictability while strengthening contract discussions with objective evidence.</p>
+                    <ul>
+                        <li>Lane and period performance segmentation</li>
+                        <li>OTD, delay, and reliability score trends</li>
+                        <li>Comparative benchmark views</li>
+                        <li>Export-ready scorecards for procurement reviews</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Data-backed allocation decisions consistently improve carrier portfolio reliability.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section alt-bg">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6 order-lg-2">
+                    <div class="ui-mockup">
+                        <div class="route-option-card"><strong>Scenario A:</strong> Port delay +18h, reroute by air for top 10% SKUs.</div>
+                        <div class="route-option-card"><strong>Scenario B:</strong> Hold route, split delivery windows by customer tier.</div>
+                        <div class="route-option-card"><strong>Scenario C:</strong> Shift to alternate gateway with 7% higher freight cost.</div>
+                    </div>
+                </div>
+                <div class="col-lg-6 order-lg-1">
+                    <span class="feature-number">06</span>
+                    <h2>Shipment Scenario Planner</h2>
+                    <p>Simulate disruption outcomes before you commit to intervention. The scenario planner compares route alternatives, SLA impact, and estimated financial exposure under multiple assumptions.</p>
+                    <p>This helps teams move from reactive firefighting to controlled planning. Leadership gets confidence-ranked options and finance-ready impact ranges during high-pressure events.</p>
+                    <ul>
+                        <li>What-if simulation by lane, customer, and mode</li>
+                        <li>Cost and service impact snapshots</li>
+                        <li>Prioritization based on business value-at-risk</li>
+                        <li>Reusable intervention templates</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Simulation-driven intervention planning reduces emergency freight overspend.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6">
+                    <div class="ui-mockup">
+                        <div class="mockup-top-row">
+                            <div class="mockup-stat-card"><div class="value">2.4M</div><div class="label">Shipments</div></div>
+                            <div class="mockup-stat-card warning"><div class="value">7.8%</div><div class="label">At Risk</div></div>
+                            <div class="mockup-stat-card success"><div class="value">94.2%</div><div class="label">OTD</div></div>
+                            <div class="mockup-stat-card critical"><div class="value">₹8.7Cr</div><div class="label">Exposure</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <span class="feature-number">07</span>
+                    <h2>Executive Intelligence Dashboard</h2>
+                    <p>Give leadership a portfolio view of disruption risk, service health, and financial exposure without forcing manual report assembly. Dashboards are tuned for fast review and weekly operating rhythm.</p>
+                    <p>Executives can drill from top-line KPI changes into underlying shipment cohorts to understand causes and intervention outcomes with full context.</p>
+                    <ul>
+                        <li>Board-ready KPI snapshots</li>
+                        <li>Trend tracking across risk, OTD, and exposure</li>
+                        <li>Regional, lane, and customer drilldowns</li>
+                        <li>Scheduled PDF exports for leadership reviews</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Unified executive visibility shortens alignment cycles during disruption events.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section feature-detail-section alt-bg">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6 order-lg-2">
+                    <div class="ui-mockup">
+                        <div class="small text-muted mb-2">Audit Timeline</div>
+                        <ul class="mb-0 ps-3 small">
+                            <li>09:12 - DRS crossed critical threshold</li>
+                            <li>09:16 - Manager acknowledged alert</li>
+                            <li>09:20 - Option B approved</li>
+                            <li>09:24 - Carrier switch executed</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6 order-lg-1">
+                    <span class="feature-number">08</span>
+                    <h2>Full Audit Trail & Decision Log</h2>
+                    <p>Capture every alert, recommendation, and action in an immutable timeline. This supports internal governance, customer transparency, and cross-functional post-incident learning.</p>
+                    <p>When teams can see exactly what was known, when it was known, and who acted, process improvement becomes objective and repeatable.</p>
+                    <ul>
+                        <li>Event-level decision chronology</li>
+                        <li>Actor attribution with timestamp precision</li>
+                        <li>Export support for compliance and QA</li>
+                        <li>Policy and threshold tuning with evidence</li>
+                    </ul>
+                    <div class="feature-key-benefit">Key benefit: Structured decision history improves compliance readiness and operational accountability.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="section-heading">ChainWatch Pro vs. Traditional Approaches</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="table capability-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Capability</th>
+                            <th class="highlight-col">ChainWatch Pro</th>
+                            <th>Manual / Spreadsheet</th>
+                            <th>Generic TMS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Disruption Detection</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> AI-scored risk monitoring 24/7</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Reactive only</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Partial alerts</td>
+                        </tr>
+                        <tr>
+                            <td>Route Optimization</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> Ranked alternatives with cost-time confidence</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Manual evaluation</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Basic static rules</td>
+                        </tr>
+                        <tr>
+                            <td>Carrier Performance Tracking</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> Lane-level benchmarking</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Manual reports</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Limited granularity</td>
+                        </tr>
+                        <tr>
+                            <td>Alert System</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> Multi-channel threshold rules</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Email only</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Limited customization</td>
+                        </tr>
+                        <tr>
+                            <td>Audit Trail</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> Immutable timeline with export</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Missing or inconsistent</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Partial event logging</td>
+                        </tr>
+                        <tr>
+                            <td>Scenario Planning</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> Built-in simulation toolkit</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Spreadsheet heavy</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Limited what-if analysis</td>
+                        </tr>
+                        <tr>
+                            <td>Executive Reporting</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> Automated KPI dashboards</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Manual compilation</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Static report templates</td>
+                        </tr>
+                        <tr>
+                            <td>Multi-carrier Visibility</td>
+                            <td class="highlight-col text-success"><i class="bi bi-check2-circle"></i> Unified cross-carrier control tower</td>
+                            <td class="text-danger"><i class="bi bi-x-circle"></i> Fragmented portals</td>
+                            <td class="text-warning"><i class="bi bi-exclamation-circle"></i> Integrations vary by connector</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section" style="background: var(--color-light-blue);">
+        <div class="container text-center">
+            <h2 class="section-heading">Works with your existing carriers and tools.</h2>
+            <div class="row g-3 mt-3">
+                {% for name in ['Maersk', 'MSC', 'CMA CGM', 'DHL Express', 'FedEx', 'UPS', 'Emirates SkyCargo', 'DB Schenker', 'Kuehne+Nagel', 'XPO Logistics', 'DSV', 'Nippon Express'] %}
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="integration-badge">{{ name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section cta-section-dark">
+        <div class="container position-relative text-center">
+            <h2 class="section-heading text-white">Build a proactive logistics operating system.</h2>
+            <p class="section-subheading text-white-50">Start your 14-day free trial and get full access to Professional plan capabilities. No credit card required.</p>
+            <a href="/register" class="btn btn-action-blue btn-lg mt-2">Start Free Trial</a>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

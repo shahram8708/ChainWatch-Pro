@@ -1,0 +1,19 @@
+{% extends "email/email_base.html" %}
+
+{% block content %}
+<p style="margin:0 0 14px;">Hi {{ user.first_name }},</p>
+<p style="margin:0 0 16px;">Welcome to ChainWatch Pro. Your account is now active, and your team can start monitoring disruptions before they impact customer commitments.</p>
+<p style="margin:0 0 8px;font-weight:600;">Quick start in 3 steps:</p>
+<ol style="margin:0 0 20px 20px;padding:0;">
+    <li style="margin:0 0 6px;">Complete your carrier setup</li>
+    <li style="margin:0 0 6px;">Add your first shipments</li>
+    <li style="margin:0;">Configure your alerts</li>
+</ol>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0;">
+    <tr>
+        <td>
+            <a href="{{ dashboard_url }}" style="display:inline-block;background:#0077CC;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">Go to Dashboard</a>
+        </td>
+    </tr>
+</table>
+{% endblock %}

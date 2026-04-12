@@ -1,0 +1,5 @@
+external_reference,carrier_name,mode,origin_port_code,destination_port_code,estimated_departure,estimated_arrival,origin_address,destination_address,customer_name,cargo_value_inr
+SHP-MANUAL-002,DHL Express,air,INMAA,DEHAM,2026-04-12T09:00:00,2026-04-15T18:00:00,Chennai Cargo Terminal India,Hamburg Port Germany,PharmaCure Labs,12000000.00
+SHP-MANUAL-003,MSC,ocean_fcl,SGSIN,USNYC,2026-04-10T11:00:00,2026-05-01T17:00:00,Singapore Port Singapore,New York Port USA,GlobalTech Corp,78000000.00
+SHP-MANUAL-004,Emirates SkyCargo,air,AEDXB,INBOM,2026-04-08T07:30:00,2026-04-12T15:30:00,Dubai Cargo Village UAE,Mumbai Air Cargo Complex India,JewelCraft India,5500000.00
+SHP-MANUAL-005,CMA CGM,ocean_fcl,CNNGB,GBFXT,2026-04-06T10:00:00,2026-04-26T16:00:00,Ningbo Port China,Felixstowe Port United Kingdom,BritishAuto Parts,32000000.00

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block body_class %}onboarding-page onboarding-step2{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<header class="onboarding-top-bar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="/" class="text-decoration-none d-flex align-items-center gap-2 text-navy fw-bold">
+            <i class="bi bi-link-45deg fs-4"></i>
+            <span>ChainWatch Pro</span>
+        </a>
+        <a href="/contact" class="support-link">Need help? Contact support</a>
+    </div>
+</header>
+
+<main class="onboarding-main">
+    <div class="container position-relative">
+        <section class="onboarding-progress">
+            <div class="step-track">
+                <div class="step-item completed">
+                    <span class="step-line"></span>
+                    <span class="step-circle"><i class="bi bi-check"></i></span>
+                    <div class="step-label">Shipping Profile</div>
+                </div>
+                <div class="step-item active">
+                    <span class="step-line"></span>
+                    <span class="step-circle">2</span>
+                    <div class="step-label">Carrier Setup</div>
+                </div>
+                <div class="step-item">
+                    <span class="step-line"></span>
+                    <span class="step-circle">3</span>
+                    <div class="step-label">Alert Preferences</div>
+                </div>
+                <div class="step-item">
+                    <span class="step-line"></span>
+                    <span class="step-circle">4</span>
+                    <div class="step-label">Dashboard Setup</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="onboarding-card">
+            <span class="step-pill">Step 2 of 4</span>
+            <h1 class="h2 mb-2">Carrier Setup</h1>
+            <p class="text-muted mb-4">Connect your carriers to start monitoring. You can also upload historical data to generate your baseline performance metrics.</p>
+
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                {{ form.hidden_tag() }}
+                <div data-setup-method-wrap>
+                    <label class="setup-method-card {% if form.setup_method.data == 'csv' %}active{% endif %}" data-method="csv">
+                        <div class="d-flex align-items-start gap-2">
+                            <input class="form-check-input mt-1" type="radio" name="setup_method" value="csv" {% if form.setup_method.data == 'csv' %}checked{% endif %}>
+                            <div>
+                                <strong><i class="bi bi-upload me-1"></i> Upload CSV</strong>
+                                <p class="small text-muted mb-0">Upload historical shipment data. We'll analyze your past shipments to build carrier performance baselines and configure disruption scoring.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="setup-method-card {% if form.setup_method.data == 'manual' %}active{% endif %}" data-method="manual">
+                        <div class="d-flex align-items-start gap-2">
+                            <input class="form-check-input mt-1" type="radio" name="setup_method" value="manual" {% if form.setup_method.data == 'manual' or not form.setup_method.data %}checked{% endif %}>
+                            <div>
+                                <strong><i class="bi bi-list-check me-1"></i> Select Carriers</strong>
+                                <p class="small text-muted mb-0">Choose from 40+ global carriers. We'll start monitoring new shipments you add. Best for teams starting fresh.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="setup-method-card {% if form.setup_method.data == 'skip' %}active{% endif %}" data-method="skip">
+                        <div class="d-flex align-items-start gap-2">
+                            <input class="form-check-input mt-1" type="radio" name="setup_method" value="skip" {% if form.setup_method.data == 'skip' %}checked{% endif %}>
+                            <div>
+                                <strong><i class="bi bi-arrow-right-circle me-1"></i> Skip for Now</strong>
+                                <p class="small text-muted mb-0">I'll add carrier data later. You can still use the platform manually.</p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="mt-3" data-csv-section>
+                    <div class="file-drop-zone mb-3">
+                        <i class="bi bi-file-earmark-arrow-up fs-3 d-block mb-2"></i>
+                        <p class="mb-2">Drag and drop your CSV here, or click to browse</p>
+                        {{ form.csv_file(class_='form-control') }}
+                        {% for error in form.csv_file.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                        <a href="{{ url_for('onboarding.step2_download_template') }}" class="btn btn-sm btn-outline-navy mt-3">Download CSV Template</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>shipment_id</th>
+                                    <th>carrier_name</th>
+                                    <th>origin</th>
+                                    <th>destination</th>
+                                    <th>mode</th>
+                                    <th>estimated_departure</th>
+                                    <th>estimated_arrival</th>
+                                    <th>actual_arrival</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>SHP-10021</td>
+                                    <td>Maersk Line</td>
+                                    <td>INNSA</td>
+                                    <td>DEHAM</td>
+                                    <td>Ocean FCL</td>
+                                    <td>2026-03-08 09:00</td>
+                                    <td>2026-03-28 18:00</td>
+                                    <td>2026-03-29 06:10</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-3" data-carrier-section>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <a href="#" class="small fw-semibold" data-select-mode="ocean">Select All Ocean Carriers</a>
+                        <a href="#" class="small fw-semibold" data-select-mode="air">Select All Air Carriers</a>
+                    </div>
+                    {% set selected_carriers = form.selected_carriers.data or [] %}
+                    <div class="carrier-checkbox-grid">
+                        {% for carrier in global_carriers %}
+                        <label class="carrier-checkbox-card" data-carrier-mode="{{ carrier.mode }}">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <strong class="d-block">{{ carrier.name }}</strong>
+                                    <span class="badge text-bg-light text-uppercase">{{ carrier.mode }}</span>
+                                </div>
+                                <input class="form-check-input" type="checkbox" name="selected_carriers" value="{{ carrier.id }}" {% if carrier.id|string in selected_carriers %}checked{% endif %}>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% for error in form.selected_carriers.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="{{ url_for('onboarding.step1') }}" class="text-decoration-none">&larr; Back</a>
+                    <button type="submit" class="btn btn-action-blue">Save & Continue -></button>
+                </div>
+            </form>
+        </section>
+
+        <div class="skip-step-link"><a href="{{ url_for('onboarding.step2', skip='true') }}">Skip this step -></a></div>
+
+        <aside class="motivational-sidebar">
+            <div class="motivational-card">
+                <div class="progress-circle">50%</div>
+                <p class="fw-semibold text-center">You're 50% toward your first disruption alert</p>
+                <ul class="small mb-3">
+                    <li>Seed baseline carrier performance benchmarks</li>
+                    <li>Accelerate disruption scoring relevance</li>
+                    <li>Enable faster dashboard value from day one</li>
+                </ul>
+                <small class="text-muted">After setup, you'll monitor up to {{ shipment_limit_label }} shipments automatically.</small>
+            </div>
+        </aside>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

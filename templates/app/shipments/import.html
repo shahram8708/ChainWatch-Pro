@@ -1,0 +1,135 @@
+{% extends "app_base.html" %}
+{% from "macros/forms.html" import form_errors, render_checkbox, render_file %}
+
+{% block page_title %}Import Shipments - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('shipments.list_shipments') }}">Shipments</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Import CSV</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <section class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h1 class="h4 mb-0">Upload Shipment CSV</h1>
+            </div>
+            <div class="card-body">
+                {{ form_errors(form) }}
+                <form method="post" enctype="multipart/form-data" id="shipment-import-form">
+                    {{ form.csrf_token }}
+
+                    <div class="dropzone-upload mb-3" id="csv-dropzone">
+                        <div class="dropzone-upload-inner">
+                            <i class="bi bi-cloud-arrow-up fs-2 text-primary"></i>
+                            <p class="mb-1 fw-semibold">Drag and drop your CSV here, or click to browse</p>
+                            <p class="text-muted small mb-0" id="csv-selected-filename">No file selected</p>
+                        </div>
+                        {{ form.csv_file(class_='form-control position-absolute top-0 start-0 w-100 h-100 opacity-0 js-dropzone-input', accept='.csv', id='csv-file-input') }}
+                    </div>
+                    {% for error in form.csv_file.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+
+                    {{ render_checkbox(form.update_existing) }}
+
+                    <button type="submit" class="btn btn-primary w-100">Import Shipments</button>
+                </form>
+            </div>
+        </section>
+
+        {% if results %}
+        <section class="card shadow-sm border-0 mt-4">
+            <div class="card-header bg-white">
+                <h2 class="h5 mb-0">Import Complete</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge text-bg-success">{{ results.created }} created</span>
+                    <span class="badge text-bg-primary">{{ results.updated }} updated</span>
+                    <span class="badge text-bg-danger">{{ results.errors }} errors</span>
+                </div>
+
+                {% if results.error_rows %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Row #</th>
+                                <th>External Reference</th>
+                                <th>Error Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in results.error_rows %}
+                            <tr>
+                                <td>{{ row.row }}</td>
+                                <td>{{ row.external_reference }}</td>
+                                <td>{{ row.reason }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if results.skipped_over_limit %}
+                            <tr>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>{{ results.skipped_over_limit }} rows skipped due to 500-row import limit.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+        <section class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                <h2 class="h5 mb-0">CSV Format Guide</h2>
+                <a class="btn btn-outline-primary btn-sm" href="{{ url_for('shipments.import_template') }}">Download Template</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Type</th>
+                                <th>Req</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>external_reference</td><td>string</td><td>Yes</td><td>PO-IND-10021</td></tr>
+                            <tr><td>carrier_name</td><td>string</td><td>No</td><td>Maersk Line</td></tr>
+                            <tr><td>mode</td><td>enum</td><td>Yes</td><td>ocean_fcl</td></tr>
+                            <tr><td>origin_port_code</td><td>string</td><td>Yes</td><td>INNSA</td></tr>
+                            <tr><td>destination_port_code</td><td>string</td><td>Yes</td><td>DEHAM</td></tr>
+                            <tr><td>estimated_departure</td><td>ISO datetime</td><td>Yes</td><td>2026-04-15T10:00:00</td></tr>
+                            <tr><td>estimated_arrival</td><td>ISO datetime</td><td>Yes</td><td>2026-05-08T16:00:00</td></tr>
+                            <tr><td>cargo_value_inr</td><td>decimal</td><td>No</td><td>1450000.00</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <hr>
+                <ul class="small text-muted mb-0 ps-3">
+                    <li>Accepted date format: ISO 8601 (for example 2026-05-08T16:00:00).</li>
+                    <li>Mode values: ocean_fcl, ocean_lcl, air, road, rail, multimodal.</li>
+                    <li>Carrier names are matched case-insensitively and auto-created if not found.</li>
+                    <li>Maximum 500 rows are processed per upload and file size must be 5MB or less.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

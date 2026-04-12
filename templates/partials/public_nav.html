@@ -1,0 +1,44 @@
+<nav class="navbar navbar-expand-lg public-nav fixed-top" aria-label="Public navigation">
+    <div class="container">
+        <a class="navbar-brand public-brand d-flex align-items-center" href="/" aria-label="ChainWatch Pro Home">
+            <svg width="230" height="42" viewBox="0 0 260 52" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ChainWatch Pro">
+                <g transform="translate(2,7)" stroke="#1B3A6B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 7.5L12.8 3.3C9.7 0.2 4.6 0.2 1.5 3.3C-1.6 6.4 -1.6 11.5 1.5 14.6L5.7 18.8C8.8 21.9 13.9 21.9 17 18.8L19.1 16.7"/>
+                    <path d="M9.9 9.9L14.1 14.1"/>
+                    <path d="M22 19.8L26.2 24C29.3 27.1 34.4 27.1 37.5 24C40.6 20.9 40.6 15.8 37.5 12.7L33.3 8.5C30.2 5.4 25.1 5.4 22 8.5L19.9 10.6"/>
+                </g>
+                <text x="48" y="34" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" fill="#1B3A6B" letter-spacing="0.2">ChainWatch Pro</text>
+            </svg>
+        </a>
+
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#publicNavMenu" aria-controls="publicNavMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="publicNavMenu">
+            <ul class="navbar-nav mx-auto align-items-lg-center gap-lg-2">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/features' %}active{% endif %}" href="/features">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/pricing' %}active{% endif %}" href="/pricing">Pricing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/about' %}active{% endif %}" href="/about">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path.startswith('/blog') %}active{% endif %}" href="/blog">Blog</a>
+                </li>
+            </ul>
+
+            <div class="public-nav-actions ms-lg-3 d-flex flex-column flex-lg-row gap-2 w-100 w-lg-auto">
+                {% if current_user.is_authenticated %}
+                <a class="btn btn-action-blue w-100 w-lg-auto" href="/dashboard">Go to Dashboard</a>
+                {% else %}
+                <a class="btn btn-outline-navy w-100 w-lg-auto" href="/login">Sign In</a>
+                <a class="btn btn-action-blue w-100 w-lg-auto" href="/register">Start Free Trial</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

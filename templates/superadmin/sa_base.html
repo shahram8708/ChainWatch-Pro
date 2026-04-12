@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block body_class %}sa-layout{% endblock %}
+
+{% block head_extra %}
+{{ super() }}
+<style>
+    .sa-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        background: #0F1923;
+    }
+    .sa-sidebar {
+        background: #1A2634;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 20px 14px;
+    }
+    .sa-logo {
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 16px;
+        letter-spacing: 0.02em;
+        margin-bottom: 14px;
+    }
+    .sa-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .sa-nav a {
+        color: #d6e2f1;
+        text-decoration: none;
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .sa-nav a:hover,
+    .sa-nav a.active {
+        background: #243447;
+        color: #ffffff;
+    }
+    .sa-main {
+        min-width: 0;
+    }
+    .sa-topbar {
+        background: #000000;
+        color: #ffffff;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 1200;
+    }
+    .sa-badge-critical {
+        background: #D32F2F;
+        color: #ffffff;
+        font-size: 11px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+    .sa-content {
+        padding: 24px;
+        color: #E7EDF5;
+    }
+    .sa-card {
+        background: #182637;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 16px;
+        color: #E7EDF5;
+    }
+    .sa-card .table {
+        --bs-table-bg: transparent;
+        --bs-table-color: #d8e3f1;
+        --bs-table-border-color: rgba(255, 255, 255, 0.12);
+    }
+    .sa-card a {
+        color: #89C2FF;
+    }
+    .btn-sa-danger {
+        background: #D32F2F;
+        color: #ffffff;
+        border-color: #D32F2F;
+    }
+    .btn-sa-danger:hover {
+        background: #b21f1f;
+        border-color: #b21f1f;
+        color: #ffffff;
+    }
+    @media (max-width: 992px) {
+        .sa-shell {
+            grid-template-columns: 1fr;
+        }
+        .sa-sidebar {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sa-shell">
+    <aside class="sa-sidebar">
+        <div class="sa-logo">⚡ ChainWatch Pro - SuperAdmin Panel</div>
+        <nav class="sa-nav">
+            <a href="{{ url_for('superadmin.dashboard') }}" class="{% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('superadmin.organisations') }}" class="{% if request.endpoint in ['superadmin.organisations', 'superadmin.organisation_detail'] %}active{% endif %}">Organisations</a>
+            <a href="{{ url_for('superadmin.users') }}" class="{% if request.endpoint == 'superadmin.users' %}active{% endif %}">All Users</a>
+            <a href="{{ url_for('superadmin.platform_stats') }}" class="{% if request.endpoint == 'superadmin.platform_stats' %}active{% endif %}">Platform Stats</a>
+            <a href="{{ url_for('superadmin.gemini_usage') }}" class="{% if request.endpoint == 'superadmin.gemini_usage' %}active{% endif %}">AI Usage</a>
+            <a href="{{ url_for('superadmin.system_health') }}" class="{% if request.endpoint == 'superadmin.system_health' %}active{% endif %}">System Health</a>
+            <a href="{{ url_for('superadmin.feature_flags') }}" class="{% if request.endpoint == 'superadmin.feature_flags' %}active{% endif %}">Feature Flags</a>
+            <a href="{{ url_for('superadmin.platform_audit_log') }}" class="{% if request.endpoint == 'superadmin.platform_audit_log' %}active{% endif %}">Audit Log</a>
+            <a href="{{ url_for('superadmin.announcement') }}" class="{% if request.endpoint == 'superadmin.announcement' %}active{% endif %}">Announcements</a>
+            <a href="{{ url_for('auth.logout') }}">Back to Normal App -></a>
+        </nav>
+    </aside>
+
+    <main class="sa-main">
+        <header class="sa-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <strong>⚡ ChainWatch Pro - SuperAdmin Panel</strong>
+                <span class="sa-badge-critical">SUPERADMIN MODE</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 small">
+                <span>Logged in as {{ current_user.email }}</span>
+                {% if session.get('superadmin_impersonating') %}
+                    <a href="{{ url_for('superadmin.exit_impersonation') }}" class="btn btn-warning btn-sm">Exit Impersonation</a>
+                {% else %}
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Exit to Normal View</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <section class="sa-content container-fluid">
+            {% block sa_content %}{% endblock %}
+        </section>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build and packaging artifacts
+build/
+dist/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# Test, type-check, and coverage artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.pyre/
+.ruff_cache/
+.hypothesis/
+
+# Logs and scheduler state
+*.log
+celerybeat-schedule
+
+# Flask local data
+instance/
+*.sqlite3
+*.db
+
+# Generated uploads/reports
+static/uploads/
+static/reports/
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,212 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}Organisation Detail - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 text-white mb-1">{{ organisation.name }}</h1>
+        <p class="text-secondary mb-0">Detailed tenant management and controls.</p>
+    </div>
+    <a href="{{ url_for('superadmin.organisations') }}" class="btn btn-outline-light btn-sm">Back to Organisations</a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Organisation Profile</h2>
+            <form method="post" action="{{ url_for('superadmin.edit_organisation', org_id=organisation.id) }}" class="row g-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="col-md-6">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" type="text" name="name" value="{{ organisation.name }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Industry</label>
+                    <input class="form-control" type="text" name="industry" value="{{ organisation.industry or '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Plan</label>
+                    <select class="form-select" name="subscription_plan">
+                        <option value="starter" {% if organisation.subscription_plan == 'starter' %}selected{% endif %}>Starter</option>
+                        <option value="professional" {% if organisation.subscription_plan == 'professional' %}selected{% endif %}>Professional</option>
+                        <option value="enterprise" {% if organisation.subscription_plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="subscription_status">
+                        <option value="active" {% if organisation.subscription_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="trial" {% if organisation.subscription_status == 'trial' %}selected{% endif %}>Trial</option>
+                        <option value="expired" {% if organisation.subscription_status == 'expired' %}selected{% endif %}>Expired</option>
+                        <option value="cancelled" {% if organisation.subscription_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Trial Ends At</label>
+                    <input class="form-control" type="datetime-local" name="trial_ends_at" value="{{ organisation.trial_ends_at.strftime('%Y-%m-%dT%H:%M:%S') if organisation.trial_ends_at else '' }}">
+                </div>
+                {% set plan_overrides = organisation.org_profile_data.get('plan_overrides', {}) if organisation.org_profile_data else {} %}
+                <div class="col-md-4">
+                    <label class="form-label">Shipment Limit Override</label>
+                    <input class="form-control" type="number" min="0" name="shipment_limit" value="{{ plan_overrides.get('shipment_limit', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Carrier Limit Override</label>
+                    <input class="form-control" type="number" min="0" name="carrier_limit" value="{{ plan_overrides.get('carrier_limit', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">User Limit Override</label>
+                    <input class="form-control" type="number" min="0" name="user_limit" value="{{ plan_overrides.get('user_limit', '') }}">
+                </div>
+                <div class="col-md-6 form-check ms-2">
+                    <input class="form-check-input" type="checkbox" id="orgActiveCheckbox" name="is_active" {% if organisation.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="orgActiveCheckbox">Organisation Active</label>
+                </div>
+                <div class="col-12 d-grid d-md-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Save Organisation</button>
+                    <button class="btn btn-outline-warning" type="submit" formaction="{{ url_for('superadmin.impersonate_org', org_id=organisation.id) }}" formmethod="post">Impersonate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="sa-card h-100 mb-3">
+            <h2 class="h5 mb-3">Usage Stats</h2>
+            <div class="row g-2">
+                <div class="col-sm-6"><div class="border rounded p-2">Shipments: {{ usage_stats.shipments }}</div></div>
+                <div class="col-sm-6"><div class="border rounded p-2">Alerts: {{ usage_stats.alerts }}</div></div>
+                <div class="col-sm-6"><div class="border rounded p-2">AI Calls: {{ usage_stats.ai_calls }}</div></div>
+                <div class="col-sm-6"><div class="border rounded p-2">Reports: {{ usage_stats.reports }}</div></div>
+            </div>
+        </div>
+
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Subscription Override</h2>
+            <form method="post" action="{{ url_for('superadmin.override_subscription', org_id=organisation.id) }}" class="row g-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="col-md-6">
+                    <label class="form-label">Plan</label>
+                    <select class="form-select" name="subscription_plan">
+                        <option value="starter">Starter</option>
+                        <option value="professional">Professional</option>
+                        <option value="enterprise">Enterprise</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="subscription_status">
+                        <option value="active">Active</option>
+                        <option value="trial">Trial</option>
+                        <option value="expired">Expired</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Trial Ends At</label>
+                    <input class="form-control" type="datetime-local" name="trial_ends_at">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Override Reason</label>
+                    <textarea class="form-control" name="override_reason" rows="2" required></textarea>
+                </div>
+                <div class="col-12 d-grid">
+                    <button class="btn btn-warning" type="submit">Apply Override</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Organisation Users</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th></tr></thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.full_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.role|title }}</td>
+                            <td>{{ user.last_login_at | format_datetime if user.last_login_at else '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-secondary py-4">No users in this organisation.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Subscription History</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Time</th><th>Event</th><th>Actor</th></tr></thead>
+                    <tbody>
+                        {% for entry in subscription_history %}
+                        <tr>
+                            <td>{{ entry.created_at | format_datetime }}</td>
+                            <td>{{ entry.event_type }}</td>
+                            <td>{{ entry.actor_label }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-secondary py-4">No subscription history found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Audit Entries (Last 100)</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Time</th><th>Event</th><th>Actor</th><th>Description</th></tr></thead>
+                    <tbody>
+                        {% for entry in audit_entries %}
+                        <tr>
+                            <td>{{ entry.created_at | format_datetime }}</td>
+                            <td>{{ entry.event_type }}</td>
+                            <td>{{ entry.actor_label }}</td>
+                            <td>{{ entry.description }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-secondary py-4">No audit entries found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3 text-warning">Danger Zone</h2>
+            <form method="post" action="{{ url_for('superadmin.suspend_organisation', org_id=organisation.id) }}" class="mb-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="form-label">Suspension Reason</label>
+                <textarea class="form-control mb-2" name="reason" rows="2" required></textarea>
+                <button class="btn btn-warning w-100" type="submit">Suspend Organisation</button>
+            </form>
+
+            <form method="post" action="{{ url_for('superadmin.delete_organisation', org_id=organisation.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="form-label">Type organisation name to confirm deletion</label>
+                <input class="form-control mb-2" type="text" name="confirm_text" placeholder="{{ organisation.name }}" required>
+                <button class="btn btn-sa-danger w-100" type="submit">Hard Delete Organisation</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

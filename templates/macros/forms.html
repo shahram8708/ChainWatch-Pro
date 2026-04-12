@@ -1,0 +1,136 @@
+{% macro render_field(field, label=True, placeholder='', help_text='', input_class='') %}
+<div class="mb-3">
+    {% if label %}
+    <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
+    {% endif %}
+    {% set classes = 'form-control' %}
+    {% if input_class %}
+        {% set classes = classes + ' ' + input_class %}
+    {% endif %}
+    {% if field.errors %}
+        {% set classes = classes + ' is-invalid' %}
+    {% endif %}
+    {{ field(class_=classes, placeholder=placeholder) }}
+    {% if help_text %}
+    <small class="form-text text-muted">{{ help_text }}</small>
+    {% endif %}
+    {% for error in field.errors %}
+    <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_select(field, label=True) %}
+<div class="mb-3">
+    {% if label %}
+    <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
+    {% endif %}
+    {% set classes = 'form-select' %}
+    {% if field.errors %}
+        {% set classes = classes + ' is-invalid' %}
+    {% endif %}
+    {{ field(class_=classes) }}
+    {% for error in field.errors %}
+    <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_checkbox(field, label_text='') %}
+<div class="form-check mb-3">
+    {% set classes = 'form-check-input' %}
+    {% if field.errors %}
+        {% set classes = classes + ' is-invalid' %}
+    {% endif %}
+    {{ field(class_=classes) }}
+    <label class="form-check-label" for="{{ field.id }}">
+        {{ label_text if label_text else field.label.text }}
+    </label>
+    {% for error in field.errors %}
+    <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro form_errors(form) %}
+{% if form.errors and form.errors.get('__all__') %}
+<div class="alert alert-danger" role="alert">
+    <ul class="mb-0 ps-3">
+        {% for error in form.errors.get('__all__') %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endmacro %}
+
+
+{% macro render_datetime_local(field, label=True, help_text='') %}
+<div class="mb-3">
+    {% if label %}
+    <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
+    {% endif %}
+    {% set classes = 'form-control' %}
+    {% if field.errors %}
+        {% set classes = classes + ' is-invalid' %}
+    {% endif %}
+    {{ field(class_=classes, type='datetime-local') }}
+    {% if help_text %}
+    <small class="form-text text-muted">{{ help_text }}</small>
+    {% endif %}
+    {% for error in field.errors %}
+    <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+
+{% macro render_file(field, label=True, help_text='', accept='') %}
+<div class="mb-3">
+    {% if label %}
+    <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
+    {% endif %}
+    {% set classes = 'form-control' %}
+    {% if field.errors %}
+        {% set classes = classes + ' is-invalid' %}
+    {% endif %}
+    {{ field(class_=classes, accept=accept) }}
+    {% if help_text %}
+    <small class="form-text text-muted">{{ help_text }}</small>
+    {% endif %}
+    {% for error in field.errors %}
+    <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+
+{% macro render_textarea(field, rows=4, label=True, help_text='', max_length=None) %}
+<div class="mb-3">
+    {% if label %}
+    <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
+    {% endif %}
+    {% set classes = 'form-control' %}
+    {% if field.errors %}
+        {% set classes = classes + ' is-invalid' %}
+    {% endif %}
+    {% if max_length %}
+    {{ field(class_=classes, rows=rows, data_max_length=max_length) }}
+    {% else %}
+    {{ field(class_=classes, rows=rows) }}
+    {% endif %}
+    <div class="d-flex justify-content-between align-items-center mt-1">
+        {% if help_text %}
+        <small class="form-text text-muted">{{ help_text }}</small>
+        {% else %}
+        <small class="form-text text-muted"></small>
+        {% endif %}
+        {% if max_length %}
+        <small class="text-muted textarea-char-counter" data-for="{{ field.id }}">0 / {{ max_length }} characters</small>
+        {% endif %}
+    </div>
+    {% for error in field.errors %}
+    <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{% endmacro %}

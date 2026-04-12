@@ -1,0 +1,268 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Carrier Intelligence - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Carrier Intelligence</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Carrier Intelligence</h1>
+        <p class="text-muted mb-0">Analyse carrier reliability trends, compare OTD performance across lanes, and read AI-powered assessments of each carrier.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        {% set period_labels = {'30d': '30 Days', '90d': '90 Days', '180d': '180 Days', '365d': '1 Year'} %}
+        {% for key, label in period_labels.items() %}
+        <a href="{{ url_for('carrier_intel.index', period=key, carrier_id=(selected_carrier.id if selected_carrier and selected_carrier.id else None)) }}" class="period-selector-pill {% if period == key %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<section class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 mb-1">Carrier Performance Overview</h2>
+                <p class="text-muted mb-0">Last {{ period_months }} month{% if period_months != 1 %}s{% endif %}</p>
+            </div>
+        </div>
+
+        {% if carriers_summary %}
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Carrier Name</th>
+                        <th>OTD Rate</th>
+                        <th>Avg Delay</th>
+                        <th>CRS Score</th>
+                        <th>Shipments Analysed</th>
+                        <th>Trend</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in carriers_summary %}
+                    {% set otd = row.otd_rate | float %}
+                    {% set avg_delay = row.avg_delay_hours | float %}
+                    {% set crs = row.crs_score | float %}
+                    <tr class="carrier-table-row">
+                        <td>
+                            <div class="fw-semibold">{{ row.carrier_name }}</div>
+                            <span class="badge text-bg-light">{{ row.mode | replace('_', ' ') | title }}</span>
+                        </td>
+                        <td>
+                            <span class="fs-5 fw-bold {% if otd >= 90 %}text-success{% elif otd >= 80 %}text-primary{% elif otd >= 70 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ '%.1f' | format(otd) }}%
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-semibold {% if avg_delay < 4 %}text-success{% elif avg_delay <= 12 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ '%.1f' | format(avg_delay) }} hrs
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {% if crs >= 81 %}text-bg-danger{% elif crs >= 61 %}text-bg-warning{% elif crs >= 31 %}text-bg-secondary{% else %}text-bg-success{% endif %}">
+                                {{ '%.1f' | format(crs) }}
+                            </span>
+                        </td>
+                        <td>{{ row.shipments_count }}</td>
+                        <td>
+                            {% if row.trend == 'up' %}
+                            <span class="trend-arrow-up"><i class="bi bi-arrow-up-right"></i> Up</span>
+                            {% elif row.trend == 'down' %}
+                            <span class="trend-arrow-down"><i class="bi bi-arrow-down-right"></i> Down</span>
+                            {% else %}
+                            <span class="trend-arrow-neutral"><i class="bi bi-dash"></i> Neutral</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('carrier_intel.index', period=period, carrier_id=row.carrier_id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <h3 class="h6 mb-2">No carrier performance data yet.</h3>
+            <p class="text-muted mb-3">Performance metrics are calculated from your completed shipments. Data will appear after shipments are delivered.</p>
+            <a href="{{ url_for('shipments.import_shipments') }}" class="btn btn-outline-primary">Import Historical Shipment Data</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if selected_carrier %}
+{% set selected_id = selected_carrier.id | string %}
+{% set selected_commentary = selected_summary.ai_commentary if selected_summary else {} %}
+{% set selected_generated_at = selected_summary.ai_generated_at if selected_summary else None %}
+<section class="carrier-detail-section mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 mb-1">{{ selected_carrier.name }}</h2>
+            <span class="badge text-bg-light">{{ selected_carrier.mode | replace('_', ' ') | title }}</span>
+        </div>
+        <a href="{{ url_for('carrier_intel.index', period=period) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i> Close</a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-xl-5">
+            <article class="chart-card h-100">
+                <h3 class="h6 mb-3">{{ selected_carrier.name }} - OTD% Trend</h3>
+                <div style="height: 280px;">
+                    <canvas
+                        id="otd-trend-chart-{{ selected_id }}"
+                        data-chart-type="otd-trend"
+                        data-chart-config='{{ (otd_trend_data.get(selected_id, [])) | tojson | forceescape }}'
+                    ></canvas>
+                </div>
+            </article>
+        </div>
+        <div class="col-xl-7">
+            <article class="chart-card h-100">
+                <h3 class="h6 mb-3">Performance by Lane</h3>
+                {% if lane_breakdown %}
+                <div style="height: 280px;">
+                    <canvas
+                        id="lane-chart-{{ selected_id }}"
+                        data-chart-type="lane-bar"
+                        data-chart-config='{{ lane_breakdown | tojson | forceescape }}'
+                    ></canvas>
+                </div>
+                {% else %}
+                <div class="d-flex h-100 align-items-center justify-content-center text-muted">Insufficient lane data for selected period.</div>
+                {% endif %}
+            </article>
+        </div>
+    </div>
+
+    <article class="ai-commentary-card ai-content-card" id="carrier-ai-commentary-card" data-carrier-id="{{ selected_id }}">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="ai-badge">AI</span>
+                <span class="text-muted small">Carrier Assessment by ChainWatch AI</span>
+                {% if selected_summary and selected_summary.ai_served_stale and selected_summary.ai_stale_warning %}
+                <span class="badge text-bg-warning">{{ selected_summary.ai_stale_warning }}</span>
+                {% endif %}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <small class="text-muted ai-generated-timestamp" id="carrier-commentary-timestamp">
+                    {% if selected_generated_at %}
+                    Generated {{ selected_generated_at | format_datetime }}
+                    {% else %}
+                    Generated today
+                    {% endif %}
+                </small>
+                {% if current_user.role in ['admin', 'manager'] %}
+                <button class="btn btn-sm btn-outline-primary" id="regenerate-carrier-commentary">Regenerate</button>
+                {% endif %}
+            </div>
+        </div>
+        <div id="carrier-commentary-content">
+            {% if selected_summary and selected_summary.ai_commentary_html %}
+            {{ selected_summary.ai_commentary_html | safe }}
+            {% else %}
+            <p class="mb-0">Carrier commentary is being generated for this period.</p>
+            {% endif %}
+        </div>
+        <small class="text-muted d-block mt-2" id="carrier-regeneration-count">Regenerated {{ selected_summary.ai_regeneration_count if selected_summary else 0 }} times</small>
+    </article>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+(() => {
+    function initRegenerateButton(buttonElement, endpoint, contentContainerId, onSuccess) {
+        buttonElement.addEventListener("click", async function() {
+            const originalText = this.innerHTML;
+
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Regenerating...';
+            this.disabled = true;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById(contentContainerId).innerHTML = data.content_html;
+
+                    const timestampEl = buttonElement.closest(".ai-content-card")
+                                                      .querySelector(".ai-generated-timestamp");
+                    if (timestampEl) {
+                        timestampEl.textContent = "Just regenerated";
+                    }
+
+                    if (typeof onSuccess === "function") {
+                        onSuccess(data);
+                    }
+
+                    buttonElement.innerHTML = "✓ Updated";
+                    buttonElement.classList.add("btn-success");
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.disabled = false;
+                        buttonElement.classList.remove("btn-success");
+                    }, 2000);
+                } else {
+                    buttonElement.innerHTML = "✗ Failed - Try again";
+                    buttonElement.disabled = false;
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error("Regenerate failed:", error);
+                buttonElement.innerHTML = originalText;
+                buttonElement.disabled = false;
+            }
+        });
+    }
+
+    const button = document.getElementById("regenerate-carrier-commentary");
+    const card = document.getElementById("carrier-ai-commentary-card");
+    if (!button || !card) {
+        return;
+    }
+
+    const carrierId = card.getAttribute("data-carrier-id");
+    if (!carrierId) {
+        return;
+    }
+
+    initRegenerateButton(
+        button,
+        `/carriers/regenerate-commentary/${carrierId}?period={{ period }}`,
+        "carrier-commentary-content",
+        (data) => {
+            const regenCountEl = document.getElementById("carrier-regeneration-count");
+            if (regenCountEl) {
+                regenCountEl.textContent = `Regenerated ${data.regeneration_count || 0} times`;
+            }
+        }
+    );
+})();
+</script>
+{% endblock %}

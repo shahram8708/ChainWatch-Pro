@@ -1,0 +1,436 @@
+{% extends "app_base.html" %}
+{% from "macros/shipment.html" import risk_badge %}
+{% from "macros/alerts.html" import alert_item, alert_severity_badge %}
+{% from "macros/forms.html" import render_textarea %}
+{% from "macros/charts.html" import drs_circular_gauge %}
+
+{% block page_title %}{{ shipment.external_reference }} - Shipment Detail - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block app_content %}
+{% set drs_score = (latest_disruption.drs_total if latest_disruption else shipment.disruption_risk_score) | float %}
+{% if drs_score >= 81 %}
+    {% set risk_label = 'Critical' %}
+    {% set risk_class = 'text-danger' %}
+    {% set gauge_color = '#D32F2F' %}
+{% elif drs_score >= 61 %}
+    {% set risk_label = 'Warning' %}
+    {% set risk_class = 'text-warning' %}
+    {% set gauge_color = '#FF8C00' %}
+{% elif drs_score >= 31 %}
+    {% set risk_label = 'Watch' %}
+    {% set risk_class = 'text-warning' %}
+    {% set gauge_color = '#F59E0B' %}
+{% else %}
+    {% set risk_label = 'On Track' %}
+    {% set risk_class = 'text-success' %}
+    {% set gauge_color = '#00A86B' %}
+{% endif %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('shipments.list_shipments') }}">Shipments</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ shipment.external_reference }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+    <div>
+        <div class="mb-2">{{ risk_badge(shipment.disruption_risk_score, 'xl') }}</div>
+        <h1 class="mb-1">{{ shipment.external_reference }}</h1>
+        <p class="text-muted mb-0">{{ shipment.customer_name or 'Customer not provided' }}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('shipments.edit', id=shipment.id) }}" class="btn btn-outline-primary">Edit Shipment</a>
+        <button
+            id="archive-shipment-btn"
+            class="btn btn-outline-danger"
+            type="button"
+            data-archive-url="{{ url_for('shipments.archive', id=shipment.id) }}"
+            data-shipment-reference="{{ shipment.external_reference }}"
+        >Archive</button>
+    </div>
+</div>
+
+<section class="card shadow-sm border-0 mb-4">
+    <div class="card-body py-3">
+        <div class="row g-3">
+            <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-geo-alt text-primary"></i><div><small class="text-muted d-block">Origin Port</small><strong>{{ shipment.origin_port_code }}</strong></div></div>
+            <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-flag text-danger"></i><div><small class="text-muted d-block">Destination Port</small><strong>{{ shipment.destination_port_code }}</strong></div></div>
+            <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-truck text-primary"></i><div><small class="text-muted d-block">Carrier</small><strong>{{ shipment.carrier.name if shipment.carrier else 'Unassigned' }}</strong></div></div>
+            <div class="col-lg col-md-6 d-flex align-items-center gap-2"><i class="bi bi-diagram-3 text-primary"></i><div><small class="text-muted d-block">Mode</small><strong>{{ shipment.mode | replace('_', ' ') | title }}</strong></div></div>
+            <div class="col-lg col-md-12 d-flex align-items-center gap-2"><i class="bi bi-pin-map text-primary"></i><div><small class="text-muted d-block">Current Location</small><strong>{{ shipment.current_location_name or 'Location pending' }}</strong></div></div>
+        </div>
+        <small class="text-muted d-block mt-3">Last Updated {{ shipment.updated_at | format_datetime }}</small>
+    </div>
+</section>
+
+<div class="row g-4 align-items-start">
+    <div class="col-xl-8">
+        <section class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Disruption Risk Score</h2></div>
+            <div class="card-body">
+                {% if latest_disruption %}
+                <div class="drs-gauge-container">
+                    {{ drs_circular_gauge(drs_score, size=240, stroke_width=16, show_label=True) }}
+                </div>
+
+                <div class="mt-3">
+                    <div class="drs-sub-score-row">
+                        <div class="drs-sub-score-label">TVS <i class="bi bi-info-circle drs-sub-score-info-icon" data-bs-toggle="tooltip" title="Transit Volatility Score"></i></div>
+                        <div class="progress flex-grow-1"><div class="progress-bar" style="width: {{ latest_disruption.tvs | float }}%; background: #0077CC;"></div></div>
+                        <div class="drs-sub-score-value">{{ '%.1f' | format(latest_disruption.tvs | float) }}%</div>
+                    </div>
+                    <div class="drs-sub-score-row">
+                        <div class="drs-sub-score-label">MCS <i class="bi bi-info-circle drs-sub-score-info-icon" data-bs-toggle="tooltip" title="Mode Complexity Score"></i></div>
+                        <div class="progress flex-grow-1"><div class="progress-bar" style="width: {{ latest_disruption.mcs | float }}%; background: #3B82F6;"></div></div>
+                        <div class="drs-sub-score-value">{{ '%.1f' | format(latest_disruption.mcs | float) }}%</div>
+                    </div>
+                    <div class="drs-sub-score-row">
+                        <div class="drs-sub-score-label">EHS <i class="bi bi-info-circle drs-sub-score-info-icon" data-bs-toggle="tooltip" title="External Hazard Score"></i></div>
+                        <div class="progress flex-grow-1"><div class="progress-bar" style="width: {{ latest_disruption.ehs | float }}%; background: #D32F2F;"></div></div>
+                        <div class="drs-sub-score-value">{{ '%.1f' | format(latest_disruption.ehs | float) }}%</div>
+                    </div>
+                    <div class="drs-sub-score-row">
+                        <div class="drs-sub-score-label">CRS <i class="bi bi-info-circle drs-sub-score-info-icon" data-bs-toggle="tooltip" title="Carrier Reliability Score"></i></div>
+                        <div class="progress flex-grow-1"><div class="progress-bar" style="width: {{ latest_disruption.crs | float }}%; background: #10B981;"></div></div>
+                        <div class="drs-sub-score-value">{{ '%.1f' | format(latest_disruption.crs | float) }}%</div>
+                    </div>
+                    <div class="drs-sub-score-row">
+                        <div class="drs-sub-score-label">DTAS <i class="bi bi-info-circle drs-sub-score-info-icon" data-bs-toggle="tooltip" title="Delay Trend Acceleration Score"></i></div>
+                        <div class="progress flex-grow-1"><div class="progress-bar" style="width: {{ latest_disruption.dtas | float }}%; background: #F59E0B;"></div></div>
+                        <div class="drs-sub-score-value">{{ '%.1f' | format(latest_disruption.dtas | float) }}%</div>
+                    </div>
+                    <div class="drs-sub-score-row">
+                        <div class="drs-sub-score-label">CPS <i class="bi bi-info-circle drs-sub-score-info-icon" data-bs-toggle="tooltip" title="Customs Processing Score"></i></div>
+                        <div class="progress flex-grow-1"><div class="progress-bar" style="width: {{ latest_disruption.cps | float }}%; background: #8B5CF6;"></div></div>
+                        <div class="drs-sub-score-value">{{ '%.1f' | format(latest_disruption.cps | float) }}%</div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-hourglass-split fs-2 text-muted"></i>
+                    <p class="text-muted mt-2 mb-0">DRS score will be computed within 15 minutes of shipment creation.</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="card route-map-card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                <h2 class="h5 mb-0">Shipment Route</h2>
+            </div>
+            <div class="card-body position-relative">
+                {% if route_recommendations and drs_score > 60 %}
+                <div class="map-toggle-panel">
+                    {% for rec in route_recommendations %}
+                    <label class="form-check form-switch small mb-1 d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" data-route-option="{{ rec.option_label }}">
+                        <span>Option {{ rec.option_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div id="route-map" class="map-container" style="height: 380px;"></div>
+            </div>
+        </section>
+
+        <section class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Shipment Milestones</h2></div>
+            <div class="card-body">
+                <div class="milestone-timeline">
+                    {% for milestone in milestones %}
+                    <div class="milestone-item">
+                        <div class="milestone-node-wrapper">
+                            {% if milestone.status == 'completed_on_time' %}
+                            <span class="milestone-node milestone-node-complete-ontime"><i class="bi bi-check"></i></span>
+                            {% elif milestone.status == 'completed_late' %}
+                            <span class="milestone-node milestone-node-complete-late"><i class="bi bi-exclamation"></i></span>
+                            {% elif milestone.status == 'missed' %}
+                            <span class="milestone-node milestone-node-missed"><i class="bi bi-x"></i></span>
+                            {% elif milestone.status == 'in_progress' %}
+                            <span class="milestone-node milestone-node-inprogress"></span>
+                            {% else %}
+                            <span class="milestone-node milestone-node-upcoming"></span>
+                            {% endif %}
+                            {% if not loop.last %}<span class="milestone-line"></span>{% endif %}
+                        </div>
+                        <div class="milestone-content">
+                            <h3 class="h6 mb-1">{{ milestone.name }}</h3>
+                            <div class="milestone-planned-time">Planned: {{ milestone.planned_datetime | format_datetime if milestone.planned_datetime else 'TBD' }}</div>
+                            <div class="milestone-actual-time">Actual: {{ milestone.actual_datetime | format_datetime if milestone.actual_datetime else 'Pending' }}</div>
+                            <span class="badge text-bg-light mt-1 milestone-delta">{{ milestone.delta_text }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-4">
+        {% set ehs_signals = latest_disruption.ehs_signals if latest_disruption and latest_disruption.ehs_signals else [] %}
+        {% set primary_signal = ehs_signals[0] if ehs_signals else {} %}
+        {% set disruption_type = (primary_signal.get('type', 'general') if primary_signal is mapping else 'general') %}
+        {% set detection_source = (primary_signal.get('source', 'Carrier update') if primary_signal is mapping else 'Carrier update') %}
+        {% set eta_impact_days = (primary_signal.get('eta_impact_days', 0) if primary_signal is mapping else 0) %}
+        {% set confidence_level = (primary_signal.get('confidence', 72) if primary_signal is mapping else 72) %}
+
+        {% if shipment.disruption_risk_score | float > 30 %}
+        <section class="card disruption-card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Disruption Analysis</h2></div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="disruption-type-badge">{{ disruption_type | replace('_', ' ') | title }}</span>
+                    {{ alert_severity_badge(shipment.risk_level) }}
+                </div>
+                <dl class="row mb-0 small">
+                    <dt class="col-5 text-muted">Detection Source</dt><dd class="col-7">{{ detection_source }}</dd>
+                    <dt class="col-5 text-muted">Detection Timestamp</dt><dd class="col-7">{{ latest_disruption.computed_at | format_datetime if latest_disruption else shipment.updated_at | format_datetime }}</dd>
+                    <dt class="col-5 text-muted">ETA Impact</dt>
+                    <dd class="col-7">
+                        {% if eta_impact_days | float > 0 %}<span class="text-danger">+{{ eta_impact_days }} days</span>{% else %}<span class="text-success">None detected</span>{% endif %}
+                    </dd>
+                    <dt class="col-5 text-muted">SLA Breach Probability</dt><dd class="col-7"><span class="badge {% if shipment.sla_breach_probability | float > 50 %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ '%.1f' | format(shipment.sla_breach_probability | float) }}%</span></dd>
+                    <dt class="col-5 text-muted">Confidence Level</dt><dd class="col-7">{{ confidence_level }}%</dd>
+                </dl>
+
+                <div class="ai-summary-card ai-content-card mt-3 position-relative" id="shipment-ai-summary-card" data-shipment-id="{{ shipment.id }}">
+                    <span class="ai-tag">AI</span>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="h6 mb-0"><i class="bi bi-stars me-1"></i>Gemini Disruption Summary</h3>
+                        <div class="d-flex align-items-center gap-2">
+                            <small class="text-muted ai-generated-timestamp" id="shipment-ai-generated">Generated {{ ai_disruption_summary.generated_at if ai_disruption_summary and ai_disruption_summary.generated_at else 'just now' }}</small>
+                            {% if current_user.role in ['admin', 'manager'] %}
+                            <button class="btn btn-sm btn-outline-primary" id="regenerate-shipment-summary-btn">Regenerate</button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if ai_disruption_summary and ai_disruption_summary.served_stale and ai_disruption_summary.stale_warning %}
+                    <span class="badge text-bg-warning mb-2" id="shipment-ai-stale-warning">{{ ai_disruption_summary.stale_warning }}</span>
+                    {% else %}
+                    <span class="badge text-bg-warning mb-2 d-none" id="shipment-ai-stale-warning"></span>
+                    {% endif %}
+
+                    <div id="shipment-ai-summary-content">
+                    {% if ai_disruption_summary and ai_disruption_summary.formatted_html %}
+                        {{ ai_disruption_summary.formatted_html | safe }}
+                    {% else %}
+                        <p class="mb-0 small">Google Gemini indicates rising volatility along this lane. Buffer time is advised at customs handoffs and carrier checkpoint windows. Approving an alternate route can reduce late-delivery probability.</p>
+                    {% endif %}
+                    </div>
+                    <small class="text-muted d-block mt-2" id="shipment-ai-regeneration-count">Regenerated {{ ai_disruption_summary.regeneration_count if ai_disruption_summary else 0 }} times</small>
+                </div>
+            </div>
+        </section>
+        {% else %}
+        <section class="card shadow-sm border-0 mb-4">
+            <div class="card-body text-center py-4">
+                <i class="bi bi-shield-check fs-2 text-success"></i>
+                <p class="mb-0 mt-2 text-muted">No active disruptions detected.</p>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if route_recommendations %}
+        <section class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <h2 class="h5 mb-0">Route Alternatives</h2>
+                <span class="badge text-bg-secondary">{{ route_recommendations | length }}</span>
+            </div>
+
+            {% for recommendation in route_recommendations %}
+            {% set option_class = {'A': 'option-a', 'B': 'option-b', 'C': 'option-c'}.get(recommendation.option_label, 'option-a') %}
+            {% set strategy_label = {'fastest': 'Fastest', 'cost_optimized': 'Cost-Optimized', 'hybrid': 'Hybrid'}.get(recommendation.strategy, recommendation.strategy | replace('_', ' ') | title) %}
+            {% set transit_delta = recommendation.transit_time_delta_hours | float %}
+            {% set cost_delta = recommendation.cost_delta_inr | float %}
+            {% set confidence = recommendation.on_time_confidence | float %}
+            <article class="card route-alt-card {{ option_class }} shadow-sm border-0 mb-3" data-recommendation-id="{{ recommendation.id }}">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="route-option-label">{{ recommendation.option_label }}</span>
+                            <span class="badge text-bg-light">{{ strategy_label }}</span>
+                        </div>
+                        <small class="text-muted">ETA {{ recommendation.revised_eta | format_datetime }}</small>
+                    </div>
+
+                    <div class="row g-2 small mb-3">
+                        <div class="col-6">Transit Delta:</div>
+                        <div class="col-6 text-end {% if transit_delta < 0 %}text-success{% elif transit_delta > 0 %}text-danger{% endif %}">
+                            {% if transit_delta < 0 %}-{{ transit_delta | abs }}h{% elif transit_delta > 0 %}+{{ transit_delta }}h{% else %}No change{% endif %}
+                        </div>
+                        <div class="col-6">Cost Delta:</div>
+                        <div class="col-6 text-end {% if cost_delta <= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if cost_delta <= 0 %}-{% else %}+{% endif %}{{ (cost_delta | abs) | format_currency_inr }}
+                        </div>
+                    </div>
+
+                    <div class="route-confidence-score {% if confidence > 80 %}text-success{% elif confidence >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ '%.1f' | format(confidence) }}%
+                    </div>
+                    <div class="small text-muted mb-2">On-time confidence</div>
+
+                    <div class="execution-countdown small mb-3" data-deadline="{{ recommendation.execution_deadline.isoformat() }}">
+                        <i class="bi bi-clock me-1"></i>
+                        <span>Calculating remaining time...</span>
+                    </div>
+
+                    <form
+                        class="route-decision-form"
+                        data-approve-url="{{ url_for('shipments.approve_recommendation', shipment_id=shipment.id, rec_id=recommendation.id) }}"
+                        data-dismiss-url="{{ url_for('shipments.dismiss_recommendation', shipment_id=shipment.id, rec_id=recommendation.id) }}"
+                    >
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="recommendation_id" value="{{ recommendation.id }}">
+                        <div class="mb-2">
+                            <label class="form-label">Decision Notes (optional)</label>
+                            <textarea class="form-control" id="decision-notes-{{ recommendation.id }}" name="decision_notes" rows="2" maxlength="1000" data-max-length="1000"></textarea>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button type="submit" name="submit_approve" class="btn btn-primary btn-sm btn-approve-route">Approve Reroute</button>
+                            <button type="submit" name="submit_dismiss" class="btn btn-link btn-sm text-muted p-0">Dismiss</button>
+                        </div>
+                        <div class="route-decision-feedback small mt-2 d-none"></div>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </section>
+        {% elif drs_score > 60 %}
+        <section class="card shadow-sm border-0 mb-4">
+            <div class="card-body text-center py-4">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-muted mt-3 mb-0">Route alternatives are being generated...</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                <h2 class="h5 mb-0">Shipment Alerts</h2>
+                <a href="{{ url_for('alerts.index', shipment_id=shipment.id) }}" class="small">View all alerts</a>
+            </div>
+            <div class="card-body p-0">
+                {% for alert in recent_alerts %}
+                {{ alert_item(alert) }}
+                {% else %}
+                <div class="p-3 text-muted">No alerts for this shipment.</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="modal fade" id="archiveShipmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5 mb-0">Archive Shipment?</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to archive this shipment? It will be hidden from active views.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-archive-shipment">Archive</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" ></script>
+<script type="module">
+import { initRouteMap } from "{{ url_for('static', filename='js/map.js') }}";
+
+document.addEventListener("DOMContentLoaded", () => {
+    const shipmentData = {{ shipment_map_data | tojson }};
+    initRouteMap("route-map", shipmentData);
+
+    function initRegenerateButton(buttonElement, endpoint, contentContainerId) {
+        buttonElement.addEventListener("click", async function() {
+            const originalText = this.innerHTML;
+
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Regenerating...';
+            this.disabled = true;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById(contentContainerId).innerHTML = data.content_html;
+
+                    const timestampEl = buttonElement.closest(".ai-content-card")
+                                                      .querySelector(".ai-generated-timestamp");
+                    if (timestampEl) {
+                        timestampEl.textContent = "Just regenerated";
+                    }
+
+                    const regenCountEl = document.getElementById("shipment-ai-regeneration-count");
+                    if (regenCountEl) {
+                        regenCountEl.textContent = `Regenerated ${data.regeneration_count || 0} times`;
+                    }
+
+                    const staleBadge = document.getElementById("shipment-ai-stale-warning");
+                    if (staleBadge) {
+                        if (data.served_stale && data.stale_warning) {
+                            staleBadge.textContent = data.stale_warning;
+                            staleBadge.classList.remove("d-none");
+                        } else {
+                            staleBadge.classList.add("d-none");
+                        }
+                    }
+
+                    buttonElement.innerHTML = "✓ Updated";
+                    buttonElement.classList.add("btn-success");
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.disabled = false;
+                        buttonElement.classList.remove("btn-success");
+                    }, 2000);
+
+                } else {
+                    buttonElement.innerHTML = "✗ Failed - Try again";
+                    buttonElement.disabled = false;
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                    }, 3000);
+                }
+
+            } catch (error) {
+                console.error("Regenerate failed:", error);
+                buttonElement.innerHTML = originalText;
+                buttonElement.disabled = false;
+            }
+        });
+    }
+
+    const regenButton = document.getElementById("regenerate-shipment-summary-btn");
+    if (regenButton) {
+        initRegenerateButton(
+            regenButton,
+            "{{ url_for('shipments.regenerate_disruption_summary', shipment_id=shipment.id) }}",
+            "shipment-ai-summary-content"
+        );
+    }
+});
+</script>
+{% endblock %}

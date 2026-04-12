@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}429 Too Many Requests | ChainWatch Pro{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-card">
+        <h1>429</h1>
+        <h2>Too many requests</h2>
+        <p>Your request rate is temporarily limited. Please wait and try again.</p>
+        <a href="/login" class="btn btn-primary">Back to login</a>
+    </div>
+</div>
+{% endblock %}

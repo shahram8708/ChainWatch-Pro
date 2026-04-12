@@ -1,0 +1,99 @@
+{% from "macros/alerts.html" import alert_severity_badge %}
+
+{% if selected_alert %}
+{% set recommendations = {
+    'weather': 'Re-route through weather-safe corridor and notify downstream teams.',
+    'port_congestion': 'Shift to alternate terminal and request priority unloading slot.',
+    'carrier_delay': 'Escalate with carrier and trigger backup lane capacity.',
+    'geopolitical': 'Activate compliance review and choose lower-risk transit lane.',
+    'customs': 'Prepare additional documentation and request customs pre-clearance.'
+} %}
+{% set recommended_action = recommendations.get(selected_alert.alert_type, 'Review shipment details and evaluate alternate route options immediately.') %}
+<div class="alert-detail-content" data-alert-id="{{ selected_alert.id }}">
+    <div class="d-flex d-xl-none mb-3">
+        <button class="btn btn-outline-secondary btn-sm" type="button" id="mobile-alert-back-btn">
+            <i class="bi bi-arrow-left me-1"></i>Back to alerts
+        </button>
+    </div>
+
+    <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+        <div>
+            <div class="mb-2">{{ alert_severity_badge(selected_alert.severity) }}</div>
+            <h3 class="h4 mb-1">{{ selected_alert.title }}</h3>
+            <p class="text-muted mb-0">{{ selected_alert.created_at | format_datetime }}</p>
+        </div>
+    </div>
+
+    <section class="card border-0 bg-light mb-3">
+        <div class="card-body">
+            <h4 class="h6">Affected Shipment</h4>
+            {% if selected_alert.shipment %}
+            <p class="mb-1">
+                <i class="bi bi-box-seam me-1"></i>
+                <a href="{{ url_for('shipments.detail', id=selected_alert.shipment.id) }}" class="text-decoration-none fw-semibold">{{ selected_alert.shipment.external_reference or selected_alert.shipment.id }}</a>
+            </p>
+            <p class="mb-1 text-muted small">{{ selected_alert.shipment.origin_port_code }} -> {{ selected_alert.shipment.destination_port_code }}</p>
+            <p class="mb-0 text-muted small">{{ selected_alert.shipment.carrier.name if selected_alert.shipment.carrier else 'Carrier pending' }} | DRS {{ '%.1f' | format(selected_alert.shipment.disruption_risk_score | float) }}</p>
+            {% else %}
+            <p class="text-muted mb-0">No shipment is directly attached to this alert.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="mb-3">
+        <div class="row g-2 small mb-2">
+            <div class="col-sm-4 text-muted">Alert Type</div>
+            <div class="col-sm-8">{{ selected_alert.alert_type | replace('_', ' ') | title }}</div>
+            <div class="col-sm-4 text-muted">Detection Source</div>
+            <div class="col-sm-8">Gemini Enrichment + Carrier Signals</div>
+        </div>
+    </section>
+
+    <section class="card border-0 mb-3 alert-description-card ai-content-card" id="alert-ai-description-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="h6 mb-0">Description</h4>
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted ai-generated-timestamp" id="alert-ai-generated-at">Generated {{ selected_alert.ai_generated_at | format_datetime if selected_alert.ai_generated_at else selected_alert.created_at | format_datetime }}</small>
+                    {% if current_user.role in ['admin', 'manager'] %}
+                    <button class="btn btn-sm btn-outline-primary" type="button" id="regenerate-alert-description-btn" data-regenerate-url="{{ url_for('alerts.regenerate_description', id=selected_alert.id) }}">Regenerate</button>
+                    {% endif %}
+                </div>
+            </div>
+            <span class="badge text-bg-warning mb-2 d-none" id="alert-ai-stale-warning"></span>
+            <div id="alert-description-content">
+                <p class="mb-0">{{ selected_alert.description }}</p>
+            </div>
+            <small class="text-muted d-block mt-2" id="alert-ai-regeneration-count">Regenerated {{ selected_alert.ai_regeneration_count | default(0) }} times</small>
+        </div>
+    </section>
+
+    <section class="ai-summary-card mb-3">
+        <h4 class="h6 mb-2"><i class="bi bi-lightbulb me-1"></i>Recommended Action</h4>
+        <p class="mb-0 small">{{ recommended_action }}</p>
+    </section>
+
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        {% if selected_alert.shipment %}
+        <a class="btn btn-primary" href="{{ url_for('shipments.detail', id=selected_alert.shipment.id) }}">Go to Shipment</a>
+        {% endif %}
+
+        {% if not selected_alert.is_acknowledged %}
+        <button
+            class="btn btn-outline-primary"
+            type="button"
+            id="acknowledge-alert-btn"
+            data-alert-id="{{ selected_alert.id }}"
+            data-ack-url="{{ url_for('alerts.acknowledge', id=selected_alert.id) }}"
+        >Acknowledge</button>
+        {% else %}
+        <span class="text-success fw-semibold">Acknowledged ✓{% if selected_alert.acknowledging_user %} by {{ selected_alert.acknowledging_user.full_name }}{% endif %} {% if selected_alert.acknowledged_at %}at {{ selected_alert.acknowledged_at | format_datetime }}{% endif %}</span>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="h-100 d-flex flex-column align-items-center justify-content-center text-center text-muted py-5">
+    <i class="bi bi-bell fs-1 mb-3"></i>
+    <p class="mb-0">Select an alert to view details.</p>
+</div>
+{% endif %}

@@ -1,0 +1,61 @@
+{% extends "app_base.html" %}
+{% from "macros/forms.html" import form_errors, render_datetime_local, render_field, render_select, render_textarea %}
+
+{% block page_title %}New Shipment - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('shipments.list_shipments') }}">Shipments</a></li>
+        <li class="breadcrumb-item active" aria-current="page">New Shipment</li>
+    </ol>
+</nav>
+
+<div class="card shadow-sm border-0 mx-auto shipment-form-card">
+    <div class="card-header bg-white d-flex align-items-center gap-2">
+        <i class="bi bi-box-seam fs-5 text-primary"></i>
+        <h1 class="h4 mb-0">Create New Shipment</h1>
+    </div>
+    <div class="card-body p-4">
+        {{ form_errors(form) }}
+        <form method="post" id="shipment-create-form" data-date-validation="true">
+            {{ form.csrf_token }}
+
+            <div class="row g-3">
+                <div class="col-12">{{ render_field(form.external_reference) }}</div>
+                <div class="col-md-6">{{ render_select(form.carrier_id) }}</div>
+                <div class="col-md-6">{{ render_select(form.mode) }}</div>
+                <div class="col-md-6">{{ render_field(form.origin_port_code, placeholder='INNSA') }}</div>
+                <div class="col-md-6">{{ render_field(form.destination_port_code, placeholder='DEHAM') }}</div>
+                <div class="col-md-6">{{ render_datetime_local(form.estimated_departure) }}</div>
+                <div class="col-md-6">{{ render_datetime_local(form.estimated_arrival) }}</div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="{{ form.cargo_value_inr.id }}">{{ form.cargo_value_inr.label.text }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        {{ form.cargo_value_inr(class_='form-control' + (' is-invalid' if form.cargo_value_inr.errors else '')) }}
+                    </div>
+                    {% for error in form.cargo_value_inr.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-12 col-md-6">{{ render_field(form.customer_name) }}</div>
+                <div class="col-12">{{ render_textarea(form.origin_address, rows=3, max_length=500) }}</div>
+                <div class="col-12">{{ render_textarea(form.destination_address, rows=3, max_length=500) }}</div>
+            </div>
+
+            <div class="alert alert-danger d-none mt-3" id="shipment-date-error"></div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary btn-lg w-100">Create Shipment</button>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('shipments.list_shipments') }}" class="text-muted">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

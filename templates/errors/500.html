@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}500 Server Error | ChainWatch Pro{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-card">
+        <h1>500</h1>
+        <h2>Something went wrong</h2>
+        <p>We encountered an internal error. Please try again in a moment.</p>
+        <a href="/dashboard" class="btn btn-primary">Return to dashboard</a>
+    </div>
+</div>
+{% endblock %}

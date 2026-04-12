@@ -1,0 +1,538 @@
+{% extends "app_base.html" %}
+{% from "macros/charts.html" import drs_circular_gauge %}
+
+{% block page_title %}Route Optimizer - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+.optimizer-card {
+    background: #ffffff;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(27, 58, 107, 0.08);
+}
+
+.optimizer-option-card {
+    border-radius: 14px;
+    border: 1px solid #e8edf5;
+    height: 100%;
+    position: relative;
+}
+
+.optimizer-option-card.option-approved-shadow {
+    border-color: rgba(0, 168, 107, 0.45);
+    box-shadow: 0 6px 20px rgba(0, 168, 107, 0.15);
+}
+
+.optimizer-option-card.option-dimmed {
+    opacity: 0.5;
+}
+
+.option-label-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.option-label-a {
+    background: var(--color-action-blue);
+}
+
+.option-label-b {
+    background: var(--color-warning-orange);
+}
+
+.option-label-c {
+    background: var(--color-success);
+}
+
+.subscore-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.delta-positive {
+    color: var(--color-critical-red);
+    font-weight: 700;
+}
+
+.delta-negative {
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+.countdown-urgent {
+    color: var(--color-critical-red);
+    font-weight: 700;
+}
+
+.no-selection-state {
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(145deg, #f7fbff, #f0f7ff);
+    border: 1px dashed #c9d7ea;
+    border-radius: 14px;
+}
+
+.alt-route-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 42px;
+}
+
+@media (max-width: 991.98px) {
+    .selector-row {
+        flex-direction: column;
+    }
+
+    .selector-row .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Route Optimizer</li>
+    </ol>
+</nav>
+
+<div class="mb-4">
+    <h1 class="mb-1">Route Optimizer</h1>
+    <p class="text-muted mb-0">Review AI-generated route alternatives for at-risk shipments. Approve or dismiss each option to log your decision.</p>
+</div>
+
+<section class="optimizer-card card mb-4">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Select At-Risk Shipment</h2>
+
+        {% if at_risk_shipments %}
+        <form class="selector-row d-flex align-items-center gap-2" method="get" action="{{ url_for('optimizer.index') }}" id="optimizer-selector-form">
+            {{ selector_form.shipment_id(class_='form-select form-select-lg', id='optimizer-shipment-select') }}
+            <button type="submit" class="btn btn-primary btn-lg">Load Analysis</button>
+        </form>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-shield-check text-success" style="font-size: 40px;"></i>
+            <h3 class="h5 mt-3">No shipments require rerouting right now.</h3>
+            <p class="text-muted mb-0">All active shipments have DRS below 60.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if selected_shipment %}
+{% set drs_score = (latest_drs.drs_total if latest_drs else selected_shipment.disruption_risk_score) | float %}
+{% set has_pending = recommendations | selectattr('status', 'equalto', 'pending') | list | length > 0 %}
+{% set has_approved = recommendations | selectattr('status', 'equalto', 'approved') | list | length > 0 %}
+{% set rec_a = (recommendations | selectattr('option_label', 'equalto', 'A') | list | first) %}
+{% set rec_b = (recommendations | selectattr('option_label', 'equalto', 'B') | list | first) %}
+{% set rec_c = (recommendations | selectattr('option_label', 'equalto', 'C') | list | first) %}
+
+{% set signal_items = [
+    {
+        'label': 'Weather',
+        'score': (latest_drs.ehs_signals.weather_score if latest_drs and latest_drs.ehs_signals else 0),
+        'description': (latest_drs.ehs_signals.weather_description if latest_drs and latest_drs.ehs_signals else 'No weather signal'),
+        'icon': 'bi-cloud-lightning-rain'
+    },
+    {
+        'label': 'Port Congestion',
+        'score': (latest_drs.ehs_signals.port_congestion_score if latest_drs and latest_drs.ehs_signals else 0),
+        'description': (latest_drs.ehs_signals.port_congestion_description if latest_drs and latest_drs.ehs_signals else 'No congestion signal'),
+        'icon': 'bi-building'
+    },
+    {
+        'label': 'Customs Risk',
+        'score': (latest_drs.ehs_signals.customs_score if latest_drs and latest_drs.ehs_signals else 0),
+        'description': (latest_drs.ehs_signals.customs_description if latest_drs and latest_drs.ehs_signals else 'No customs signal'),
+        'icon': 'bi-file-earmark-lock'
+    },
+    {
+        'label': 'Event Risk',
+        'score': (latest_drs.ehs_signals.event_score if latest_drs and latest_drs.ehs_signals else 0),
+        'description': (latest_drs.ehs_signals.event_description if latest_drs and latest_drs.ehs_signals else 'No route event signal'),
+        'icon': 'bi-newspaper'
+    }
+] %}
+{% set top_signals = signal_items | sort(attribute='score', reverse=True) %}
+
+<section class="optimizer-card card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+            <div>
+                <div class="text-muted small mb-1">Shipment</div>
+                <div class="fs-4 fw-bold">{{ selected_shipment.external_reference or selected_shipment.id }}</div>
+                <div class="text-muted">{{ selected_shipment.origin_port_code }} <i class="bi bi-arrow-right"></i> {{ selected_shipment.destination_port_code }}</div>
+                <div class="small mt-1">
+                    <span class="me-2"><i class="bi bi-truck"></i> {{ selected_shipment.carrier.name if selected_shipment.carrier else 'Unassigned Carrier' }}</span>
+                    <span><i class="bi bi-diagram-3"></i> {{ selected_shipment.mode | replace('_', ' ') | title }}</span>
+                </div>
+                <div class="small mt-1 text-muted">ETA: {{ selected_shipment.estimated_arrival | format_datetime }}</div>
+                <div class="small mt-1"><span class="badge text-bg-light">{{ selected_shipment.status | replace('_', ' ') | title }}</span></div>
+            </div>
+
+            <div class="text-center">
+                {{ drs_circular_gauge(drs_score, size=200, stroke_width=14, show_label=False, label='DRS') }}
+                <div class="small text-muted">Risk Level: {{ selected_shipment.risk_level | title }}</div>
+            </div>
+        </div>
+
+        {% if latest_drs %}
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+            <span class="subscore-dot" style="background:#0077CC;" title="TVS">{{ '%.0f' | format(latest_drs.tvs | float) }}</span>
+            <span class="subscore-dot" style="background:#3B82F6;" title="MCS">{{ '%.0f' | format(latest_drs.mcs | float) }}</span>
+            <span class="subscore-dot" style="background:#D32F2F;" title="EHS">{{ '%.0f' | format(latest_drs.ehs | float) }}</span>
+            <span class="subscore-dot" style="background:#10B981;" title="CRS">{{ '%.0f' | format(latest_drs.crs | float) }}</span>
+            <span class="subscore-dot" style="background:#F59E0B;" title="DTAS">{{ '%.0f' | format(latest_drs.dtas | float) }}</span>
+            <span class="subscore-dot" style="background:#7E22CE;" title="CPS">{{ '%.0f' | format(latest_drs.cps | float) }}</span>
+            <span class="small text-muted ms-2">TVS, MCS, EHS, CRS, DTAS, CPS</span>
+        </div>
+        {% endif %}
+
+        <div class="card bg-light border-0 mb-3">
+            <div class="card-body" style="background: var(--color-light-blue); border-radius: 10px;">
+                <h3 class="h6 mb-2">Disruption Summary</h3>
+                {% for signal in top_signals[:2] %}
+                <div class="d-flex gap-2 align-items-start mb-2">
+                    <i class="bi {{ signal.icon }} text-primary"></i>
+                    <div>
+                        <div class="fw-semibold">{{ signal.label }} ({{ '%.0f' | format(signal.score | float) }})</div>
+                        <div class="small text-muted">{{ signal.description }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if latest_alert and latest_alert.description %}
+                <div class="mt-2 p-2 bg-white rounded small">
+                    <span class="badge text-bg-primary">AI</span>
+                    <span class="ms-1">{{ latest_alert.description }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if not has_pending %}
+        <button class="btn btn-primary" id="analyze-routes-btn" data-shipment-id="{{ selected_shipment.id }}">
+            <span class="btn-label"><i class="bi bi-magic"></i> Analyze Routes</span>
+        </button>
+        {% endif %}
+    </div>
+</section>
+
+<section id="optimizer-recommendations-wrapper">
+<section class="optimizer-card card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Route Alternatives <span class="badge text-bg-secondary">{{ recommendations | length }}</span></h2>
+        </div>
+
+        <div class="row g-3">
+            {% for label in ['A', 'B', 'C'] %}
+            {% set recommendation = (recommendations | selectattr('option_label', 'equalto', label) | list | first) %}
+            <div class="col-xl-4">
+                {% if recommendation %}
+                {% set confidence = recommendation.on_time_confidence | float %}
+                {% set transit_delta = recommendation.transit_time_delta_hours | float %}
+                {% set cost_delta = recommendation.cost_delta_inr | float %}
+                {% set is_dimmed = has_approved and recommendation.status != 'approved' %}
+                <article class="optimizer-option-card p-3 {% if recommendation.status == 'approved' %}option-approved-shadow{% endif %} {% if is_dimmed %}option-dimmed{% endif %}">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="option-label-circle option-label-{{ label | lower }}">{{ label }}</span>
+                            <span class="badge text-bg-light">
+                                {{ {'fastest': 'Fastest', 'cost_optimized': 'Cost-Optimized', 'hybrid': 'Hybrid'}.get(recommendation.strategy, recommendation.strategy | title) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="fw-semibold mb-1"><i class="bi bi-truck"></i> {{ recommendation.alt_carrier.name if recommendation.alt_carrier else 'Alternative Carrier' }}</div>
+                    <div class="small text-muted alt-route-description mb-2" title="{{ recommendation.alt_route_description }}">{{ recommendation.alt_route_description }}</div>
+
+                    <div class="mb-2">
+                        <div class="small text-muted">Revised ETA</div>
+                        <div class="fw-bold">{{ recommendation.revised_eta | format_datetime }}</div>
+                    </div>
+
+                    <div class="mb-2 small">
+                        <i class="bi bi-clock"></i>
+                        <span class="{% if transit_delta <= 0 %}delta-negative{% else %}delta-positive{% endif %}">
+                            {% if transit_delta <= 0 %}-{{ '%.1f' | format(transit_delta | abs) }} hrs{% else %}+{{ '%.1f' | format(transit_delta) }} hrs{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="mb-2 small">
+                        <i class="bi bi-wallet2"></i>
+                        <span class="{% if cost_delta <= 0 %}delta-negative{% else %}delta-positive{% endif %}">
+                            {% if cost_delta <= 0 %}₹ -{{ (cost_delta | abs) | format_currency_inr | replace('₹', '') }}{% else %}₹ +{{ cost_delta | format_currency_inr | replace('₹', '') }}{% endif %}
+                        </span>
+                        <div class="text-muted" style="font-size: 11px;">Estimated - based on cargo value and route differential</div>
+                    </div>
+
+                    <div class="text-center my-3">
+                        <div style="font-size: 28px; font-weight: 800; color: {% if confidence >= 80 %}var(--color-success){% elif confidence >= 60 %}var(--color-watch-amber){% else %}var(--color-critical-red){% endif %};">
+                            {{ '%.1f' | format(confidence) }}%
+                        </div>
+                        <div class="small text-muted">On-Time Confidence</div>
+                    </div>
+
+                    <div class="execution-countdown small mb-3" data-deadline="{{ recommendation.execution_deadline.isoformat() }}">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span>Decision required by: {{ recommendation.execution_deadline | format_datetime }}</span>
+                    </div>
+
+                    {% if recommendation.status == 'approved' %}
+                    <div class="alert alert-success py-2 mb-0">
+                        <div class="fw-semibold">✓ Approved</div>
+                        <div class="small text-muted">
+                            {{ recommendation.deciding_user.full_name if recommendation.deciding_user else 'User' }}
+                            at {{ recommendation.decided_at | format_datetime if recommendation.decided_at else '-' }}
+                        </div>
+                    </div>
+                    {% elif recommendation.status == 'dismissed' %}
+                    <div class="alert alert-secondary py-2 mb-0">✗ Dismissed</div>
+                    {% elif recommendation.status == 'expired' %}
+                    <div class="alert alert-danger py-2 mb-0">⚠ Expired on {{ recommendation.execution_deadline | format_datetime }}</div>
+                    {% else %}
+                    <form method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="recommendation_id" value="{{ recommendation.id }}">
+                        <input type="hidden" name="shipment_id" value="{{ selected_shipment.id }}">
+                        <div class="mb-2">
+                            <label class="form-label">Decision Notes</label>
+                            <textarea id="decision-notes-{{ recommendation.id }}" name="decision_notes" class="form-control" rows="4" maxlength="1000" data-max-length="1000"></textarea>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-approve-route" formaction="{{ url_for('optimizer.approve_recommendation', rec_id=recommendation.id) }}">Approve Reroute</button>
+                            <button type="submit" class="btn btn-outline-danger" formaction="{{ url_for('optimizer.dismiss_recommendation', rec_id=recommendation.id) }}">Dismiss</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </article>
+                {% else %}
+                <article class="optimizer-option-card p-3 d-flex flex-column align-items-center justify-content-center text-center">
+                    <div class="option-label-circle option-label-{{ label | lower }} mb-2">{{ label }}</div>
+                    <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                    <div class="small text-muted">Generating alternative...</div>
+                </article>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if rec_a and rec_b and rec_c %}
+{% set earliest_eta = [rec_a.revised_eta, rec_b.revised_eta, rec_c.revised_eta] | min %}
+{% set best_transit = [rec_a.transit_time_delta_hours | float, rec_b.transit_time_delta_hours | float, rec_c.transit_time_delta_hours | float] | min %}
+{% set best_cost = [rec_a.cost_delta_inr | float, rec_b.cost_delta_inr | float, rec_c.cost_delta_inr | float] | min %}
+{% set best_confidence = [rec_a.on_time_confidence | float, rec_b.on_time_confidence | float, rec_c.on_time_confidence | float] | max %}
+{% set best_deadline = [rec_a.execution_deadline, rec_b.execution_deadline, rec_c.execution_deadline] | max %}
+
+<section class="optimizer-card card mb-4">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Side-by-Side Comparison</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Option A</th>
+                        <th>Option B</th>
+                        <th>Option C</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Strategy</th>
+                        <td>{{ rec_a.strategy | replace('_', ' ') | title }}</td>
+                        <td>{{ rec_b.strategy | replace('_', ' ') | title }}</td>
+                        <td>{{ rec_c.strategy | replace('_', ' ') | title }}</td>
+                    </tr>
+                    <tr>
+                        <th>Carrier</th>
+                        <td>{{ rec_a.alt_carrier.name if rec_a.alt_carrier else 'Alternative Carrier' }}</td>
+                        <td>{{ rec_b.alt_carrier.name if rec_b.alt_carrier else 'Alternative Carrier' }}</td>
+                        <td>{{ rec_c.alt_carrier.name if rec_c.alt_carrier else 'Alternative Carrier' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Mode</th>
+                        <td>{{ rec_a.alt_carrier.mode if rec_a.alt_carrier else '-' }}</td>
+                        <td>{{ rec_b.alt_carrier.mode if rec_b.alt_carrier else '-' }}</td>
+                        <td>{{ rec_c.alt_carrier.mode if rec_c.alt_carrier else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Revised ETA</th>
+                        <td class="{% if rec_a.revised_eta == earliest_eta %}table-success{% endif %}">{{ rec_a.revised_eta | format_datetime }}</td>
+                        <td class="{% if rec_b.revised_eta == earliest_eta %}table-success{% endif %}">{{ rec_b.revised_eta | format_datetime }}</td>
+                        <td class="{% if rec_c.revised_eta == earliest_eta %}table-success{% endif %}">{{ rec_c.revised_eta | format_datetime }}</td>
+                    </tr>
+                    <tr>
+                        <th>Transit Time Change</th>
+                        <td class="{% if rec_a.transit_time_delta_hours | float == best_transit %}table-success{% endif %}">{{ '%.1f' | format(rec_a.transit_time_delta_hours | float) }} hrs</td>
+                        <td class="{% if rec_b.transit_time_delta_hours | float == best_transit %}table-success{% endif %}">{{ '%.1f' | format(rec_b.transit_time_delta_hours | float) }} hrs</td>
+                        <td class="{% if rec_c.transit_time_delta_hours | float == best_transit %}table-success{% endif %}">{{ '%.1f' | format(rec_c.transit_time_delta_hours | float) }} hrs</td>
+                    </tr>
+                    <tr>
+                        <th>Cost Delta (₹)</th>
+                        <td class="{% if rec_a.cost_delta_inr | float == best_cost %}table-success{% endif %}">{{ rec_a.cost_delta_inr | format_currency_inr }}</td>
+                        <td class="{% if rec_b.cost_delta_inr | float == best_cost %}table-success{% endif %}">{{ rec_b.cost_delta_inr | format_currency_inr }}</td>
+                        <td class="{% if rec_c.cost_delta_inr | float == best_cost %}table-success{% endif %}">{{ rec_c.cost_delta_inr | format_currency_inr }}</td>
+                    </tr>
+                    <tr>
+                        <th>On-Time Confidence</th>
+                        <td class="{% if rec_a.on_time_confidence | float == best_confidence %}table-success{% endif %}">{{ '%.1f' | format(rec_a.on_time_confidence | float) }}%</td>
+                        <td class="{% if rec_b.on_time_confidence | float == best_confidence %}table-success{% endif %}">{{ '%.1f' | format(rec_b.on_time_confidence | float) }}%</td>
+                        <td class="{% if rec_c.on_time_confidence | float == best_confidence %}table-success{% endif %}">{{ '%.1f' | format(rec_c.on_time_confidence | float) }}%</td>
+                    </tr>
+                    <tr>
+                        <th>Execution Deadline</th>
+                        <td class="{% if rec_a.execution_deadline == best_deadline %}table-success{% endif %}">{{ rec_a.execution_deadline | format_datetime }}</td>
+                        <td class="{% if rec_b.execution_deadline == best_deadline %}table-success{% endif %}">{{ rec_b.execution_deadline | format_datetime }}</td>
+                        <td class="{% if rec_c.execution_deadline == best_deadline %}table-success{% endif %}">{{ rec_c.execution_deadline | format_datetime }}</td>
+                    </tr>
+                    <tr>
+                        <th>Recommended If</th>
+                        <td>Speed is your highest priority and SLA risk is immediate.</td>
+                        <td>Cost control is critical and moderate delay tolerance exists.</td>
+                        <td>You need a balanced tradeoff between timeline and spend.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+</section>
+
+{% else %}
+<section class="no-selection-state">
+    <div>
+        <svg width="180" height="120" viewBox="0 0 180 120" fill="none" aria-hidden="true">
+            <path d="M10 90C35 70 55 50 90 50C125 50 145 70 170 30" stroke="#1B3A6B" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="10" cy="90" r="6" fill="#00A86B"/>
+            <circle cx="90" cy="50" r="6" fill="#FF8C00"/>
+            <circle cx="170" cy="30" r="6" fill="#0077CC"/>
+        </svg>
+        <h3 class="mt-3">Select an at-risk shipment above to view route alternatives</h3>
+        <p class="text-muted mb-0">The optimizer compares speed, cost, and confidence to suggest rerouting decisions before deadlines expire.</p>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    const selector = document.getElementById("optimizer-shipment-select");
+    const selectorForm = document.getElementById("optimizer-selector-form");
+    if (selector && selectorForm) {
+        let timerId = null;
+        selector.addEventListener("change", () => {
+            if (timerId) {
+                clearTimeout(timerId);
+            }
+            timerId = setTimeout(() => {
+                selectorForm.submit();
+            }, 300);
+        });
+    }
+
+    const analyzeButton = document.getElementById("analyze-routes-btn");
+    if (!analyzeButton) {
+        return;
+    }
+
+    const shipmentId = analyzeButton.getAttribute("data-shipment-id");
+    const recommendationsWrapper = document.getElementById("optimizer-recommendations-wrapper");
+
+    const replaceRecommendationsSection = async () => {
+        const response = await fetch(`/optimizer?shipment_id=${shipmentId}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+        if (!response.ok) {
+            return false;
+        }
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const incoming = doc.getElementById("optimizer-recommendations-wrapper");
+        if (!incoming || !recommendationsWrapper) {
+            return false;
+        }
+        recommendationsWrapper.innerHTML = incoming.innerHTML;
+        return true;
+    };
+
+    analyzeButton.addEventListener("click", async () => {
+        analyzeButton.disabled = true;
+        const original = analyzeButton.innerHTML;
+        analyzeButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating alternatives...';
+
+        try {
+            const triggerResponse = await fetch(`/optimizer/trigger/${shipmentId}`);
+            if (!triggerResponse.ok) {
+                analyzeButton.disabled = false;
+                analyzeButton.innerHTML = original;
+                return;
+            }
+
+            let polls = 0;
+            const pollHandle = setInterval(async () => {
+                polls += 1;
+                try {
+                    const statusResponse = await fetch(`/api/v1/optimizer/recommendations/${shipmentId}`);
+                    if (!statusResponse.ok) {
+                        return;
+                    }
+                    const payload = await statusResponse.json();
+                    if (payload.has_recommendations) {
+                        clearInterval(pollHandle);
+                        await replaceRecommendationsSection();
+                        analyzeButton.disabled = false;
+                        analyzeButton.innerHTML = original;
+                    } else if (polls >= 24) {
+                        clearInterval(pollHandle);
+                        analyzeButton.disabled = false;
+                        analyzeButton.innerHTML = original;
+                    }
+                } catch (error) {
+                    if (polls >= 24) {
+                        clearInterval(pollHandle);
+                        analyzeButton.disabled = false;
+                        analyzeButton.innerHTML = original;
+                    }
+                }
+            }, 5000);
+        } catch (error) {
+            analyzeButton.disabled = false;
+            analyzeButton.innerHTML = original;
+        }
+    });
+})();
+</script>
+{% endblock %}

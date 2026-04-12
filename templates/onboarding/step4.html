@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import render_select %}
+
+{% block body_class %}onboarding-page onboarding-step4{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<header class="onboarding-top-bar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="/" class="text-decoration-none d-flex align-items-center gap-2 text-navy fw-bold">
+            <i class="bi bi-link-45deg fs-4"></i>
+            <span>ChainWatch Pro</span>
+        </a>
+        <a href="/contact" class="support-link">Need help? Contact support</a>
+    </div>
+</header>
+
+<main class="onboarding-main">
+    <div class="container position-relative">
+        <section class="onboarding-progress">
+            <div class="step-track">
+                <div class="step-item completed">
+                    <span class="step-line"></span>
+                    <span class="step-circle"><i class="bi bi-check"></i></span>
+                    <div class="step-label">Shipping Profile</div>
+                </div>
+                <div class="step-item completed">
+                    <span class="step-line"></span>
+                    <span class="step-circle"><i class="bi bi-check"></i></span>
+                    <div class="step-label">Carrier Setup</div>
+                </div>
+                <div class="step-item completed">
+                    <span class="step-line"></span>
+                    <span class="step-circle"><i class="bi bi-check"></i></span>
+                    <div class="step-label">Alert Preferences</div>
+                </div>
+                <div class="step-item active">
+                    <span class="step-line"></span>
+                    <span class="step-circle">4</span>
+                    <div class="step-label">Dashboard Setup</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="onboarding-card">
+            <span class="step-pill">Step 4 of 4</span>
+            <h1 class="h2 mb-2">Dashboard Setup</h1>
+            <p class="text-muted mb-4">Customize your ChainWatch Pro dashboard to show the information most relevant to your role.</p>
+
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+
+                <h2 class="h5 mb-2">Dashboard KPI cards preview</h2>
+                <div class="dashboard-preview-mini mb-3" data-dashboard-preview>
+                    <div class="dashboard-preview-grid">
+                        <div class="dashboard-preview-card" data-preview-card="active_shipments"><strong>247</strong><br>Total Active Shipments</div>
+                        <div class="dashboard-preview-card" data-preview-card="critical_alerts"><strong>3</strong><br>Critical Alerts</div>
+                        <div class="dashboard-preview-card" data-preview-card="warning_alerts"><strong>12</strong><br>Warning Alerts</div>
+                        <div class="dashboard-preview-card" data-preview-card="otd_rate"><strong>94.2%</strong><br>Fleet OTD Rate</div>
+                        <div class="dashboard-preview-card" data-preview-card="financial_exposure"><strong>₹8.7Cr</strong><br>Financial Exposure</div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="carrier-checkbox-card d-flex align-items-center gap-2">
+                            {{ form.show_active_shipments_card(class_='form-check-input', **{'data-preview-toggle':'active_shipments'}) }}
+                            <span><strong>Total Active Shipments</strong><br><small class="text-muted">Live shipment count across all lanes</small></span>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="carrier-checkbox-card d-flex align-items-center gap-2">
+                            {{ form.show_critical_alerts_card(class_='form-check-input', **{'data-preview-toggle':'critical_alerts'}) }}
+                            <span><strong>Critical Alerts Count</strong><br><small class="text-muted">Urgent disruptions requiring action</small></span>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="carrier-checkbox-card d-flex align-items-center gap-2">
+                            {{ form.show_warning_alerts_card(class_='form-check-input', **{'data-preview-toggle':'warning_alerts'}) }}
+                            <span><strong>Warning Alerts Count</strong><br><small class="text-muted">Developing disruptions to watch</small></span>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="carrier-checkbox-card d-flex align-items-center gap-2">
+                            {{ form.show_otd_rate_card(class_='form-check-input', **{'data-preview-toggle':'otd_rate'}) }}
+                            <span><strong>Fleet On-Time Delivery Rate</strong><br><small class="text-muted">Portfolio delivery reliability</small></span>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="carrier-checkbox-card d-flex align-items-center gap-2">
+                            {{ form.show_financial_exposure_card(class_='form-check-input', **{'data-preview-toggle':'financial_exposure'}) }}
+                            <span><strong>Financial Exposure</strong><br><small class="text-muted">INR value currently at risk</small></span>
+                        </label>
+                    </div>
+                </div>
+
+                <h2 class="h5 mb-2">Default filters</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ render_select(form.default_risk_filter) }}
+                        <small class="text-muted">Controls default dashboard risk cohort.</small>
+                    </div>
+                    <div class="col-md-4">
+                        {{ render_select(form.default_mode_filter) }}
+                        <small class="text-muted">Sets your primary mode view on login.</small>
+                    </div>
+                    <div class="col-md-4">
+                        {{ render_select(form.default_sort) }}
+                        <small class="text-muted">Determines the default table ordering strategy.</small>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        {{ render_select(form.timezone) }}
+                        <small class="text-muted">This affects how all shipment dates and times are displayed throughout the platform.</small>
+                    </div>
+                    <div class="col-md-6">
+                        {{ render_select(form.default_page_size) }}
+                        <small class="text-muted">Choose your preferred default table page size.</small>
+                    </div>
+                </div>
+
+                <div class="completion-box mt-4 mb-3">
+                    <p class="fw-semibold mb-1">🚀 You're almost done! After clicking "Complete Setup", your workspace will be ready and you'll see your dashboard with all your configuration applied.</p>
+                    <p class="mb-0 small">What happens next: -> Your carrier data sync begins immediately -> Your first disruption scan runs within 15 minutes -> You'll receive a welcome email with quick-start tips</p>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="{{ url_for('onboarding.step3') }}" class="text-decoration-none">&larr; Back</a>
+                </div>
+                <button type="submit" class="btn btn-action-blue btn-lg w-100 mt-2">Complete Setup & Go to Dashboard 🚀</button>
+            </form>
+        </section>
+
+        <div class="skip-step-link"><a href="{{ url_for('onboarding.step4', skip='true') }}">Skip this step -></a></div>
+
+        <aside class="motivational-sidebar">
+            <div class="motivational-card">
+                <div class="progress-circle">100%</div>
+                <p class="fw-semibold text-center">You're 100% toward your first disruption alert</p>
+                <ul class="small mb-3">
+                    <li>Apply personalized dashboard defaults</li>
+                    <li>Activate your operational command center</li>
+                    <li>Launch your first disruption scan automatically</li>
+                </ul>
+                <small class="text-muted">After setup, you'll monitor up to {{ shipment_limit_label }} shipments automatically.</small>
+            </div>
+        </aside>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

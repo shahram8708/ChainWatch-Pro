@@ -1,0 +1,173 @@
+{% extends "app_base.html" %}
+{% from "macros/shipment.html" import shipment_row, shipment_card %}
+{% from "macros/pagination.html" import pagination_widget %}
+
+{% block page_title %}Shipments - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+{% set active_filters = namespace(count=0) %}
+{% if filters.q %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.status %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.carrier_id %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.mode %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.risk %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+
+<nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Shipments</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+    <h1 class="mb-0">Shipments</h1>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary" href="{{ url_for('shipments.new_shipment') }}"><i class="bi bi-plus-lg me-1"></i>New Shipment</a>
+        <a class="btn btn-outline-primary" href="{{ url_for('shipments.import_shipments') }}"><i class="bi bi-upload me-1"></i>Import CSV</a>
+    </div>
+</div>
+
+<section class="stats-strip mb-4">
+    <div class="stats-strip-item">
+        <span class="stats-strip-label">Total Active</span>
+        <strong>{{ stats.total_active }}</strong>
+    </div>
+    <div class="stats-strip-item">
+        <span class="stats-strip-label">In Transit</span>
+        <strong>{{ stats.in_transit }}</strong>
+    </div>
+    <div class="stats-strip-item">
+        <span class="stats-strip-label">Delayed</span>
+        <strong>{{ stats.delayed }}</strong>
+    </div>
+    <div class="stats-strip-item">
+        <span class="stats-strip-label">Delivered (30 days)</span>
+        <strong>{{ stats.delivered_30d }}</strong>
+    </div>
+</section>
+
+<section class="card filter-bar-card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <h2 class="h5 mb-0">Filters</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge rounded-pill active-filters-badge {% if active_filters.count == 0 %}d-none{% endif %}" data-active-filter-badge>{{ active_filters.count }} active filters</span>
+                <button class="btn btn-link btn-sm p-0" type="button" id="clear-shipment-filters">Clear Filters</button>
+            </div>
+        </div>
+
+        <form id="shipment-filter-form" class="filter-bar-form" method="get" action="{{ url_for('shipments.list_shipments') }}">
+            <div class="row g-2 align-items-end">
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="{{ form.q.id }}">Search</label>
+                    {{ form.q(class_='form-control', placeholder='Reference, customer, or port code', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.status.id }}">Status</label>
+                    {{ form.status(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.carrier_id.id }}">Carrier</label>
+                    {{ form.carrier_id(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.mode.id }}">Mode</label>
+                    {{ form.mode(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.risk.id }}">Risk</label>
+                    {{ form.risk(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-1 col-md-6 text-md-end">
+                    <button class="btn btn-outline-primary w-100" type="button" id="export-csv-btn"><i class="bi bi-download"></i></button>
+                </div>
+            </div>
+            {{ form.sort(value=sort) }}
+            {{ form.order(value=order) }}
+            <div id="filter-loading-spinner" class="small text-muted mt-2 d-none">
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Applying filters...
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card shadow-sm border-0" id="shipment-table-card">
+    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h3 class="h5 mb-0">Shipment Registry <span class="text-muted">({{ shipments.total }})</span></h3>
+        {% if shipments.total > 0 %}
+        {% set start_idx = ((shipments.page - 1) * shipments.per_page) + 1 %}
+        {% set end_idx = start_idx + (shipments.items | length) - 1 %}
+        <small class="text-muted">Showing {{ start_idx }}-{{ end_idx }} of {{ shipments.total }}</small>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-hover shipment-table mb-0" id="shipment-table">
+            <thead>
+                <tr>
+                    <th style="width:36px;"><input class="form-check-input" id="select-all-rows" type="checkbox" aria-label="Select all visible shipments"></th>
+                    <th class="sortable" data-sort="disruption_risk_score">Risk Score <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="external_reference">Shipment ID <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="origin_port_code">Origin <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="destination_port_code">Destination <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="carrier_name">Carrier <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="mode">Mode <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="status">Status <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="estimated_arrival">ETA <span class="sort-icon"></span></th>
+                    <th class="sortable" data-sort="cargo_value_inr">Cargo Value (₹)</th>
+                    <th class="sortable" data-sort="created_at">Created <span class="sort-icon"></span></th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="shipment-table-body">
+                {% for shipment, carrier_name in shipments.items %}
+                {{ shipment_row(shipment, carrier_name, True) }}
+                {% else %}
+                <tr>
+                    <td colspan="12" class="py-5 text-center">
+                        <div class="empty-state">
+                            <svg width="70" height="70" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                                <rect x="10" y="18" width="44" height="30" rx="6" fill="#EBF4FF"/>
+                                <path d="M10 26H54" stroke="#1B3A6B" stroke-width="2"/>
+                                <path d="M32 18V48" stroke="#1B3A6B" stroke-width="2"/>
+                            </svg>
+                            <h4 class="h6 mt-3">No shipments match your filters</h4>
+                            <button type="button" class="btn btn-link p-0" id="empty-clear-filters">Clear filters</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-md-none p-3" id="shipment-card-stack">
+        {% for shipment, carrier_name in shipments.items %}
+            {{ shipment_card(shipment, carrier_name) }}
+        {% else %}
+            <div class="text-center py-4">
+                <h4 class="h6">No shipments match your filters</h4>
+                <button type="button" class="btn btn-link p-0" id="empty-clear-filters-mobile">Clear filters</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="card-footer bg-white" id="shipments-pagination">
+        {{ pagination_widget(shipments, 'shipments.list_shipments', q=filters.q, status=filters.status, carrier_id=filters.carrier_id, mode=filters.mode, risk=filters.risk, sort=sort, order=order) }}
+    </div>
+</section>
+
+<div class="bulk-toolbar" id="bulk-toolbar">
+    <div class="d-flex align-items-center justify-content-between gap-3 w-100">
+        <span><strong data-selected-count>0</strong> selected</span>
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-light" type="button" id="bulk-export-selected">Export Selected</button>
+            <button class="btn btn-link btn-sm text-white p-0" type="button" id="bulk-deselect-all">Deselect All</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

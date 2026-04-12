@@ -1,0 +1,110 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}Platform Stats - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<h1 class="h3 text-white mb-4">Platform Analytics</h1>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Daily Active Organisations (30d)</h2><canvas id="activeOrgsChart" height="180"></canvas></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">New Organisation Registrations (Weekly)</h2><canvas id="newOrgsChart" height="180"></canvas></div></div>
+    <div class="col-lg-4"><div class="sa-card"><h2 class="h6">Subscription Plan Distribution</h2><canvas id="planDistributionChart" height="220"></canvas></div></div>
+    <div class="col-lg-8"><div class="sa-card"><h2 class="h6">Shipments Created Per Day</h2><canvas id="shipmentsChart" height="220"></canvas></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Gemini API Calls Per Day</h2><canvas id="aiCallsChart" height="180"></canvas></div></div>
+    <div class="col-lg-6"><div class="sa-card"><h2 class="h6">Alert Generation Per Day</h2><canvas id="alertsChart" height="180"></canvas></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Top 10 Most Active Organisations</h2>
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Organisation</th><th>Shipment Count</th></tr></thead>
+                <tbody>
+                    {% for row in top_active_orgs %}
+                    <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td></tr>
+                    {% else %}
+                    <tr><td colspan="2" class="text-center text-secondary py-4">No shipment data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Top 10 Organisations by Avg DRS</h2>
+            <table class="table table-sm align-middle mb-3">
+                <thead><tr><th>Organisation</th><th>Average DRS</th></tr></thead>
+                <tbody>
+                    {% for row in top_drs_orgs %}
+                    <tr><td>{{ row[0] }}</td><td>{{ '%.2f'|format(row[1] or 0) }}</td></tr>
+                    {% else %}
+                    <tr><td colspan="2" class="text-center text-secondary py-4">No DRS data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="alert alert-info mb-0">Revenue projection (MRR): <strong>₹ {{ '%.2f'|format(mrr_inr) }}</strong></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(() => {
+    const labels = {{ labels | tojson }};
+
+    const makeLine = (id, datasetLabel, data, border, fillColor) => {
+        const ctx = document.getElementById(id);
+        if (!ctx) return;
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: datasetLabel,
+                    data,
+                    borderColor: border,
+                    backgroundColor: fillColor,
+                    tension: 0.28,
+                    fill: true,
+                    pointRadius: 2
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    };
+
+    makeLine('activeOrgsChart', 'Active Organisations', {{ active_org_series | tojson }}, '#38BDF8', 'rgba(56, 189, 248, 0.25)');
+    makeLine('shipmentsChart', 'Shipments', {{ shipments_series | tojson }}, '#22C55E', 'rgba(34, 197, 94, 0.20)');
+    makeLine('aiCallsChart', 'Gemini Calls', {{ ai_series | tojson }}, '#F59E0B', 'rgba(245, 158, 11, 0.25)');
+    makeLine('alertsChart', 'Alerts', {{ alerts_series | tojson }}, '#EF4444', 'rgba(239, 68, 68, 0.22)');
+
+    const newOrgs = document.getElementById('newOrgsChart');
+    if (newOrgs) {
+        new Chart(newOrgs, {
+            type: 'bar',
+            data: {
+                labels: {{ weekly_labels | tojson }},
+                datasets: [{ label: 'New Organisations', data: {{ weekly_counts | tojson }}, backgroundColor: '#60A5FA' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    const plans = document.getElementById('planDistributionChart');
+    if (plans) {
+        new Chart(plans, {
+            type: 'doughnut',
+            data: {
+                labels: {{ plan_labels | tojson }},
+                datasets: [{ data: {{ plan_counts | tojson }}, backgroundColor: ['#2563EB', '#10B981', '#F97316'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+})();
+</script>
+{% endblock %}

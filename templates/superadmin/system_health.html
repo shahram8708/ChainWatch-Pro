@@ -1,0 +1,70 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}System Health - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<h1 class="h3 text-white mb-4">System Health Dashboard</h1>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Database Health</h2>
+            <p>Status: <strong class="text-{{ 'success' if database_status == 'green' else ('warning' if database_status == 'amber' else 'danger') }}">{{ database_status|upper }}</strong></p>
+            {% if database_error %}<p class="text-danger small">{{ database_error }}</p>{% endif %}
+            <ul class="small mb-3">
+                <li>Longest running query: {{ longest_running_query }}</li>
+                <li>Organisations: {{ table_counts.get('organisations', 0) }}</li>
+                <li>Users: {{ table_counts.get('users', 0) }}</li>
+                <li>Shipments: {{ table_counts.get('shipments', 0) }}</li>
+                <li>Alerts: {{ table_counts.get('alerts', 0) }}</li>
+                <li>Audit Logs: {{ table_counts.get('audit_logs', 0) }}</li>
+                <li>AI Entries: {{ table_counts.get('ai_generated_content', 0) }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Redis Health</h2>
+            <p>Status: <strong class="text-{{ 'success' if redis_status == 'green' else ('warning' if redis_status == 'amber' else 'danger') }}">{{ redis_status|upper }}</strong></p>
+            <ul class="small mb-0">
+                <li>Memory Used: {{ redis_metrics.memory_used }}</li>
+                <li>Cache Key Count: {{ redis_metrics.db_size }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Celery Health</h2>
+            <p>Status: <strong class="text-{{ 'success' if celery_status == 'green' else ('warning' if celery_status == 'amber' else 'danger') }}">{{ celery_status|upper }}</strong></p>
+            <ul class="small mb-0">
+                <li>Workers Online: {{ celery_metrics.workers_online }}</li>
+                <li>Queue High: {{ celery_metrics.queue_sizes.high }}</li>
+                <li>Queue Default: {{ celery_metrics.queue_sizes.default }}</li>
+                <li>Queue Low: {{ celery_metrics.queue_sizes.low }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Email & Gemini Health</h2>
+            <div class="mb-3">
+                <p class="mb-1">Email Status: <strong class="text-{{ 'success' if email_status == 'green' else ('warning' if email_status == 'amber' else 'danger') }}">{{ email_status|upper }}</strong></p>
+                <ul class="small mb-0">
+                    <li>Last Email Sent At: {{ last_email_sent_at | format_datetime if last_email_sent_at else '-' }}</li>
+                    <li>SMTP Errors (Last Hour): {{ smtp_errors_last_hour }}</li>
+                </ul>
+            </div>
+            <div>
+                <p class="mb-1">Gemini Status: <strong class="text-{{ 'success' if gemini_status == 'green' else ('warning' if gemini_status == 'amber' else 'danger') }}">{{ gemini_status|upper }}</strong></p>
+                <ul class="small mb-0">
+                    <li>Last Successful Gemini Call: {{ last_gemini_success | format_datetime if last_gemini_success else '-' }}</li>
+                    <li>Last Gemini Failure: {{ last_gemini_failure | format_datetime if last_gemini_failure else '-' }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

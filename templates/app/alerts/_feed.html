@@ -1,0 +1,28 @@
+{% from "macros/alerts.html" import alert_item %}
+
+<div class="alert-feed-list" id="alert-feed-list" data-rendered-count="{{ alerts_pagination.items | length }}" data-total="{{ alerts_pagination.total }}">
+    {% for alert in alerts_pagination.items %}
+    {{ alert_item(alert, selected_alert and selected_alert.id == alert.id) }}
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-bell-slash fs-2"></i>
+        <p class="mt-2 mb-0">No alerts found for this filter.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="alert-feed-pagination d-flex align-items-center justify-content-between p-3 border-top">
+    <button
+        class="btn btn-sm btn-outline-secondary js-alert-page"
+        type="button"
+        data-page="{{ alerts_pagination.prev_num if alerts_pagination.has_prev else '' }}"
+        {% if not alerts_pagination.has_prev %}disabled{% endif %}
+    >Previous</button>
+    <small class="text-muted">Page {{ alerts_pagination.page }} of {{ alerts_pagination.pages or 1 }}</small>
+    <button
+        class="btn btn-sm btn-outline-secondary js-alert-page"
+        type="button"
+        data-page="{{ alerts_pagination.next_num if alerts_pagination.has_next else '' }}"
+        {% if not alerts_pagination.has_next %}disabled{% endif %}
+    >Next</button>
+</div>

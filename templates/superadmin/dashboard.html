@@ -1,0 +1,129 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}SuperAdmin Dashboard - ChainWatch Pro{% endblock %}
+
+{% block sa_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 text-white mb-1">Platform Overview</h1>
+        <p class="text-secondary mb-0">Real-time visibility into organisations, subscriptions, shipments, and AI usage.</p>
+    </div>
+    <a href="{{ url_for('superadmin.platform_stats') }}" class="btn btn-outline-light btn-sm">Open Full Analytics</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">Total Organisations</div>
+            <div class="h3 mb-0">{{ total_organisations }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">Active Subscriptions</div>
+            <div class="h3 mb-0">{{ total_active_subscriptions }}</div>
+            <div class="small text-secondary mt-1">
+                Starter: {{ plan_breakdown.get('starter', 0) }} |
+                Professional: {{ plan_breakdown.get('professional', 0) }} |
+                Enterprise: {{ plan_breakdown.get('enterprise', 0) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">Total Users</div>
+            <div class="h3 mb-0">{{ total_users }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">Active Shipments</div>
+            <div class="h3 mb-0">{{ total_active_shipments }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">Alerts Generated Today</div>
+            <div class="h3 mb-0">{{ alerts_today }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">Gemini Calls Today</div>
+            <div class="h3 mb-0">{{ gemini_calls_today }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">Platform MRR</div>
+            <div class="h3 mb-0">₹ {{ '%.2f'|format(mrr_inr) }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="sa-card h-100">
+            <div class="text-secondary small mb-1">New Organisations (7d)</div>
+            <div class="h3 mb-0">{{ new_orgs_this_week }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="sa-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Recent Activity (Last 50)</h2>
+                <a href="{{ url_for('superadmin.platform_audit_log') }}" class="small">Open audit log</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Organisation</th>
+                            <th>Event</th>
+                            <th>Actor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in recent_activity %}
+                        <tr>
+                            <td>{{ row.event.created_at | format_datetime }}</td>
+                            <td>{{ row.organisation_name }}</td>
+                            <td>{{ row.event.event_type }}</td>
+                            <td>{{ row.event.actor_label }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-secondary py-4">No activity yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Organisations At Risk</h2>
+            <div class="list-group list-group-flush">
+                {% for org in at_risk_organisations %}
+                <div class="list-group-item bg-transparent px-0 border-secondary border-opacity-25">
+                    <div class="fw-semibold">{{ org.name }}</div>
+                    <div class="small text-secondary">
+                        Plan: {{ org.subscription_plan|title }} |
+                        Status: {{ org.subscription_status|title }}
+                    </div>
+                    <div class="small text-secondary">
+                        Trial ends: {{ org.trial_ends_at | format_datetime if org.trial_ends_at else '-' }}
+                    </div>
+                    <a href="{{ url_for('superadmin.organisation_detail', org_id=org.id) }}" class="small">Open details</a>
+                </div>
+                {% else %}
+                <div class="text-secondary small">No at-risk organisations right now.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

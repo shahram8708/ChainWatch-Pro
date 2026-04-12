@@ -1,0 +1,251 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Carrier Integrations - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+{% set carrier_meter = usage.get('carriers', {}) %}
+{% set carriers_used = carrier_meter.get('used', 0) %}
+{% set carriers_limit = carrier_meter.get('limit') %}
+{% set carriers_pct = carrier_meter.get('percentage', 0) %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Integrations</li>
+    </ol>
+</nav>
+
+<h1 class="mb-3">Carrier Integrations</h1>
+
+<nav class="nav settings-sub-nav mb-4">
+    <a class="nav-link {% if active_settings_tab == 'profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">Profile</a>
+    <a class="nav-link {% if active_settings_tab == 'team' %}active{% endif %}" href="{{ url_for('settings.team') }}">Team</a>
+    <a class="nav-link {% if active_settings_tab == 'integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">Integrations</a>
+    <a class="nav-link {% if active_settings_tab == 'alerts' %}active{% endif %}" href="{{ url_for('settings.alerts') }}">Alerts</a>
+    <a class="nav-link {% if active_settings_tab == 'billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">Billing</a>
+</nav>
+
+{% if carriers_limit is not none %}
+    {% if carriers_pct >= 100 %}
+    <div class="alert alert-danger">{{ carriers_used }} of {{ carriers_limit }} carrier integrations used. Limit reached.</div>
+    {% elif carriers_pct >= 80 %}
+    <div class="alert alert-warning">{{ carriers_used }} of {{ carriers_limit }} carrier integrations used. You're nearing your limit.</div>
+    {% else %}
+    <div class="alert alert-info">{{ carriers_used }} of {{ carriers_limit }} carrier integrations used.</div>
+    {% endif %}
+{% else %}
+<div class="alert alert-info">Unlimited carrier integrations on your current plan.</div>
+{% endif %}
+
+<article class="settings-content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Connected Integrations</h2>
+        <span class="badge text-bg-light border">{{ connected_count }} connected</span>
+    </div>
+
+    {% set connected = global_carriers|selectattr('connected')|list %}
+    {% if connected %}
+        {% for entry in connected %}
+        <div class="d-flex flex-wrap justify-content-between align-items-center border rounded p-3 mb-2" data-carrier-row="{{ entry.carrier.id }}">
+            <div>
+                <div class="fw-semibold">{{ entry.carrier.name }} <span class="badge text-bg-success ms-1">Connected</span></div>
+                <div class="small text-muted">{{ entry.carrier.mode|title }} • API Key: {{ entry.masked_api_key }}</div>
+                <div class="small text-muted">Last verified: {{ entry.last_tested_at or 'Not tested yet' }}</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary test-connection-btn" data-carrier-id="{{ entry.carrier.id }}" type="button">Test Connection</button>
+                <button class="btn btn-sm btn-outline-secondary open-connect-form-btn" data-carrier-id="{{ entry.carrier.id }}" type="button">Edit</button>
+                <button class="btn btn-sm btn-outline-danger disconnect-btn" data-carrier-id="{{ entry.carrier.id }}" type="button">Disconnect</button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="text-center text-muted py-4">
+        <i class="bi bi-plug fs-2 d-block mb-2"></i>
+        No carrier integrations connected yet. Connect your first carrier below.
+    </div>
+    {% endif %}
+</article>
+
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Add Carrier Integration</h2>
+
+    <div class="carrier-card-row mb-3">
+        {% for entry in global_carriers %}
+        <div class="carrier-connect-card {% if entry.connected %}connected{% endif %}">
+            <div class="fw-semibold small">{{ entry.carrier.name }}</div>
+            <div class="small text-muted mb-2">{{ entry.carrier.mode|title }}</div>
+            {% if entry.connected %}
+                <span class="badge text-bg-success">Connected</span>
+            {% else %}
+                <button class="btn btn-sm btn-outline-primary open-connect-form-btn" data-carrier-id="{{ entry.carrier.id }}" type="button">Connect</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="inline-connect-form d-none" id="inline-connect-form-wrap">
+        <form id="carrier-connect-form" action="{{ url_for('settings.connect_integration') }}" method="post">
+            {{ connect_form.csrf_token }}
+            {{ connect_form.carrier_id(id='connect-carrier-id') }}
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">API Key / Username</label>
+                    {{ connect_form.api_key(class_='form-control', id='connect-api-key') }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">API Secret / Password</label>
+                    <div class="input-group">
+                        {{ connect_form.api_secret(class_='form-control', id='connect-api-secret') }}
+                        <button class="btn btn-outline-secondary" id="toggle-api-secret" type="button"><i class="bi bi-eye"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Custom API Endpoint URL</label>
+                    {{ connect_form.api_endpoint(class_='form-control', placeholder='https://api.carrier.com/health', id='connect-api-endpoint') }}
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3 mt-3">
+                <button class="btn btn-primary" type="submit">Connect Carrier</button>
+                <button class="btn btn-link" id="cancel-connect-form" type="button">Cancel</button>
+                <span class="small text-muted" id="connect-form-status"></span>
+            </div>
+        </form>
+    </div>
+
+    <hr>
+
+    <h3 class="h6 mb-2">Manual / CSV Import</h3>
+    <p class="small text-muted">For carriers without API support, upload historical records via CSV and link them to your workspace.</p>
+
+    <form method="post" action="{{ url_for('settings.import_integration_csv') }}" enctype="multipart/form-data">
+        {{ csv_import_form.csrf_token }}
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label">CSV File</label>
+                {{ csv_import_form.csv_file(class_='form-control') }}
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Carrier Name</label>
+                {{ csv_import_form.carrier_name(class_='form-control') }}
+            </div>
+            <div class="col-md-2 d-grid align-items-end">
+                <button class="btn btn-outline-primary" type="submit">Import &amp; Link</button>
+            </div>
+        </div>
+    </form>
+</article>
+
+<article class="settings-content-card" style="background:#EBF4FF; border-left:4px solid #0077CC;">
+    <h2 class="h6 mb-2">Integration Notes</h2>
+    <p class="small mb-1">Supported API types: REST and Manual ingestion.</p>
+    <p class="small mb-1">Data synced: shipment position, status updates, and ETA revisions.</p>
+    <p class="small mb-1">Sync frequency: every 15 minutes for active integrations.</p>
+    <a class="small" href="{{ url_for('public.contact') }}">Need help with integration onboarding?</a>
+</article>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    const connectWrap = document.getElementById('inline-connect-form-wrap');
+    const connectForm = document.getElementById('carrier-connect-form');
+    const connectCarrierInput = document.getElementById('connect-carrier-id');
+    const connectStatus = document.getElementById('connect-form-status');
+
+    function openConnectForm(carrierId) {
+        connectCarrierInput.value = carrierId;
+        connectWrap.classList.remove('d-none');
+        connectStatus.textContent = '';
+        connectWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.querySelectorAll('.open-connect-form-btn').forEach((btn) => {
+        btn.addEventListener('click', () => openConnectForm(btn.dataset.carrierId));
+    });
+
+    document.getElementById('cancel-connect-form')?.addEventListener('click', () => {
+        connectWrap.classList.add('d-none');
+        connectForm.reset();
+    });
+
+    document.getElementById('toggle-api-secret')?.addEventListener('click', () => {
+        const field = document.getElementById('connect-api-secret');
+        field.type = field.type === 'password' ? 'text' : 'password';
+    });
+
+    connectForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        connectStatus.textContent = 'Connecting...';
+
+        const formData = new FormData(connectForm);
+        try {
+            const response = await fetch(connectForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const payload = await response.json();
+            if (payload.success) {
+                connectStatus.textContent = 'Connected successfully.';
+                window.location.reload();
+            } else {
+                connectStatus.textContent = payload.error || 'Could not connect carrier.';
+            }
+        } catch (error) {
+            connectStatus.textContent = 'Could not connect carrier.';
+        }
+    });
+
+    document.querySelectorAll('.disconnect-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Disconnect this integration?')) return;
+            const response = await fetch(`/settings/integrations/${btn.dataset.carrierId}/disconnect`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const payload = await response.json();
+            if (payload.success) {
+                window.location.reload();
+            }
+        });
+    });
+
+    document.querySelectorAll('.test-connection-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+
+            try {
+                const response = await fetch(`/settings/integrations/${btn.dataset.carrierId}/test`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken }
+                });
+                const payload = await response.json();
+                if (payload.success) {
+                    btn.textContent = `✓ Connected (${payload.latency_ms ?? '-'}ms)`;
+                } else {
+                    btn.textContent = '✗ Failed';
+                    alert(payload.message || 'Connection test failed.');
+                }
+            } catch (error) {
+                btn.textContent = '✗ Failed';
+            }
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = original;
+            }, 2500);
+        });
+    });
+})();
+</script>
+{% endblock %}

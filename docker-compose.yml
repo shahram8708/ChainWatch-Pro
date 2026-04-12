@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./:/app
+    networks:
+      - chainwatch_network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: chainwatch_user
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: chainwatchpro
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - chainwatch_network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - chainwatch_network
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: celery -A celery_worker.celery worker --loglevel=info -Q high,default,low
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./:/app
+    networks:
+      - chainwatch_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  chainwatch_network:
+    driver: bridge

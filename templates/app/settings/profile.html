@@ -1,0 +1,287 @@
+{% extends "app_base.html" %}
+{% from "macros/forms.html" import render_field, render_select %}
+
+{% block page_title %}Profile Settings - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Profile Settings</li>
+    </ol>
+</nav>
+
+<h1 class="mb-3">Profile Settings</h1>
+
+<nav class="nav settings-sub-nav mb-4">
+    <a class="nav-link {% if active_settings_tab == 'profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">Profile</a>
+    <a class="nav-link {% if active_settings_tab == 'team' %}active{% endif %}" href="{{ url_for('settings.team') }}">Team</a>
+    <a class="nav-link {% if active_settings_tab == 'integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">Integrations</a>
+    <a class="nav-link {% if active_settings_tab == 'alerts' %}active{% endif %}" href="{{ url_for('settings.alerts') }}">Alerts</a>
+    <a class="nav-link {% if active_settings_tab == 'billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">Billing</a>
+</nav>
+
+<form method="post" action="{{ url_for('settings.profile') }}" enctype="multipart/form-data">
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Personal Information</h2>
+    {{ profile_form.csrf_token }}
+    <input type="hidden" name="form_type" value="profile">
+
+    <div class="row g-3">
+        <div class="col-md-6">{{ render_field(profile_form.first_name) }}</div>
+        <div class="col-md-6">{{ render_field(profile_form.last_name) }}</div>
+    </div>
+
+    {{ render_field(profile_form.email, help_text='Changing your email will require re-verification.') }}
+
+    <div class="mb-3">
+        <label class="form-label" for="{{ profile_form.phone.id }}">{{ profile_form.phone.label.text }}</label>
+        <div class="input-group">
+            <span class="input-group-text">+</span>
+            {{ profile_form.phone(class_='form-control', placeholder='919999999999') }}
+        </div>
+        <small class="text-muted">Used for critical SMS notifications only.</small>
+        {% for error in profile_form.phone.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    {{ render_select(profile_form.timezone) }}
+
+    <div class="d-flex align-items-start gap-3 mb-3">
+        <div
+            id="profile-photo-preview"
+            class="avatar-circle profile-avatar-lg"
+            data-initials="{{ current_user.initials }}"
+            data-current-photo-url="{{ current_user.profile_photo_url or '' }}"
+        >
+            {% if current_user.profile_photo_url %}
+            <img src="{{ current_user.profile_photo_url }}" alt="{{ current_user.full_name }} profile photo">
+            {% else %}
+            {{ current_user.initials }}
+            {% endif %}
+        </div>
+        <div class="flex-grow-1">
+            <div class="fw-semibold">Profile Photo</div>
+            <div class="small text-muted mb-2">JPG, PNG, or WEBP. Max 2MB.</div>
+            {{ profile_form.profile_photo(class_='form-control', id='profile-photo-input', accept='.jpg,.jpeg,.png,.webp') }}
+            {% for error in profile_form.profile_photo.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+
+            {% if current_user.profile_photo_url %}
+            <div class="form-check mt-2">
+                {{ profile_form.remove_profile_photo(class_='form-check-input', id='remove-profile-photo') }}
+                <label class="form-check-label" for="remove-profile-photo">Remove current photo</label>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</article>
+
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Notification Preferences</h2>
+    <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
+        <div>
+            <div class="fw-semibold">Email Notifications</div>
+            <div class="small text-muted">Receive email alerts for shipment disruptions</div>
+        </div>
+        <div>
+            {% if profile_form.alert_email_enabled.data %}<span class="badge text-bg-success">Always On</span>{% endif %}
+            {{ profile_form.alert_email_enabled(class_='form-check-input ms-2') }}
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center border rounded p-3">
+        <div>
+            <div class="fw-semibold">SMS Notifications</div>
+            <div class="small text-muted">Receive SMS for Critical alerts only. Standard rates may apply.</div>
+        </div>
+        <div>{{ profile_form.alert_sms_enabled(class_='form-check-input') }}</div>
+    </div>
+    <p class="small text-muted mt-2 mb-0">Alert thresholds and channels can be configured in Alert Settings.</p>
+    <button class="btn btn-primary mt-3" type="submit">Save Profile Changes</button>
+</article>
+</form>
+
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Change Password</h2>
+    <form method="post" action="{{ url_for('settings.profile') }}" id="password-change-form">
+        {{ password_form.csrf_token }}
+        <input type="hidden" name="form_type" value="password">
+
+        <div class="mb-3">
+            <label class="form-label" for="{{ password_form.current_password.id }}">{{ password_form.current_password.label.text }}</label>
+            <div class="input-group">
+                {{ password_form.current_password(class_='form-control', id='current-password') }}
+                <button class="btn btn-outline-secondary" type="button" data-toggle-password="#current-password"><i class="bi bi-eye"></i></button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="{{ password_form.new_password.id }}">{{ password_form.new_password.label.text }}</label>
+            {{ password_form.new_password(class_='form-control', id='new-password') }}
+            <div class="progress mt-2" style="height:8px;">
+                <div id="password-strength-bar" class="progress-bar" style="width:0%"></div>
+            </div>
+            <div id="password-strength-label" class="small text-muted mt-1">Strength: -</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="{{ password_form.confirm_password.id }}">{{ password_form.confirm_password.label.text }}</label>
+            {{ password_form.confirm_password(class_='form-control') }}
+        </div>
+
+        <button class="btn btn-outline-primary" type="submit">Update Password</button>
+    </form>
+</article>
+
+<article class="settings-content-card border border-danger-subtle">
+    <h2 class="h5 mb-3 text-danger">Account</h2>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <div class="fw-semibold">Delete Account</div>
+            <div class="small text-muted">Deletion follows mandatory data retention policy and is completed within 30 days.</div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deletionRequestModal">Request Account Deletion</button>
+    </div>
+</article>
+
+<div class="modal fade" id="deletionRequestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5">Request Account Deletion</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                This request does not delete your account immediately. ChainWatch Pro will process your request within 30 days subject to retention obligations.
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{{ url_for('settings.request_deletion') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-danger" type="submit">Submit Deletion Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    function setPasswordType(selector, visible) {
+        const input = document.querySelector(selector);
+        if (!input) return;
+        input.type = visible ? 'text' : 'password';
+    }
+
+    document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+        let visible = false;
+        button.addEventListener('click', () => {
+            visible = !visible;
+            setPasswordType(button.getAttribute('data-toggle-password'), visible);
+        });
+    });
+
+    const profilePhotoInput = document.getElementById('profile-photo-input');
+    const removePhotoInput = document.getElementById('remove-profile-photo');
+    const photoPreview = document.getElementById('profile-photo-preview');
+    const initials = photoPreview?.dataset.initials || 'U';
+    const currentPhotoUrl = photoPreview?.dataset.currentPhotoUrl || '';
+    let selectedPhotoBlobUrl = null;
+
+    function renderPhotoInitials() {
+        if (!photoPreview) return;
+        photoPreview.innerHTML = initials;
+    }
+
+    function renderPhotoImage(src) {
+        if (!photoPreview) return;
+        photoPreview.innerHTML = '';
+        const image = document.createElement('img');
+        image.src = src;
+        image.alt = 'Profile photo preview';
+        photoPreview.appendChild(image);
+    }
+
+    profilePhotoInput?.addEventListener('change', () => {
+        const file = profilePhotoInput.files?.[0];
+        if (!file) {
+            if (currentPhotoUrl) {
+                renderPhotoImage(currentPhotoUrl);
+            } else {
+                renderPhotoInitials();
+            }
+            return;
+        }
+
+        if (selectedPhotoBlobUrl) {
+            URL.revokeObjectURL(selectedPhotoBlobUrl);
+        }
+
+        selectedPhotoBlobUrl = URL.createObjectURL(file);
+        renderPhotoImage(selectedPhotoBlobUrl);
+
+        if (removePhotoInput) {
+            removePhotoInput.checked = false;
+        }
+    });
+
+    removePhotoInput?.addEventListener('change', () => {
+        if (!removePhotoInput.checked) {
+            if (profilePhotoInput?.files?.length) {
+                if (selectedPhotoBlobUrl) {
+                    renderPhotoImage(selectedPhotoBlobUrl);
+                }
+            } else if (currentPhotoUrl) {
+                renderPhotoImage(currentPhotoUrl);
+            }
+            return;
+        }
+
+        if (profilePhotoInput) {
+            profilePhotoInput.value = '';
+        }
+
+        if (selectedPhotoBlobUrl) {
+            URL.revokeObjectURL(selectedPhotoBlobUrl);
+            selectedPhotoBlobUrl = null;
+        }
+
+        renderPhotoInitials();
+    });
+
+    const newPassword = document.getElementById('new-password');
+    const strengthBar = document.getElementById('password-strength-bar');
+    const strengthLabel = document.getElementById('password-strength-label');
+
+    function calculateStrength(value) {
+        let score = 0;
+        if (value.length >= 8) score += 20;
+        if (/[A-Z]/.test(value)) score += 20;
+        if (/[a-z]/.test(value)) score += 20;
+        if (/\d/.test(value)) score += 20;
+        if (/[^A-Za-z0-9]/.test(value)) score += 20;
+        return score;
+    }
+
+    function labelForScore(score) {
+        if (score >= 80) return ['Strong', 'bg-success'];
+        if (score >= 60) return ['Good', 'bg-info'];
+        if (score >= 40) return ['Fair', 'bg-warning'];
+        return ['Weak', 'bg-danger'];
+    }
+
+    newPassword?.addEventListener('input', () => {
+        const score = calculateStrength(newPassword.value || '');
+        const [label, klass] = labelForScore(score);
+        strengthBar.style.width = `${score}%`;
+        strengthBar.className = `progress-bar ${klass}`;
+        strengthLabel.textContent = `Strength: ${label}`;
+    });
+})();
+</script>
+{% endblock %}

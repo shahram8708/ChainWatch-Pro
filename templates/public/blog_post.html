@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page blog-post-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main class="article-page-wrap">
+    <section class="public-section pt-3 pb-4 bg-white">
+        <div class="container">
+            <div class="breadcrumb-row">
+                <a href="/blog">Blog</a> &gt; <span>{{ post.category }}</span> &gt; <span>{{ post.title }}</span>
+            </div>
+
+            <div class="article-header mb-4">
+                {% set cat_class = 'cat-' + post.category|lower|replace(' ', '-') %}
+                <span class="category-badge {{ cat_class }}">{{ post.category }}</span>
+                <h1>{{ post.title }}</h1>
+                <p class="text-muted fs-5">{{ post.excerpt }}</p>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="author-avatar">{{ post.author_name.split()[0][0] }}{{ post.author_name.split()[-1][0] }}</span>
+                        <div class="post-card-meta">
+                            <div><strong>{{ post.author_name }}</strong> · {{ post.author_role }} · {{ post.author_company }}</div>
+                            <div>{{ post.published_date }} · {{ post.read_time_minutes }} min read</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a class="btn btn-sm btn-outline-navy" href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url|urlencode }}" target="_blank" rel="noopener">LinkedIn</a>
+                        <a class="btn btn-sm btn-outline-navy" href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.url|urlencode }}" target="_blank" rel="noopener">Twitter</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-3 d-none d-lg-block">
+                    <aside class="article-toc" data-article-toc>
+                        <h2 class="h6 mb-3">Table of Contents</h2>
+                        <ul data-article-toc-list></ul>
+                    </aside>
+                </div>
+                <div class="col-lg-9">
+                    <article class="article-content" data-article-content>
+                        {{ post.content_html | safe }}
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section pt-4" style="background: var(--color-light-blue);">
+        <div class="container">
+            <h2 class="section-heading text-center mb-4">Related Articles</h2>
+            <div class="row g-4">
+                {% for item in related_posts %}
+                <div class="col-md-6">
+                    {% set cat_class = 'cat-' + item.category|lower|replace(' ', '-') %}
+                    <article class="post-card p-4 h-100">
+                        <span class="category-badge {{ cat_class }}">{{ item.category }}</span>
+                        <h3 class="h5">{{ item.title }}</h3>
+                        <p class="text-muted">{{ item.excerpt }}</p>
+                        <a href="/blog/{{ item.slug }}" class="feature-link">Read Article -></a>
+                    </article>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white pt-4">
+        <div class="container" style="max-width: 840px;">
+            <div class="author-bio-card mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="author-avatar">{{ post.author_name.split()[0][0] }}{{ post.author_name.split()[-1][0] }}</span>
+                    <div>
+                        <h3 class="h5 mb-1">{{ post.author_name }}</h3>
+                        <p class="text-muted mb-0">{{ post.author_role }}</p>
+                    </div>
+                </div>
+                <p class="mb-0 mt-3">{{ post.author_name.split()[0] }} works with logistics operators and enterprise supply chain teams to design practical disruption response playbooks, combining data intelligence with high-velocity execution workflows.</p>
+            </div>
+
+            <div class="article-cta-card text-center">
+                <h3 class="h4 mb-2">Ready to stop reactive logistics?</h3>
+                <p class="text-muted">Start proactive monitoring with AI-powered disruption detection and route optimization built for real operations teams.</p>
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <a href="/register" class="btn btn-action-blue">Start Free Trial</a>
+                    <a href="/demo" class="btn btn-outline-navy">Book a Demo</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

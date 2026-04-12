@@ -1,0 +1,300 @@
+{% extends "app_base.html" %}
+{% from "macros/shipment.html" import shipment_row, shipment_card %}
+{% from "macros/alerts.html" import alert_item %}
+{% from "macros/pagination.html" import pagination_widget %}
+
+{% block page_title %}Dashboard - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" >
+{% endblock %}
+
+{% block app_content %}
+{% set active_filters = namespace(count=0) %}
+{% if filters.q %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.status %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.carrier_id %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.mode %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+{% if filters.risk %}{% set active_filters.count = active_filters.count + 1 %}{% endif %}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Dashboard</h1>
+        <p class="text-muted mb-0" id="dashboard-local-time"></p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" href="{{ url_for('shipments.new_shipment') }}"><i class="bi bi-plus-lg me-1"></i>New Shipment</a>
+        <a class="btn btn-outline-primary" href="{{ url_for('shipments.import_shipments') }}"><i class="bi bi-upload me-1"></i>Import CSV</a>
+    </div>
+</div>
+
+<div id="metric-cards" class="row g-3 mb-4">
+    {% if 'active_shipments' in enabled_cards %}
+    <div class="col-xl-3 col-md-6">
+        <article class="metric-card skeleton-card" data-metric="active_shipments">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="metric-icon metric-icon-blue"><i class="bi bi-box-seam"></i></div>
+                <span class="metric-label">Total Active Shipments</span>
+            </div>
+            <div class="metric-value skeleton-text" data-metric-value>{{ metrics.active_shipments }}</div>
+            <div class="metric-trend trend-neutral"><span>Operational load in real-time</span></div>
+        </article>
+    </div>
+    {% endif %}
+
+    {% if 'critical_alerts' in enabled_cards %}
+    <div class="col-xl-3 col-md-6">
+        <article class="metric-card skeleton-card {% if metrics.critical_count > 0 %}metric-card-critical{% endif %}" data-metric="critical_count">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="metric-icon metric-icon-critical"><i class="bi bi-bell-fill"></i></div>
+                <span class="metric-label">Critical Alerts</span>
+            </div>
+            <div class="metric-value text-danger skeleton-text" data-metric-value>{{ metrics.critical_count }}</div>
+            <div class="metric-trend trend-down"><span>Require immediate attention</span></div>
+        </article>
+    </div>
+    {% endif %}
+
+    {% if 'warning_alerts' in enabled_cards %}
+    <div class="col-xl-3 col-md-6">
+        <article class="metric-card skeleton-card {% if metrics.warning_count > 0 %}metric-card-warning{% endif %}" data-metric="warning_count">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="metric-icon metric-icon-warning"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <span class="metric-label">Warning Alerts</span>
+            </div>
+            <div class="metric-value text-warning skeleton-text" data-metric-value>{{ metrics.warning_count }}</div>
+            <div class="metric-trend trend-neutral"><span>Need review soon</span></div>
+        </article>
+    </div>
+    {% endif %}
+
+    {% if 'otd_rate' in enabled_cards %}
+    <div class="col-xl-3 col-md-6">
+        <article class="metric-card skeleton-card metric-card-success" data-metric="otd_rate">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="metric-icon metric-icon-success"><i class="bi bi-check-circle-fill"></i></div>
+                <span class="metric-label">Fleet OTD Rate</span>
+            </div>
+            <div class="metric-value skeleton-text" data-metric-value>
+                {% if metrics.otd_rate is not none %}{{ '%.2f' | format(metrics.otd_rate) }}%{% else %}-{% endif %}
+            </div>
+            <div class="metric-trend {% if metrics.otd_trend == 'up' %}trend-up{% elif metrics.otd_trend == 'down' %}trend-down{% else %}trend-neutral{% endif %}" data-otd-trend>
+                {% if metrics.otd_rate is none %}
+                <span>No data yet</span>
+                {% elif metrics.otd_trend == 'up' %}
+                <i class="bi bi-arrow-up-right"></i><span>Improving month-over-month</span>
+                {% elif metrics.otd_trend == 'down' %}
+                <i class="bi bi-arrow-down-right"></i><span>Needs carrier intervention</span>
+                {% else %}
+                <i class="bi bi-dash"></i><span>Stable trend</span>
+                {% endif %}
+            </div>
+        </article>
+    </div>
+    {% endif %}
+</div>
+
+<section class="card filter-bar-card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <h2 class="h5 mb-0">Shipment Filters</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge rounded-pill active-filters-badge {% if active_filters.count == 0 %}d-none{% endif %}" data-active-filter-badge>{{ active_filters.count }} active</span>
+                <button class="btn btn-link btn-sm p-0" type="button" id="clear-shipment-filters">Clear Filters</button>
+            </div>
+        </div>
+
+        <form id="shipment-filter-form" class="filter-bar-form" method="get" action="{{ url_for('dashboard.index') }}">
+            <div class="row g-2 align-items-end">
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="{{ form.q.id }}">Search</label>
+                    {{ form.q(class_='form-control', placeholder='Reference or customer', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.status.id }}">Status</label>
+                    {{ form.status(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.carrier_id.id }}">Carrier</label>
+                    {{ form.carrier_id(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.mode.id }}">Mode</label>
+                    {{ form.mode(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="{{ form.risk.id }}">Risk</label>
+                    {{ form.risk(class_='form-select', data_filter_input='1') }}
+                </div>
+                <div class="col-lg-1 col-md-6 text-md-end">
+                    <button class="btn btn-outline-primary w-100" type="button" id="export-csv-btn"><i class="bi bi-download me-1"></i>CSV</button>
+                </div>
+            </div>
+            {{ form.sort(value=sort) }}
+            {{ form.order(value=order) }}
+            <div id="filter-loading-spinner" class="small text-muted mt-2 d-none">
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Applying filters...
+            </div>
+        </form>
+    </div>
+</section>
+
+<div class="row g-3 align-items-start mb-4">
+    <div class="col-xl-9">
+        <section class="card shadow-sm border-0" id="shipment-table-card">
+            <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h3 class="h5 mb-0">Active Shipments <span class="text-muted">({{ shipments.total }})</span></h3>
+                </div>
+                {% if shipments.total > 0 %}
+                {% set start_idx = ((shipments.page - 1) * shipments.per_page) + 1 %}
+                {% set end_idx = start_idx + (shipments.items | length) - 1 %}
+                <small class="text-muted">Showing {{ start_idx }}-{{ end_idx }} of {{ shipments.total }}</small>
+                {% endif %}
+            </div>
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover shipment-table mb-0" id="shipment-table">
+                    <thead>
+                        <tr>
+                            <th style="width:36px;"><input class="form-check-input" id="select-all-rows" type="checkbox" aria-label="Select all visible shipments"></th>
+                            <th class="sortable" data-sort="disruption_risk_score">Risk Score <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="external_reference">Shipment ID <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="origin_port_code">Origin <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="destination_port_code">Destination <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="carrier_name">Carrier <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="mode">Mode <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="status">Status <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="estimated_arrival">ETA <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="days_to_delivery">Days to Delivery <span class="sort-icon"></span></th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shipment-table-body">
+                        {% for shipment, carrier_name, latest_drs_total, latest_drs_computed_at in shipments.items %}
+                        {{ shipment_row(shipment, carrier_name) }}
+                        {% else %}
+                        <tr>
+                            <td colspan="11" class="py-5 text-center">
+                                <div class="empty-state">
+                                    <svg width="70" height="70" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                                        <rect x="10" y="18" width="44" height="30" rx="6" fill="#EBF4FF"/>
+                                        <path d="M10 26H54" stroke="#1B3A6B" stroke-width="2"/>
+                                        <path d="M32 18V48" stroke="#1B3A6B" stroke-width="2"/>
+                                    </svg>
+                                    <h4 class="h6 mt-3">No shipments match your filters</h4>
+                                    <button type="button" class="btn btn-link p-0" id="empty-clear-filters">Clear filters</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-md-none p-3" id="shipment-card-stack">
+                {% for shipment, carrier_name, latest_drs_total, latest_drs_computed_at in shipments.items %}
+                    {{ shipment_card(shipment, carrier_name) }}
+                {% else %}
+                    <div class="text-center py-4">
+                        <h4 class="h6">No shipments match your filters</h4>
+                        <button type="button" class="btn btn-link p-0" id="empty-clear-filters-mobile">Clear filters</button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="card-footer bg-white" id="shipments-pagination">
+                {{ pagination_widget(shipments, 'dashboard.index', q=filters.q, status=filters.status, carrier_id=filters.carrier_id, mode=filters.mode, risk=filters.risk, sort=sort, order=order) }}
+            </div>
+        </section>
+    </div>
+
+    <aside class="col-xl-3">
+        <section class="card shadow-sm border-0 recent-alert-panel">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <h3 class="h5 mb-0">Recent Alerts</h3>
+                    <span class="badge rounded-pill text-bg-danger" id="recent-alert-count">{{ recent_alerts | length }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('alerts.index') }}" class="small">View All</a>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#recent-alert-list" aria-expanded="true" aria-controls="recent-alert-list">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="recent-alert-list" class="collapse show">
+                <div class="list-group list-group-flush recent-alerts-scroll">
+                    {% for alert in recent_alerts %}
+                    <div class="dashboard-alert-link" role="link" tabindex="0" data-nav-url="{{ url_for('alerts.index', selected_alert_id=alert.id) }}">
+                        {{ alert_item(alert) }}
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                        <p class="mb-0 mt-2">All clear! No active alerts.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </aside>
+</div>
+
+<div class="bulk-toolbar" id="bulk-toolbar">
+    <div class="d-flex align-items-center justify-content-between gap-3 w-100">
+        <span><strong data-selected-count>0</strong> selected</span>
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-light" type="button" id="bulk-export-selected">Export Selected</button>
+            <button class="btn btn-link btn-sm text-white p-0" type="button" id="bulk-deselect-all">Deselect All</button>
+        </div>
+    </div>
+</div>
+
+<section class="card route-map-card shadow-sm border-0">
+    <div class="card-header bg-white d-flex align-items-center justify-content-between">
+        <h3 class="h5 mb-0">Live Shipment Map</h3>
+        <button class="btn btn-sm btn-outline-primary" type="button" id="map-refresh-btn"><i class="bi bi-arrow-clockwise"></i></button>
+    </div>
+    <div class="card-body position-relative">
+        <div id="shipment-map" class="map-container" style="height: 450px;"></div>
+        <div id="shipment-map-overlay" class="map-empty-overlay d-none"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" ></script>
+<script type="module">
+import { initDashboardMap, refreshDashboardMap } from "{{ url_for('static', filename='js/map.js') }}";
+
+document.addEventListener("DOMContentLoaded", () => {
+    const localTimeElement = document.getElementById("dashboard-local-time");
+    if (localTimeElement) {
+        const formatter = new Intl.DateTimeFormat(undefined, {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+        localTimeElement.textContent = formatter.format(new Date());
+        window.setInterval(() => {
+            localTimeElement.textContent = formatter.format(new Date());
+        }, 1000);
+    }
+
+    initDashboardMap("shipment-map", "{{ url_for('api.shipment_map_data') }}");
+
+    const mapRefreshButton = document.getElementById("map-refresh-btn");
+    if (mapRefreshButton) {
+        mapRefreshButton.addEventListener("click", () => {
+            refreshDashboardMap();
+        });
+    }
+});
+</script>
+{% endblock %}

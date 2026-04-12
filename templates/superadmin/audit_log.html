@@ -1,0 +1,89 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}Platform Audit Log - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<h1 class="h3 text-white mb-4">Platform-Wide Audit Log</h1>
+
+<div class="sa-card mb-4">
+    <form class="row g-3 align-items-end" method="get">
+        <div class="col-md-2">
+            <label class="form-label">Organisation</label>
+            <select class="form-select" name="org_id">
+                <option value="">All</option>
+                {% for org in organisations %}
+                <option value="{{ org.id }}" {% if filters.org_id == org.id|string %}selected{% endif %}>{{ org.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Event Type</label>
+            <select class="form-select" name="event_type">
+                <option value="">All</option>
+                {% for event in event_types %}
+                <option value="{{ event }}" {% if filters.event_type == event %}selected{% endif %}>{{ event }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Actor</label>
+            <input class="form-control" type="text" name="actor" value="{{ filters.actor }}" placeholder="Actor email or label">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">From</label>
+            <input class="form-control" type="date" name="start_date" value="{{ filters.start_date }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">To</label>
+            <input class="form-control" type="date" name="end_date" value="{{ filters.end_date }}">
+        </div>
+        <div class="col-md-2 d-grid gap-2">
+            <button class="btn btn-primary" type="submit">Apply</button>
+            <a class="btn btn-outline-light" href="{{ url_for('superadmin.platform_audit_log', org_id=filters.org_id, event_type=filters.event_type, actor=filters.actor, start_date=filters.start_date, end_date=filters.end_date, export='csv') }}">Export CSV</a>
+        </div>
+    </form>
+</div>
+
+<div class="sa-card">
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Organisation ID</th>
+                    <th>Event</th>
+                    <th>Actor</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in pagination.items %}
+                <tr>
+                    <td>{{ entry.created_at | format_datetime }}</td>
+                    <td>{{ entry.organisation_id }}</td>
+                    <td>{{ entry.event_type }}</td>
+                    <td>{{ entry.actor_label }}</td>
+                    <td>{{ entry.description }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-secondary py-4">No audit entries found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('superadmin.platform_audit_log', page=pagination.prev_num, org_id=filters.org_id, event_type=filters.event_type, actor=filters.actor, start_date=filters.start_date, end_date=filters.end_date) }}">Previous</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('superadmin.platform_audit_log', page=pagination.next_num, org_id=filters.org_id, event_type=filters.event_type, actor=filters.actor, start_date=filters.start_date, end_date=filters.end_date) }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

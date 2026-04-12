@@ -1,0 +1,16 @@
+{% extends "email/email_base.html" %}
+
+{% block content %}
+<p style="margin:0 0 14px;">Hi,</p>
+<p style="margin:0 0 14px;">{{ inviter.full_name }} has invited you to join their ChainWatch Pro workspace.</p>
+<p style="margin:0 0 14px;">To activate your access, verify your email using the secure link below:</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 18px;">
+    <tr>
+        <td>
+            <a href="{{ verification_url }}" style="display:inline-block;background:#0077CC;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">Accept Invitation</a>
+        </td>
+    </tr>
+</table>
+<p style="margin:0 0 14px;">After verification, use "Forgot password" on the login page to set your preferred password for first sign-in.</p>
+<p style="margin:0;">If you were not expecting this invitation, you can safely ignore this message.</p>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Alert Center - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Alert Center</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <h1 class="mb-0">Alert Center</h1>
+    <button class="btn btn-outline-primary" id="mark-all-read-btn" type="button">Mark All Read</button>
+</div>
+
+<div class="row g-3 mb-4" id="alert-stats-cards">
+    <div class="col-md-3">
+        <article class="metric-card {% if stats.new_last_hour > 0 %}metric-card-critical{% endif %}">
+            <div class="metric-label">New This Hour</div>
+            <div class="metric-value {% if stats.new_last_hour > 0 %}text-danger{% endif %}" data-stat="new_last_hour">{{ stats.new_last_hour }}</div>
+        </article>
+    </div>
+    <div class="col-md-3">
+        <article class="metric-card metric-card-success">
+            <div class="metric-label">Acknowledged Today</div>
+            <div class="metric-value text-success" data-stat="acknowledged_today">{{ stats.acknowledged_today }}</div>
+        </article>
+    </div>
+    <div class="col-md-3">
+        <article class="metric-card">
+            <div class="metric-label">Average Resolution Time</div>
+            <div class="metric-value {% if stats.avg_resolution_hours and stats.avg_resolution_hours > 8 %}text-warning{% endif %}" data-stat="avg_resolution_hours">{{ '%.1f' | format(stats.avg_resolution_hours) if stats.avg_resolution_hours is not none else '-' }} hrs</div>
+        </article>
+    </div>
+    <div class="col-md-3">
+        <article class="metric-card {% if stats.total_active > 0 %}metric-card-warning{% endif %}">
+            <div class="metric-label">Total Active Alerts</div>
+            <div class="metric-value" data-stat="total_active">{{ stats.total_active }}</div>
+        </article>
+    </div>
+</div>
+
+<div class="alert-refresh-banner d-none" id="new-alert-banner">
+    New alerts received. <button type="button" class="btn btn-link btn-sm p-0" id="refresh-alert-feed-btn">Click to refresh.</button>
+</div>
+
+<div class="row g-0 alert-center-layout" id="alert-center-layout">
+    <section class="col-xl-4 alert-feed-pane">
+        <div class="card h-100 border-0 shadow-sm rounded-0">
+            <div class="card-header bg-white border-bottom-0 pb-2">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h2 class="h5 mb-0">Alerts <span class="text-muted" id="alerts-total-count">{{ alerts_pagination.total }}</span></h2>
+                </div>
+                <ul class="nav nav-pills nav-sm gap-1 flex-wrap" id="alert-severity-tabs">
+                    <li class="nav-item"><button class="nav-link alert-severity-tab {% if filters.severity == 'all' and filters.acknowledged != 'acknowledged' %}active{% endif %}" data-severity="all" type="button">All</button></li>
+                    <li class="nav-item"><button class="nav-link alert-severity-tab {% if filters.severity == 'critical' %}active{% endif %}" data-severity="critical" type="button">Critical</button></li>
+                    <li class="nav-item"><button class="nav-link alert-severity-tab {% if filters.severity == 'warning' %}active{% endif %}" data-severity="warning" type="button">Warning</button></li>
+                    <li class="nav-item"><button class="nav-link alert-severity-tab {% if filters.severity == 'watch' %}active{% endif %}" data-severity="watch" type="button">Watch</button></li>
+                    <li class="nav-item"><button class="nav-link alert-severity-tab {% if filters.acknowledged == 'acknowledged' %}active{% endif %}" data-severity="all" data-acknowledged="acknowledged" type="button">Acknowledged</button></li>
+                </ul>
+            </div>
+            <div class="card-body p-0" id="alerts-feed-container">
+                {% include "app/alerts/_feed.html" %}
+            </div>
+        </div>
+    </section>
+
+    <section class="col-xl-8 alert-detail-pane" id="alert-detail-pane">
+        <div class="card h-100 border-0 shadow-sm rounded-0">
+            <div class="card-body" id="alert-detail-container">
+                {% include "app/alerts/_detail.html" %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="module" src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endblock %}

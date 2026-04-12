@@ -1,0 +1,274 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Alert Settings - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block app_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Alerts</li>
+    </ol>
+</nav>
+
+<h1 class="mb-3">Alert Settings</h1>
+
+<nav class="nav settings-sub-nav mb-4">
+    <a class="nav-link {% if active_settings_tab == 'profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">Profile</a>
+    <a class="nav-link {% if active_settings_tab == 'team' %}active{% endif %}" href="{{ url_for('settings.team') }}">Team</a>
+    <a class="nav-link {% if active_settings_tab == 'integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">Integrations</a>
+    <a class="nav-link {% if active_settings_tab == 'alerts' %}active{% endif %}" href="{{ url_for('settings.alerts') }}">Alerts</a>
+    <a class="nav-link {% if active_settings_tab == 'billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">Billing</a>
+</nav>
+
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Global Alert Configuration</h2>
+
+    <form method="post" action="{{ url_for('settings.alerts') }}" id="global-alert-form">
+        {{ global_settings_form.csrf_token }}
+        <input type="hidden" name="form_type" value="global">
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Warning Threshold</label>
+                {{ global_settings_form.drs_warning_threshold(class_='form-range', type='range', min='30', max='79', id='warning-threshold-slider') }}
+                <div class="small text-muted">Value: <span id="warning-threshold-value">{{ global_settings_form.drs_warning_threshold.data }}</span></div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Critical Threshold</label>
+                {{ global_settings_form.drs_critical_threshold(class_='form-range', type='range', min='60', max='100', id='critical-threshold-slider') }}
+                <div class="small text-muted">Value: <span id="critical-threshold-value">{{ global_settings_form.drs_critical_threshold.data }}</span></div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Alert Frequency</label>
+                {{ global_settings_form.alert_frequency(class_='form-select') }}
+            </div>
+            <div class="col-md-6">
+                <div class="form-check form-switch mt-4">
+                    {{ global_settings_form.webhook_enabled(class_='form-check-input', id='global-webhook-enabled') }}
+                    <label class="form-check-label" for="global-webhook-enabled">Enable Webhook Notifications</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3" id="webhook-config-wrap">
+            <div class="col-md-9">
+                <label class="form-label">Webhook URL</label>
+                {{ global_settings_form.webhook_url(class_='form-control', id='global-webhook-url', placeholder='https://example.com/webhooks/alerts') }}
+            </div>
+            <div class="col-md-3 d-grid align-items-end">
+                <button class="btn btn-outline-primary" id="test-webhook-btn" type="button">Test Webhook</button>
+            </div>
+            <div class="col-12"><small id="webhook-test-status" class="text-muted"></small></div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Save Global Settings</button>
+    </form>
+</article>
+
+<article class="settings-content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Custom Alert Rules</h2>
+        <span class="badge text-bg-light border">{{ alert_rules|selectattr('is_active')|list|length }} active rules</span>
+    </div>
+
+    {% if alert_rules %}
+        {% for rule in alert_rules %}
+        <div class="rule-row border rounded p-3 mb-2" data-rule-id="{{ rule.rule_id }}">
+            <div class="d-flex align-items-start gap-3 flex-grow-1">
+                <span class="audit-event-dot {% if rule.rule_type == 'carrier' %}event-type-team{% elif rule.rule_type == 'shipment' %}event-type-shipment{% elif rule.rule_type == 'lane' %}event-type-billing{% else %}event-type-system{% endif %}"></span>
+                <div>
+                    <div class="fw-semibold">
+                        Alert when {{ rule.condition|replace('_', ' ') }}
+                        {% if rule.threshold_value is not none %}{{ rule.threshold_value }}{% endif %}
+                        for {{ rule.rule_type }} {{ rule.target_id }}
+                    </div>
+                    <div class="small text-muted">Channels: {{ (rule.notification_channels or [])|join(', ') or 'none' }}</div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input rule-toggle" type="checkbox" {% if rule.is_active %}checked{% endif %} data-rule-id="{{ rule.rule_id }}">
+                </div>
+                <button class="btn btn-sm btn-outline-danger delete-rule-btn" type="button" data-rule-id="{{ rule.rule_id }}">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="text-muted mb-3">No custom rules yet. Add your first rule below.</div>
+    {% endif %}
+
+    <hr>
+
+    <h3 class="h6 mb-3">Add New Rule</h3>
+    <form method="post" action="{{ url_for('settings.alerts') }}" id="new-rule-form">
+        {{ rule_form.csrf_token }}
+        <input type="hidden" name="form_type" value="rule">
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Rule Type</label>
+                {{ rule_form.rule_type(class_='form-select', id='rule-type') }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" id="rule-target-label">Target Value (Shipment ID / Carrier Name / Lane Code / Customer Name)</label>
+                {{ rule_form.target_identifier(class_='form-control', id='rule-target') }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Condition</label>
+                {{ rule_form.condition(class_='form-select', id='rule-condition') }}
+            </div>
+            <div class="col-md-2" id="threshold-wrap">
+                <label class="form-label">Threshold (DRS)</label>
+                {{ rule_form.threshold_value(class_='form-control') }}
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 mt-3">
+            <div class="form-check">{{ rule_form.notify_email(class_='form-check-input') }} <label class="form-check-label">Email</label></div>
+            <div class="form-check">{{ rule_form.notify_sms(class_='form-check-input') }} <label class="form-check-label">SMS</label></div>
+            <div class="form-check">{{ rule_form.notify_webhook(class_='form-check-input') }} <label class="form-check-label">Webhook</label></div>
+        </div>
+
+        <button class="btn btn-primary mt-3" type="submit">Add Rule</button>
+    </form>
+</article>
+
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Notification Channels</h2>
+    <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
+        <div>
+            <div class="fw-semibold">Email</div>
+            <div class="small text-muted">{{ current_user.email }}</div>
+        </div>
+        <span class="badge text-bg-success">Enabled</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-center border rounded p-3 mb-2">
+        <div>
+            <div class="fw-semibold">SMS</div>
+            <div class="small text-muted">{{ current_user.phone or 'No phone configured' }} • Critical alerts only</div>
+        </div>
+        <a href="{{ url_for('settings.profile') }}">Edit</a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center border rounded p-3">
+        <div>
+            <div class="fw-semibold">Webhook</div>
+            <div class="small text-muted">{{ global_settings_form.webhook_url.data or 'Not configured' }}</div>
+        </div>
+        <a href="#global-alert-form">Edit</a>
+    </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    const warningSlider = document.getElementById('warning-threshold-slider');
+    const criticalSlider = document.getElementById('critical-threshold-slider');
+    const warningValue = document.getElementById('warning-threshold-value');
+    const criticalValue = document.getElementById('critical-threshold-value');
+    const webhookEnabled = document.getElementById('global-webhook-enabled');
+    const webhookWrap = document.getElementById('webhook-config-wrap');
+    const webhookStatus = document.getElementById('webhook-test-status');
+
+    function refreshThresholdLabels() {
+        warningValue.textContent = warningSlider.value;
+        criticalValue.textContent = criticalSlider.value;
+    }
+
+    function refreshWebhookVisibility() {
+        webhookWrap.style.display = webhookEnabled.checked ? 'flex' : 'none';
+    }
+
+    warningSlider?.addEventListener('input', refreshThresholdLabels);
+    criticalSlider?.addEventListener('input', refreshThresholdLabels);
+    webhookEnabled?.addEventListener('change', refreshWebhookVisibility);
+
+    refreshThresholdLabels();
+    refreshWebhookVisibility();
+
+    document.getElementById('test-webhook-btn')?.addEventListener('click', async () => {
+        webhookStatus.textContent = 'Testing webhook...';
+        const form = document.getElementById('global-alert-form');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('{{ url_for('settings.test_alert_webhook') }}', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const payload = await response.json();
+            webhookStatus.textContent = payload.message;
+            webhookStatus.className = payload.success ? 'text-success small' : 'text-danger small';
+        } catch (error) {
+            webhookStatus.textContent = 'Webhook test failed.';
+            webhookStatus.className = 'text-danger small';
+        }
+    });
+
+    const ruleType = document.getElementById('rule-type');
+    const ruleCondition = document.getElementById('rule-condition');
+    const targetLabel = document.getElementById('rule-target-label');
+    const thresholdWrap = document.getElementById('threshold-wrap');
+
+    function refreshRuleFormLabels() {
+        const value = ruleType.value;
+        const labels = {
+            shipment: 'Shipment External Reference',
+            carrier: 'Carrier Name',
+            lane: 'Lane Code (Origin->Destination)',
+            customer: 'Customer Name'
+        };
+        targetLabel.textContent = labels[value] || 'Target Value';
+    }
+
+    function refreshThresholdVisibility() {
+        thresholdWrap.style.display = ruleCondition.value === 'status_change' ? 'none' : 'block';
+    }
+
+    ruleType?.addEventListener('change', refreshRuleFormLabels);
+    ruleCondition?.addEventListener('change', refreshThresholdVisibility);
+    refreshRuleFormLabels();
+    refreshThresholdVisibility();
+
+    document.querySelectorAll('.delete-rule-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Delete this rule?')) return;
+            const ruleId = btn.dataset.ruleId;
+            const response = await fetch(`/settings/alerts/rules/${ruleId}/delete`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const payload = await response.json();
+            if (payload.success) {
+                document.querySelector(`[data-rule-id="${ruleId}"]`)?.remove();
+            }
+        });
+    });
+
+    document.querySelectorAll('.rule-toggle').forEach((toggle) => {
+        toggle.addEventListener('change', async () => {
+            const ruleId = toggle.dataset.ruleId;
+            const response = await fetch(`/settings/alerts/rules/${ruleId}/toggle`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            const payload = await response.json();
+            if (!payload.success) {
+                toggle.checked = !toggle.checked;
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

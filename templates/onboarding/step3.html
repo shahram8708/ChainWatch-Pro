@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import render_select %}
+
+{% block body_class %}onboarding-page onboarding-step3{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<header class="onboarding-top-bar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="/" class="text-decoration-none d-flex align-items-center gap-2 text-navy fw-bold">
+            <i class="bi bi-link-45deg fs-4"></i>
+            <span>ChainWatch Pro</span>
+        </a>
+        <a href="/contact" class="support-link">Need help? Contact support</a>
+    </div>
+</header>
+
+<main class="onboarding-main">
+    <div class="container position-relative">
+        <section class="onboarding-progress">
+            <div class="step-track">
+                <div class="step-item completed">
+                    <span class="step-line"></span>
+                    <span class="step-circle"><i class="bi bi-check"></i></span>
+                    <div class="step-label">Shipping Profile</div>
+                </div>
+                <div class="step-item completed">
+                    <span class="step-line"></span>
+                    <span class="step-circle"><i class="bi bi-check"></i></span>
+                    <div class="step-label">Carrier Setup</div>
+                </div>
+                <div class="step-item active">
+                    <span class="step-line"></span>
+                    <span class="step-circle">3</span>
+                    <div class="step-label">Alert Preferences</div>
+                </div>
+                <div class="step-item">
+                    <span class="step-line"></span>
+                    <span class="step-circle">4</span>
+                    <div class="step-label">Dashboard Setup</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="onboarding-card">
+            <span class="step-pill">Step 3 of 4</span>
+            <h1 class="h2 mb-2">Alert Preferences</h1>
+            <p class="text-muted mb-4">Configure how and when ChainWatch Pro notifies your team about supply chain disruptions.</p>
+
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+
+                <h2 class="h5 mb-3">Alert Channels</h2>
+                <div class="toggle-card">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <div>
+                            <strong>Email notifications (always on)</strong>
+                            <p class="small text-muted mb-0">Primary channel for all disruption alerts and workflow summaries.</p>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" checked disabled>
+                            <input type="hidden" name="alert_email" value="y">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toggle-card">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <div>
+                            <strong>SMS for Critical alerts only</strong>
+                            <p class="small text-muted mb-0">We'll use the phone number from your profile.</p>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            {{ form.alert_sms(class_='form-check-input') }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toggle-card">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <div>
+                            <strong>Webhook / Slack / Teams integration</strong>
+                            <p class="small text-muted mb-0">Route alerts directly to your incident channel.</p>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            {{ form.alert_webhook(class_='form-check-input', id='alertWebhookToggle') }}
+                        </div>
+                    </div>
+                    <div class="mt-3" id="webhookFieldWrap">
+                        <label for="{{ form.webhook_url.id }}" class="form-label">Webhook URL</label>
+                        {{ form.webhook_url(class_='form-control', placeholder='https://hooks.slack.com/services/...') }}
+                        {% for error in form.webhook_url.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                        <small class="text-muted">For Slack, create an Incoming Webhook URL and paste it here.</small>
+                    </div>
+                </div>
+
+                <h2 class="h5 mt-4 mb-3">Alert Thresholds</h2>
+                <div class="mb-3">
+                    <label class="form-label">Alert me when DRS reaches <strong data-threshold-value="warning">{{ form.drs_warning_threshold.data or 60 }}</strong></label>
+                    <input type="range" class="form-range" min="30" max="79" step="1" name="drs_warning_threshold" value="{{ form.drs_warning_threshold.data or 60 }}" data-threshold-input="warning">
+                    {% for error in form.drs_warning_threshold.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    <div class="threshold-color-bar"><span class="threshold-marker" data-threshold-marker="warning"></span></div>
+                    <small class="text-muted">DRS combines disruption signals to estimate SLA breach risk. Higher scores indicate urgency.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Critical threshold at <strong data-threshold-value="critical">{{ form.drs_critical_threshold.data or 80 }}</strong></label>
+                    <input type="range" class="form-range" min="60" max="100" step="1" name="drs_critical_threshold" value="{{ form.drs_critical_threshold.data or 80 }}" data-threshold-input="critical">
+                    {% for error in form.drs_critical_threshold.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    <div class="threshold-color-bar"><span class="threshold-marker" data-threshold-marker="critical"></span></div>
+                </div>
+                <div class="alert alert-danger d-none py-2" data-threshold-error>Critical threshold must be greater than warning threshold.</div>
+
+                <h2 class="h5 mt-4 mb-3">Alert Frequency</h2>
+                <div class="row g-2 mb-2">
+                    {% for value, label in form.alert_frequency.choices %}
+                    <div class="col-md-4">
+                        <label class="setup-method-card h-100 mb-0 {% if form.alert_frequency.data == value %}active{% endif %}">
+                            <input class="form-check-input me-1" type="radio" name="alert_frequency" value="{{ value }}" {% if form.alert_frequency.data == value %}checked{% endif %}>
+                            <span class="small">{{ label }}</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <h2 class="h5 mt-4 mb-3">Invite your team</h2>
+                {% for field in form.team_invite_emails %}
+                {% set hidden_row = loop.index > 1 and not field.data %}
+                <div class="invite-email-field {% if hidden_row %}d-none{% endif %}" data-invite-row>
+                    <label class="form-label" for="{{ field.id }}">Team invite email {{ loop.index }}</label>
+                    {{ field(class_='form-control', placeholder='teammate@company.com') }}
+                    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                </div>
+                {% endfor %}
+                <button class="btn btn-sm btn-outline-navy mb-3" data-add-invite>+ Add Another</button>
+
+                <div class="mb-3">
+                    {{ render_select(form.team_role) }}
+                    <small class="text-muted">Seat limits follow your current subscription plan and can be adjusted in billing settings.</small>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="{{ url_for('onboarding.step2') }}" class="text-decoration-none">&larr; Back</a>
+                    <button type="submit" class="btn btn-action-blue" data-threshold-submit>Save Preferences & Continue -></button>
+                </div>
+            </form>
+        </section>
+
+        <div class="skip-step-link"><a href="{{ url_for('onboarding.step3', skip='true') }}">Skip this step -></a></div>
+
+        <aside class="motivational-sidebar">
+            <div class="motivational-card">
+                <div class="progress-circle">75%</div>
+                <p class="fw-semibold text-center">You're 75% toward your first disruption alert</p>
+                <ul class="small mb-3">
+                    <li>Deliver critical alerts to the right channel</li>
+                    <li>Reduce noise with threshold-based controls</li>
+                    <li>Bring your team into the response workflow</li>
+                </ul>
+                <small class="text-muted">After setup, you'll monitor up to {{ shipment_limit_label }} shipments automatically.</small>
+            </div>
+        </aside>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+<script>
+    (() => {
+        const toggle = document.getElementById('alertWebhookToggle');
+        const wrap = document.getElementById('webhookFieldWrap');
+        if (!toggle || !wrap) {
+            return;
+        }
+
+        const sync = () => {
+            wrap.classList.toggle('d-none', !toggle.checked);
+        };
+
+        toggle.addEventListener('change', sync);
+        sync();
+    })();
+</script>
+{% endblock %}

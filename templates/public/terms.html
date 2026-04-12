@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page legal-page-wrap{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="legal-page">
+        <div class="container" style="max-width: 920px;">
+            <article class="legal-card">
+                <h1>Terms of Service</h1>
+                <p class="text-muted">Effective date: April 11, 2026</p>
+                <p>These Terms of Service ("Terms") govern access to and use of ChainWatch Pro by customer organizations and authorized users. By creating an account or using the platform, you agree to these Terms.</p>
+
+                <h2>1. Definitions</h2>
+                <p>"Service" means the ChainWatch Pro platform and related features. "Customer" means the legal entity subscribing to the Service. "User" means an individual authorized by the Customer. "Customer Data" means data submitted by or on behalf of the Customer.</p>
+
+                <h2>2. Service Description</h2>
+                <p>ChainWatch Pro is a B2B SaaS platform for supply chain disruption detection, route optimization, carrier intelligence, alerting, and reporting. We may update or improve features over time to maintain service quality and security.</p>
+
+                <h2>3. Account Access and Responsibilities</h2>
+                <p>Customer is responsible for managing user access, maintaining confidentiality of credentials, and ensuring authorized use of the Service. Customer agrees not to misuse the platform, interfere with system integrity, or access data outside its authorized tenant scope.</p>
+
+                <h2>4. Subscription Terms</h2>
+                <p>Subscriptions are offered on Starter, Professional, and Enterprise plans. Feature limits, seat limits, and data retention vary by plan. A 14-day free trial may be available for the Professional plan. If no payment method is added before trial expiry, accounts may be downgraded to Starter capabilities.</p>
+
+                <h2>5. Payment Terms</h2>
+                <p>All fees are billed in Indian Rupees (INR). Payments are processed through Razorpay using available payment methods. Unless otherwise agreed in writing, subscription fees are payable in advance and are non-cancelable for the active billing period.</p>
+
+                <h2>6. Taxes</h2>
+                <p>Fees are exclusive of applicable taxes unless explicitly stated otherwise. Customer is responsible for all applicable taxes, duties, and levies associated with its purchase and use of the Service.</p>
+
+                <h2>7. Cancellation and Refund Policy</h2>
+                <p>Customers may cancel renewal at any time from billing settings or by contacting support. Cancellation takes effect at the end of the current paid term unless otherwise agreed. Refunds are generally not provided for partially used monthly periods. Annual contracts may include custom commercial terms where documented in an order form.</p>
+
+                <h2>8. Data Ownership and License</h2>
+                <p>Customer retains ownership of Customer Data. Customer grants ChainWatch Pro a limited license to process Customer Data solely for operating, securing, and improving the Service in accordance with applicable law and contractual obligations.</p>
+
+                <h2>9. Confidentiality</h2>
+                <p>Each party agrees to protect confidential information received from the other party using reasonable safeguards and to use such information only for purposes of fulfilling these Terms.</p>
+
+                <h2>10. Disclaimer</h2>
+                <p>The Service provides risk insights and recommendations to support operational decisions. Final execution decisions remain with the Customer. While we strive for reliability and accuracy, the Service is provided on an "as available" basis to the maximum extent permitted by law.</p>
+
+                <h2>11. Limitation of Liability</h2>
+                <p>To the extent permitted by law, ChainWatch Pro will not be liable for indirect, incidental, special, consequential, or punitive damages, or for loss of profits, revenue, goodwill, or data. Aggregate liability under these Terms is limited to fees paid by Customer in the 12 months preceding the claim event.</p>
+
+                <h2>12. Termination</h2>
+                <p>Either party may terminate for material breach not cured within a reasonable notice period. We may suspend or terminate access for security threats, non-payment, or unlawful use of the Service.</p>
+
+                <h2>13. Governing Law and Jurisdiction</h2>
+                <p>These Terms are governed by the laws of India. Courts in Ahmedabad, India will have exclusive jurisdiction over disputes arising from or relating to these Terms, subject to applicable arbitration provisions in a signed enterprise agreement.</p>
+
+                <h2>14. Changes to Terms</h2>
+                <p>We may update these Terms from time to time. Continued use of the Service after an effective update constitutes acceptance of the revised Terms.</p>
+
+                <h2>15. Contact</h2>
+                <p>For legal notices or questions regarding these Terms, contact <a href="mailto:legal@chainwatchpro.com">legal@chainwatchpro.com</a>.</p>
+            </article>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% macro alert_severity_badge(severity) %}
+{% set severity_value = (severity or 'info') | lower %}
+{% set classes = {
+    'critical': 'bg-danger text-white',
+    'warning': 'bg-warning text-dark',
+    'watch': 'bg-warning-subtle text-warning-emphasis',
+    'info': 'bg-secondary text-white'
+} %}
+<span class="badge rounded-pill {{ classes.get(severity_value, 'bg-secondary text-white') }}">{{ severity_value | title }}</span>
+{% endmacro %}
+
+
+{% macro _severity_icon(severity) %}
+{% set value = (severity or 'info') | lower %}
+{% if value == 'critical' %}
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5L15 14.5H1L8 1.5Z" fill="#D32F2F"/><rect x="7.25" y="5" width="1.5" height="5" fill="white"/><rect x="7.25" y="11.25" width="1.5" height="1.5" fill="white"/></svg>
+{% elif value == 'warning' %}
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5L15 14.5H1L8 1.5Z" fill="#FF8C00"/><rect x="7.25" y="5" width="1.5" height="4.5" fill="white"/><rect x="7.25" y="10.75" width="1.5" height="1.5" fill="white"/></svg>
+{% elif value == 'watch' %}
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#F59E0B"/><circle cx="8" cy="8" r="2.5" fill="white"/></svg>
+{% else %}
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#6B7280"/><rect x="7.25" y="4.25" width="1.5" height="1.5" fill="white"/><rect x="7.25" y="6.75" width="1.5" height="5" fill="white"/></svg>
+{% endif %}
+{% endmacro %}
+
+
+{% macro alert_item(alert, selected=False) %}
+{% set severity = (alert.severity or 'info') | lower %}
+{% set strip_class = {
+    'critical': 'alert-severity-critical',
+    'warning': 'alert-severity-warning',
+    'watch': 'alert-severity-watch',
+    'info': 'alert-severity-info'
+} %}
+<div
+    class="alert-item {{ strip_class.get(severity, 'alert-severity-info') }} {% if selected %}active{% endif %}"
+    data-alert-id="{{ alert.id }}"
+    data-alert-detail-url="{{ url_for('alerts.detail_partial', id=alert.id) }}"
+    data-acknowledged="{{ 'true' if alert.is_acknowledged else 'false' }}"
+    role="button"
+    tabindex="0"
+>
+    <div class="alert-severity-strip"></div>
+    <div class="alert-item-icon me-2">{{ _severity_icon(severity) }}</div>
+    <div class="flex-grow-1 min-w-0">
+        <div class="d-flex align-items-start justify-content-between gap-2">
+            <div>
+                <div class="alert-title" title="{{ alert.title }}">{{ alert.title }}</div>
+                <div class="alert-meta mt-1">
+                    {% if alert.shipment_id and alert.shipment %}
+                    Shipment:
+                    <a href="{{ url_for('shipments.detail', id=alert.shipment_id) }}" class="text-decoration-none" data-alert-link="shipment">{{ alert.shipment.external_reference or alert.shipment_id }}</a>
+                    {% else %}
+                    Platform alert
+                    {% endif %}
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="alert-meta">{{ alert.created_at | time_ago }}</div>
+                {% if alert.is_acknowledged %}
+                <div class="text-success"><i class="bi bi-check-circle-fill"></i></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

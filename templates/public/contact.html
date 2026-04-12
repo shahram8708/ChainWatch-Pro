@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import render_field, render_select %}
+
+{% block body_class %}public-page contact-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="contact-shell">
+        <div class="container">
+            <div class="row g-4 align-items-stretch">
+                <div class="col-lg-4">
+                    <aside class="contact-info-card">
+                        <h2 class="mb-3">Let's Talk Supply Chain.</h2>
+                        <div class="contact-method">
+                            <span class="icon"><i class="bi bi-envelope"></i></span>
+                            <div>
+                                <strong>Email</strong>
+                                <p class="mb-0">support@chainwatchpro.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-method">
+                            <span class="icon"><i class="bi bi-telephone"></i></span>
+                            <div>
+                                <strong>Phone</strong>
+                                <p class="mb-0">+91-80-4567-8900</p>
+                            </div>
+                        </div>
+                        <div class="contact-method">
+                            <span class="icon"><i class="bi bi-geo-alt"></i></span>
+                            <div>
+                                <strong>Office</strong>
+                                <p class="mb-0">Ahmedabad, India</p>
+                            </div>
+                        </div>
+                        <p class="small mt-3 mb-2">Monday-Friday, 9:00 AM - 6:00 PM IST</p>
+                        <p class="small mb-2">For enterprise inquiries: <strong>enterprise@chainwatchpro.com</strong></p>
+                        <p class="small mb-3">Social: LinkedIn | Twitter/X | YouTube</p>
+                        <a href="/demo" class="text-white fw-semibold text-decoration-none">Book a demo instead? -></a>
+                    </aside>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="contact-form-card">
+                        <h2 class="h3 mb-3">Send us a message.</h2>
+
+                        {% if submitted %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>Thanks {{ submitted_name }}!</strong> We've received your message and will respond within 24 hours. We've also sent a confirmation to {{ submitted_email }}.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% else %}
+                        <form method="POST" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div class="row g-3">
+                                <div class="col-md-6">{{ render_field(form.name, placeholder='Your full name') }}</div>
+                                <div class="col-md-6">{{ render_field(form.email, placeholder='you@company.com') }}</div>
+                                <div class="col-12">{{ render_field(form.company, placeholder='Company name') }}</div>
+                                <div class="col-12">{{ render_select(form.subject) }}</div>
+                                <div class="col-12">{{ render_field(form.message, placeholder='Tell us about your challenge, goals, timeline, and current tool stack.', help_text='Minimum 20 characters so we can respond with the right context.', input_class='contact-message') }}</div>
+                                <div class="col-12 d-grid"><button type="submit" class="btn btn-action-blue">{{ form.submit.label.text }}</button></div>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+<script>
+    (() => {
+        const messageInput = document.getElementById('{{ form.message.id }}');
+        if (messageInput) {
+            messageInput.setAttribute('rows', '4');
+        }
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,425 @@
+{% extends "app_base.html" %}
+
+{% block page_title %}Billing & Subscription - ChainWatch Pro{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
+{% block app_content %}
+{% set user_meter = usage.get('users', {}) %}
+{% set shipment_meter = usage.get('shipments', {}) %}
+{% set carrier_meter = usage.get('carriers', {}) %}
+{% set billing_cycle = usage.get('billing_cycle', 'monthly') %}
+{% set is_billing_admin = current_user.role == 'admin' %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Billing</li>
+    </ol>
+</nav>
+
+<h1 class="mb-3">Billing &amp; Subscription</h1>
+
+<nav class="nav settings-sub-nav mb-4">
+    <a class="nav-link {% if active_settings_tab == 'profile' %}active{% endif %}" href="{{ url_for('settings.profile') }}">Profile</a>
+    <a class="nav-link {% if active_settings_tab == 'team' %}active{% endif %}" href="{{ url_for('settings.team') }}">Team</a>
+    <a class="nav-link {% if active_settings_tab == 'integrations' %}active{% endif %}" href="{{ url_for('settings.integrations') }}">Integrations</a>
+    <a class="nav-link {% if active_settings_tab == 'alerts' %}active{% endif %}" href="{{ url_for('settings.alerts') }}">Alerts</a>
+    <a class="nav-link {% if active_settings_tab == 'billing' %}active{% endif %}" href="{{ url_for('settings.billing') }}">Billing</a>
+</nav>
+
+<div id="payment-success-banner" class="alert alert-success d-none mb-3">Your subscription has been upgraded successfully.</div>
+
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Current Subscription</h2>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <h3 class="h3 mb-1 {% if current_plan == 'professional' %}text-primary{% elif current_plan == 'enterprise' %}text-navy{% else %}text-secondary{% endif %}">
+                {{ current_plan|title }} Plan
+            </h3>
+
+            <div class="text-muted mb-2">
+                Billed {{ billing_cycle|title }}
+                {% if current_plan in ['starter', 'professional'] %}
+                    - {{ ((plans[current_plan]['price_monthly_inr'] if billing_cycle == 'monthly' else plans[current_plan]['price_annual_inr']) / 100)|format_currency_inr }}
+                    / {{ 'month' if billing_cycle == 'monthly' else 'year' }}
+                {% endif %}
+            </div>
+
+            <div class="mb-2">
+                {% if organisation.subscription_status == 'active' %}
+                <span class="badge text-bg-success">Active</span>
+                {% elif is_trial %}
+                <span class="badge text-bg-warning">Trial</span>
+                {% elif organisation.subscription_status == 'cancelled' %}
+                <span class="badge text-bg-danger">Cancelled</span>
+                {% else %}
+                <span class="badge text-bg-danger">Expired</span>
+                {% endif %}
+            </div>
+
+            {% if is_trial %}
+            <div class="alert alert-warning">
+                Your 14-day free trial is active. {{ trial_days_remaining }} days remaining. Add payment to continue after trial.
+                {% if is_billing_admin %}
+                <button class="btn btn-sm btn-outline-primary ms-2 upgrade-plan-btn" data-plan="professional">Add Payment Method</button>
+                {% else %}
+                <span class="small ms-2">Only admins can manage billing.</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if organisation.subscription_status == 'cancelled' %}
+            <div class="small text-danger mb-2">Subscription cancelled. Access continues until {{ usage.get('next_billing_date') or 'period end' }}.</div>
+            {% endif %}
+
+            {% if usage.get('next_billing_date') %}
+            <div class="small text-muted">Next billing: {{ usage.get('next_billing_date') }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-6">
+            {% for meter_name, meter in [('Active Shipments', shipment_meter), ('Connected Carriers', carrier_meter), ('Team Users', user_meter)] %}
+            {% set pct = meter.get('percentage', 0) %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ meter_name }}: {{ meter.get('used', 0) }} / {{ meter.get('limit', 'Unlimited') }}</span>
+                    <span>{{ '%.0f'|format(pct) }}%</span>
+                </div>
+                <div class="progress seat-usage-meter">
+                    <div class="progress-bar {% if pct >= 90 %}bg-danger{% elif pct >= 70 %}bg-warning{% else %}bg-primary{% endif %}" style="width: {{ pct }}%"></div>
+                </div>
+                {% if meter.get('limit') is not none and meter.get('used', 0) >= meter.get('limit') %}
+                <div class="small text-danger mt-1">Limit reached - <a href="{{ url_for('settings.billing') }}">Upgrade</a></div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        {% if is_billing_admin and organisation.subscription_status in ['active', 'trial'] and organisation.razorpay_subscription_id %}
+        <button class="btn btn-outline-danger" id="cancel-subscription-btn" type="button">Cancel Subscription</button>
+        {% elif is_billing_admin and organisation.subscription_status == 'active' and not organisation.razorpay_subscription_id %}
+        <span class="small text-muted">One-time payment active. Auto-renew cancellation is not required.</span>
+        {% endif %}
+
+        {% if is_billing_admin and current_plan == 'starter' %}
+        <button class="btn btn-primary upgrade-plan-btn" data-plan="professional" type="button">Upgrade to Professional</button>
+        {% elif is_billing_admin and current_plan == 'professional' %}
+        <a class="btn btn-outline-primary" href="/contact?subject=Enterprise%20Plan%20Inquiry">View Enterprise Options</a>
+        {% elif not is_billing_admin %}
+        <span class="small text-muted">Only admins can change subscription plans.</span>
+        {% endif %}
+    </div>
+</article>
+
+<article class="settings-content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">All Plans</h2>
+        <div class="btn-group" role="group" id="billing-cycle-toggle">
+            <button class="btn btn-sm btn-outline-primary {% if billing_cycle != 'annual' %}active{% endif %}" type="button" data-cycle="monthly">Monthly</button>
+            <button class="btn btn-sm btn-outline-primary {% if billing_cycle == 'annual' %}active{% endif %}" type="button" data-cycle="annual">Annual</button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="plan-card-billing border p-3 h-100">
+                <h3 class="h5">Starter</h3>
+                <div class="mb-2">
+                    <strong
+                        class="plan-price"
+                        data-plan="starter"
+                        data-monthly="{{ ((plans['starter']['price_monthly_inr'] or 0) / 100)|int }}"
+                        data-annual="{{ ((plans['starter']['price_annual_inr'] or 0) / 100)|int }}"
+                    >₹12,499/mo</strong>
+                </div>
+                <ul class="small text-muted mb-3">
+                    <li>Up to 50 shipments</li>
+                    <li>3 carriers</li>
+                    <li>2 users</li>
+                    <li>Email alerts</li>
+                    <li>5 simulations/month</li>
+                    <li>5 PDF exports/month</li>
+                </ul>
+                {% if current_plan == 'starter' %}
+                <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif not is_billing_admin %}
+                <button class="btn btn-outline-secondary w-100" disabled>Admin Only</button>
+                {% else %}
+                <button class="btn btn-outline-danger w-100 upgrade-plan-btn" data-plan="starter" type="button">Downgrade</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="plan-card-billing border border-primary p-3 h-100 position-relative">
+                {% if current_plan != 'professional' %}<span class="badge text-bg-primary position-absolute top-0 end-0 mt-2 me-2">Most Popular</span>{% endif %}
+                <h3 class="h5">Professional</h3>
+                <div class="mb-2">
+                    <strong
+                        class="plan-price"
+                        data-plan="professional"
+                        data-monthly="{{ ((plans['professional']['price_monthly_inr'] or 0) / 100)|int }}"
+                        data-annual="{{ ((plans['professional']['price_annual_inr'] or 0) / 100)|int }}"
+                    >₹33,299/mo</strong>
+                </div>
+                <ul class="small text-muted mb-3">
+                    <li>Up to 500 shipments</li>
+                    <li>15 carriers</li>
+                    <li>10 users</li>
+                    <li>Email + SMS + Webhook</li>
+                    <li>Unlimited optimizer and simulations</li>
+                    <li>Unlimited PDF exports</li>
+                </ul>
+                {% if current_plan == 'professional' %}
+                <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif not is_billing_admin %}
+                <button class="btn btn-outline-secondary w-100" disabled>Admin Only</button>
+                {% else %}
+                <button class="btn btn-primary w-100 upgrade-plan-btn" data-plan="professional" type="button">Upgrade to Professional</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="plan-card-billing p-3 h-100" style="background:#1B3A6B;color:#fff;">
+                <h3 class="h5">Enterprise</h3>
+                <div class="mb-2"><strong>Custom pricing</strong></div>
+                <ul class="small mb-3">
+                    <li>Unlimited shipments, carriers, users</li>
+                    <li>SSO</li>
+                    <li>Dedicated CSM</li>
+                    <li>SLA guarantee</li>
+                </ul>
+                {% if is_billing_admin %}
+                <a class="btn btn-outline-light w-100" href="/contact?subject=Enterprise%20Plan%20Inquiry">Contact Sales</a>
+                {% else %}
+                <button class="btn btn-outline-light w-100" type="button" disabled>Admin Only</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</article>
+
+<article class="settings-content-card">
+    <h2 class="h5 mb-3">Invoice History</h2>
+    {% if invoice_history %}
+    <div class="table-responsive">
+        <table class="table invoice-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Billing Period</th>
+                    <th>Amount (INR)</th>
+                    <th>Status</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoice_history %}
+                <tr>
+                    <td>{{ invoice.invoice_number }}</td>
+                    <td>{{ invoice.billing_start or '-' }} to {{ invoice.billing_end or '-' }}</td>
+                    <td>{{ invoice.amount_inr|format_currency_inr }}</td>
+                    <td>
+                        {% if invoice.status in ['paid', 'captured'] %}
+                        <span class="badge text-bg-success">Paid</span>
+                        {% elif invoice.status in ['failed'] %}
+                        <span class="badge text-bg-danger">Failed</span>
+                        {% else %}
+                        <span class="badge text-bg-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if invoice.pdf_url %}<a href="{{ invoice.pdf_url }}" target="_blank" rel="noopener">Download</a>{% else %}-{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary mt-3" disabled title="Up to 12 invoices shown here. Contact support for full invoice history.">Load More</button>
+    {% else %}
+    <div class="text-muted">No invoices yet.</div>
+    {% endif %}
+
+    <div class="razorpay-secure-note mt-3">
+        <i class="bi bi-shield-lock"></i>
+        <span>All payments are processed securely by Razorpay. ChainWatch Pro does not store your card details. Razorpay is PCI DSS compliant.</span>
+    </div>
+</article>
+
+<div class="payment-processing-overlay d-none" id="payment-processing-overlay">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2">Processing payment...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(() => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const planPrices = document.querySelectorAll('.plan-price');
+    const cycleButtons = document.querySelectorAll('#billing-cycle-toggle [data-cycle]');
+    const overlay = document.getElementById('payment-processing-overlay');
+
+    let billingCycle = '{{ billing_cycle if billing_cycle in ["monthly", "annual"] else "monthly" }}';
+
+    function updatePrices() {
+        planPrices.forEach((el) => {
+            const monthly = Number(el.dataset.monthly || 0);
+            const annual = Number(el.dataset.annual || 0);
+            if (billingCycle === 'annual') {
+                el.textContent = `₹${annual.toLocaleString('en-IN')}/yr`;
+            } else {
+                el.textContent = `₹${monthly.toLocaleString('en-IN')}/mo`;
+            }
+        });
+    }
+
+    cycleButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            cycleButtons.forEach((item) => item.classList.remove('active'));
+            btn.classList.add('active');
+            billingCycle = btn.dataset.cycle;
+            updatePrices();
+        });
+    });
+
+    updatePrices();
+
+    async function verifyPayment(responsePayload) {
+        const response = await fetch('{{ url_for('settings.verify_billing_payment') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(responsePayload)
+        });
+        return response.json();
+    }
+
+    async function startUpgrade(plan, triggerButton) {
+        triggerButton.disabled = true;
+        triggerButton.dataset.originalText = triggerButton.textContent;
+        triggerButton.textContent = 'Starting...';
+        overlay.classList.remove('d-none');
+
+        try {
+            const upgradeResponse = await fetch('{{ url_for('settings.upgrade_billing') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ plan, billing_cycle: billingCycle })
+            });
+            const upgradePayload = await upgradeResponse.json();
+
+            if (!upgradePayload.success) {
+                if (upgradePayload.redirect_url) {
+                    window.location.href = upgradePayload.redirect_url;
+                    return;
+                }
+                alert(upgradePayload.error || 'Unable to start upgrade flow.');
+                return;
+            }
+
+            const checkoutMode = upgradePayload.checkout_mode || (upgradePayload.order_id ? 'order' : 'subscription');
+
+            const options = {
+                key: upgradePayload.razorpay_key_id,
+                name: 'ChainWatch Pro',
+                description: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Subscription`,
+                handler: async function (response) {
+                    const verificationPayload = {
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    };
+                    if (response.razorpay_subscription_id) {
+                        verificationPayload.razorpay_subscription_id = response.razorpay_subscription_id;
+                    }
+                    if (response.razorpay_order_id) {
+                        verificationPayload.razorpay_order_id = response.razorpay_order_id;
+                    }
+
+                    const verification = await verifyPayment({
+                        ...verificationPayload
+                    });
+
+                    if (verification.success) {
+                        window.location.href = '{{ url_for('settings.billing') }}?payment=success';
+                    } else {
+                        alert(verification.error || 'Payment verification failed.');
+                    }
+                },
+                prefill: {
+                    name: '{{ current_user.full_name }}',
+                    email: '{{ current_user.email }}'
+                },
+                theme: {
+                    color: '#0077CC'
+                },
+                modal: {
+                    ondismiss: function () {
+                        overlay.classList.add('d-none');
+                    }
+                }
+            };
+
+            if (checkoutMode === 'order') {
+                options.order_id = upgradePayload.order_id;
+                options.amount = Number(upgradePayload.amount_inr || 0);
+                options.currency = upgradePayload.currency || 'INR';
+            } else {
+                options.subscription_id = upgradePayload.subscription_id;
+            }
+
+            const razorpay = new Razorpay(options);
+            razorpay.open();
+        } catch (error) {
+            alert('Unable to start payment. Please try again.');
+        } finally {
+            overlay.classList.add('d-none');
+            triggerButton.disabled = false;
+            triggerButton.textContent = triggerButton.dataset.originalText || 'Upgrade';
+        }
+    }
+
+    document.querySelectorAll('.upgrade-plan-btn').forEach((btn) => {
+        btn.addEventListener('click', () => startUpgrade(btn.dataset.plan, btn));
+    });
+
+    document.getElementById('cancel-subscription-btn')?.addEventListener('click', async () => {
+        if (!confirm('Cancel your subscription at period end?')) return;
+
+        const response = await fetch('{{ url_for('settings.cancel_billing') }}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const payload = await response.json();
+        if (payload.success) {
+            alert(payload.message);
+            window.location.reload();
+        } else {
+            alert(payload.error || 'Unable to cancel subscription.');
+        }
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+        const banner = document.getElementById('payment-success-banner');
+        banner.classList.remove('d-none');
+        banner.textContent = `Your subscription has been upgraded successfully. Welcome to {{ current_plan|title }}.`;
+    }
+})();
+</script>
+{% endblock %}

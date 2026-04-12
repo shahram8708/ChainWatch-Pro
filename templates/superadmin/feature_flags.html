@@ -1,0 +1,92 @@
+{% extends "superadmin/sa_base.html" %}
+
+{% block page_title %}Feature Flags - SuperAdmin{% endblock %}
+
+{% block sa_content %}
+<h1 class="h3 text-white mb-4">Feature Flag Management</h1>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Create / Update Feature Flag</h2>
+            <form method="post" action="{{ url_for('superadmin.feature_flags') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Flag Name</label>
+                    <input class="form-control" type="text" name="flag_name" placeholder="scenario_planner_enabled" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="3"></textarea>
+                </div>
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" type="checkbox" id="flagGlobal" name="is_enabled_globally" checked>
+                    <label class="form-check-label" for="flagGlobal">Enabled Globally</label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Enabled For Plans</label>
+                    <select class="form-select" name="enabled_for_plans" multiple size="3">
+                        <option value="starter">Starter</option>
+                        <option value="professional">Professional</option>
+                        <option value="enterprise">Enterprise</option>
+                    </select>
+                    <div class="small text-secondary mt-1">Hold Ctrl/Cmd to select multiple plans.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Enabled For Org IDs (comma separated UUIDs)</label>
+                    <textarea class="form-control" name="enabled_for_org_ids" rows="2" placeholder="uuid1, uuid2"></textarea>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">Save Feature Flag</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="sa-card h-100">
+            <h2 class="h5 mb-3">Current Feature Flags</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Flag</th>
+                            <th>Global</th>
+                            <th>Plans</th>
+                            <th>Org Overrides</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for flag in flags %}
+                        <tr>
+                            <td>{{ flag.flag_name }}</td>
+                            <td>{{ 'Yes' if flag.is_enabled_globally else 'No' }}</td>
+                            <td>{{ (flag.enabled_for_plans or [])|join(', ') }}</td>
+                            <td>{{ (flag.enabled_for_org_ids or [])|length }}</td>
+                            <td>{{ flag.description or '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-secondary py-4">No feature flags configured yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sa-card">
+    <h2 class="h6 mb-3">Available Organisations (for override targeting)</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Name</th><th>Organisation ID</th><th>Plan</th></tr></thead>
+            <tbody>
+                {% for org in organisations %}
+                <tr><td>{{ org.name }}</td><td>{{ org.id }}</td><td>{{ org.subscription_plan|title }}</td></tr>
+                {% else %}
+                <tr><td colspan="3" class="text-center text-secondary py-4">No organisations found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

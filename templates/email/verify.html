@@ -1,0 +1,16 @@
+{% extends "email/email_base.html" %}
+
+{% block content %}
+<p style="margin:0 0 14px;">Hi {{ user.first_name }},</p>
+<p style="margin:0 0 14px;">Thank you for signing up for ChainWatch Pro. We help logistics teams detect disruptions early, optimize routes dynamically, and protect delivery performance.</p>
+<p style="margin:0 0 22px;">Please verify your email address to activate your account.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+    <tr>
+        <td>
+            <a href="{{ verification_url }}" style="display:inline-block;background:#0077CC;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">Verify My Email</a>
+        </td>
+    </tr>
+</table>
+<p style="margin:0 0 10px;color:#555577;">This verification link expires in 24 hours.</p>
+<p style="margin:0;color:#555577;">If you did not sign up for ChainWatch Pro, you can safely ignore this email.</p>
+{% endblock %}

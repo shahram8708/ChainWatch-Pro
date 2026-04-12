@@ -1,0 +1,10 @@
+<svg width="300" height="52" viewBox="0 0 300 52" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">ChainWatch Pro Logo</title>
+  <desc id="logoDesc">ChainWatch Pro text with a subtle chain-link icon</desc>
+  <g transform="translate(2,7)" stroke="#1B3A6B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17 7.5L12.8 3.3C9.7 0.2 4.6 0.2 1.5 3.3C-1.6 6.4 -1.6 11.5 1.5 14.6L5.7 18.8C8.8 21.9 13.9 21.9 17 18.8L19.1 16.7"/>
+    <path d="M9.9 9.9L14.1 14.1"/>
+    <path d="M22 19.8L26.2 24C29.3 27.1 34.4 27.1 37.5 24C40.6 20.9 40.6 15.8 37.5 12.7L33.3 8.5C30.2 5.4 25.1 5.4 22 8.5L19.9 10.6"/>
+  </g>
+  <text x="48" y="34" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="30" font-weight="700" fill="#1B3A6B" letter-spacing="0.2">ChainWatch Pro</text>
+</svg>

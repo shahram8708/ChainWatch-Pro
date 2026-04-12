@@ -1,0 +1,179 @@
+{% macro risk_badge(drs, size='normal') %}
+{% set score = (drs or 0) | float %}
+{% if score >= 81 %}
+    {% set level = 'critical' %}
+    {% set label = 'Critical' %}
+{% elif score >= 61 %}
+    {% set level = 'warning' %}
+    {% set label = 'Warning' %}
+{% elif score >= 31 %}
+    {% set level = 'watch' %}
+    {% set label = 'Watch' %}
+{% else %}
+    {% set level = 'green' %}
+    {% set label = 'On Track' %}
+{% endif %}
+
+{% if size == 'large' %}
+    {% set size_class = 'risk-badge-lg' %}
+{% elif size == 'xl' %}
+    {% set size_class = 'risk-badge-xl' %}
+{% else %}
+    {% set size_class = '' %}
+{% endif %}
+
+<span class="risk-badge risk-badge-{{ level }} {{ size_class }}">
+    <span class="risk-score">{{ '%.1f' | format(score) }}</span>
+    <span class="ms-1">{{ label }}</span>
+</span>
+{% endmacro %}
+
+
+{% macro _country_flag(port_code) %}
+{% set prefix = (port_code or '')[:2] | upper %}
+{% set flags = {
+    'IN': '🇮🇳',
+    'CN': '🇨🇳',
+    'SG': '🇸🇬',
+    'DE': '🇩🇪',
+    'NL': '🇳🇱',
+    'US': '🇺🇸',
+    'AE': '🇦🇪',
+    'GB': '🇬🇧',
+    'JP': '🇯🇵',
+    'KR': '🇰🇷',
+    'FR': '🇫🇷',
+    'IT': '🇮🇹',
+    'AU': '🇦🇺'
+} %}
+{{ flags.get(prefix, '🌐') }}
+{% endmacro %}
+
+
+{% macro _mode_icon(mode) %}
+{% if mode in ['ocean_fcl', 'ocean_lcl'] %}
+<i class="bi bi-water"></i>
+{% elif mode == 'air' %}
+<i class="bi bi-airplane"></i>
+{% elif mode == 'road' %}
+<i class="bi bi-truck"></i>
+{% elif mode == 'rail' %}
+<i class="bi bi-train-front"></i>
+{% else %}
+<i class="bi bi-diagram-3"></i>
+{% endif %}
+{% endmacro %}
+
+
+{% macro _mode_label(mode) %}
+{% set labels = {
+    'ocean_fcl': 'Ocean FCL',
+    'ocean_lcl': 'Ocean LCL',
+    'air': 'Air Freight',
+    'road': 'Road/Truck',
+    'rail': 'Rail',
+    'multimodal': 'Multimodal'
+} %}
+{{ labels.get(mode, mode | replace('_', ' ') | title) }}
+{% endmacro %}
+
+
+{% macro _status_badge(status) %}
+{% set classes = {
+    'pending': 'text-bg-secondary',
+    'in_transit': 'text-bg-primary',
+    'delayed': 'text-bg-danger',
+    'at_customs': 'text-bg-warning',
+    'delivered': 'text-bg-success',
+    'cancelled': 'text-bg-secondary'
+} %}
+<span class="badge {{ classes.get(status, 'text-bg-secondary') }}">{{ status | replace('_', ' ') | title }}</span>
+{% endmacro %}
+
+
+{% macro shipment_row(shipment, carrier_name='', show_extended=False) %}
+{% set eta = shipment.estimated_arrival %}
+{% set days = shipment.days_to_delivery if shipment.days_to_delivery is not none else 0 %}
+{% if days < 2 %}
+    {% set days_class = 'text-danger' %}
+{% elif days <= 5 %}
+    {% set days_class = 'text-warning' %}
+{% else %}
+    {% set days_class = 'text-success' %}
+{% endif %}
+
+<tr class="shipment-row" data-shipment-id="{{ shipment.id }}">
+    <td>
+        <input class="form-check-input row-select-checkbox" type="checkbox" value="{{ shipment.id }}" aria-label="Select shipment {{ shipment.external_reference }}">
+    </td>
+    <td>{{ risk_badge(shipment.disruption_risk_score) }}</td>
+    <td>
+        <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="fw-semibold text-decoration-none">
+            {{ shipment.external_reference or shipment.id }}
+        </a>
+    </td>
+    <td><span class="me-1">{{ _country_flag(shipment.origin_port_code) }}</span>{{ shipment.origin_port_code }}</td>
+    <td><span class="me-1">{{ _country_flag(shipment.destination_port_code) }}</span>{{ shipment.destination_port_code }}</td>
+    <td>{{ carrier_name or (shipment.carrier.name if shipment.carrier else '-') }}</td>
+    <td>{{ _mode_icon(shipment.mode) }} <span class="ms-1">{{ _mode_label(shipment.mode) }}</span></td>
+    <td>{{ _status_badge(shipment.status) }}</td>
+    <td>{{ eta | format_datetime if eta else '-' }}</td>
+    <td class="fw-semibold {{ days_class }}">
+        {% if shipment.status == 'delivered' %}
+            Delivered
+        {% elif days < 0 %}
+            Overdue {{ days | abs }}d
+        {% else %}
+            {{ days }}d
+        {% endif %}
+    </td>
+    {% if show_extended %}
+    <td>{{ shipment.cargo_value_inr | format_currency_inr if shipment.cargo_value_inr else '₹0.00' }}</td>
+    <td>{{ shipment.created_at | format_datetime }}</td>
+    {% endif %}
+    <td class="text-nowrap">
+        <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="btn btn-sm btn-primary">Review</a>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">⋮</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('shipments.edit', id=shipment.id) }}">Edit</a></li>
+                <li>
+                    <button
+                        class="dropdown-item text-danger js-archive-shipment"
+                        type="button"
+                        data-archive-url="{{ url_for('shipments.archive', id=shipment.id) }}"
+                        data-shipment-reference="{{ shipment.external_reference }}"
+                    >Archive</button>
+                </li>
+            </ul>
+        </div>
+    </td>
+</tr>
+{% endmacro %}
+
+
+{% macro shipment_card(shipment, carrier_name='') %}
+<div class="card shipment-card shadow-sm border-0 mb-3" data-shipment-id="{{ shipment.id }}">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            {{ risk_badge(shipment.disruption_risk_score) }}
+            {{ _status_badge(shipment.status) }}
+        </div>
+        <h4 class="h6 mb-2">
+            <a href="{{ url_for('shipments.detail', id=shipment.id) }}" class="text-decoration-none">{{ shipment.external_reference or shipment.id }}</a>
+        </h4>
+        <div class="row g-2 small text-muted">
+            <div class="col-6"><strong>Origin:</strong> {{ shipment.origin_port_code }}</div>
+            <div class="col-6"><strong>Destination:</strong> {{ shipment.destination_port_code }}</div>
+            <div class="col-6"><strong>Carrier:</strong> {{ carrier_name or (shipment.carrier.name if shipment.carrier else '-') }}</div>
+            <div class="col-6"><strong>Mode:</strong> {{ _mode_label(shipment.mode) }}</div>
+            <div class="col-6"><strong>ETA:</strong> {{ shipment.estimated_arrival | format_datetime if shipment.estimated_arrival else '-' }}</div>
+            <div class="col-6"><strong>Days Left:</strong> {{ shipment.days_to_delivery }}d</div>
+        </div>
+        <div class="mt-3 d-flex gap-2">
+            <a class="btn btn-primary btn-sm flex-fill" href="{{ url_for('shipments.detail', id=shipment.id) }}">Review</a>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('shipments.edit', id=shipment.id) }}">Edit</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}

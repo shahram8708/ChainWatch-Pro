@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page blog-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="blog-hero">
+        <div class="container">
+            <h1 class="section-heading mb-2">Supply Chain Intelligence Blog.</h1>
+            <p class="section-subheading">Expert insights on disruption management, carrier performance, route optimization, and the future of logistics.</p>
+        </div>
+    </section>
+
+    <section class="public-section pt-4">
+        <div class="container">
+            <article class="featured-post mb-4">
+                <div class="row g-0 align-items-stretch">
+                    <div class="col-lg-7 p-4 p-lg-5">
+                        {% set cat_class = 'cat-' + featured_post.category|lower|replace(' ', '-') %}
+                        <span class="category-badge {{ cat_class }}">{{ featured_post.category }}</span>
+                        <h2 class="h2 mb-3">{{ featured_post.title }}</h2>
+                        <p class="text-muted">{{ featured_post.excerpt }}</p>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <span class="author-avatar">{{ featured_post.author_name.split()[0][0] }}{{ featured_post.author_name.split()[-1][0] }}</span>
+                            <div class="post-card-meta">
+                                <div>{{ featured_post.author_name }} · {{ featured_post.author_role }}</div>
+                                <div>{{ featured_post.published_date }} · {{ featured_post.read_time_minutes }} min read</div>
+                            </div>
+                        </div>
+                        <a href="/blog/{{ featured_post.slug }}" class="btn btn-action-blue">Read Article -></a>
+                    </div>
+                    <div class="col-lg-5 featured-illustration">
+                        <span class="line l1"></span>
+                        <span class="line l2"></span>
+                        <span class="line l3"></span>
+                    </div>
+                </div>
+            </article>
+
+            <div class="d-flex flex-wrap gap-2 mb-4" data-blog-filter>
+                <button class="category-pill active" type="button" data-category="All">All</button>
+                <button class="category-pill" type="button" data-category="Supply Chain Strategy">Supply Chain Strategy</button>
+                <button class="category-pill" type="button" data-category="Technology">Technology</button>
+                <button class="category-pill" type="button" data-category="Carrier Intelligence">Carrier Intelligence</button>
+                <button class="category-pill" type="button" data-category="Risk Management">Risk Management</button>
+                <button class="category-pill" type="button" data-category="Industry Trends">Industry Trends</button>
+            </div>
+
+            <div class="row g-4">
+                {% for post in remaining_posts %}
+                <div class="col-lg-4 col-md-6" data-post-wrapper>
+                    {% set cat_class = 'cat-' + post.category|lower|replace(' ', '-') %}
+                    <article class="post-card p-4" data-category="{{ post.category }}">
+                        <span class="category-badge {{ cat_class }}">{{ post.category }}</span>
+                        <h3 class="h5">{{ post.title }}</h3>
+                        <p class="text-muted">{{ post.excerpt }}</p>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="author-avatar">{{ post.author_name.split()[0][0] }}{{ post.author_name.split()[-1][0] }}</span>
+                            <div class="post-card-meta">
+                                <div>{{ post.author_name }}</div>
+                                <div>{{ post.published_date }} · {{ post.read_time_minutes }} min</div>
+                            </div>
+                        </div>
+                        <a href="/blog/{{ post.slug }}" class="feature-link">Read Article -></a>
+                    </article>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="cta-section-dark mt-5 p-4 rounded-4">
+                <h2 class="h3 text-white mb-2">Get weekly supply chain intelligence in your inbox.</h2>
+                <p class="text-white-50 mb-3">Actionable insights on risk management, carrier strategy, and logistics execution.</p>
+                <form class="cta-email-form justify-content-center mb-0" data-newsletter-form>
+                    <input type="email" class="form-control" placeholder="Enter your work email" required>
+                    <button class="btn btn-action-blue" type="submit">Subscribe</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

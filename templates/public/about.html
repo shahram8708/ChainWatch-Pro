@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page about-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    <section class="about-hero">
+        <div class="container text-center">
+            <h1>We're on a mission to eliminate supply chain blind spots.</h1>
+            <p class="mx-auto" style="max-width: 760px;">ChainWatch Pro helps operations teams detect disruption early, decide faster with confidence, and protect customer commitments at scale. We believe visibility and execution should work as one system, not separate tools.</p>
+        </div>
+    </section>
+
+    <section class="public-section bg-white">
+        <div class="container">
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-7">
+                    <h2 class="section-heading">Why We Built ChainWatch Pro</h2>
+                    <p>In 2023, one of our founding teams watched a critical shipment portfolio stall behind a sudden congestion wave and learned about it only after customer escalations began. The resulting service failures and emergency freight decisions cost over ₹2.3 crore in less than six weeks, and every discussion felt reactive because no one had clear early-warning visibility.</p>
+                    <p>That experience highlighted a structural problem: logistics teams had data, but not decision-ready intelligence. Carrier portals were fragmented, status feeds were inconsistent, and risk signals were discovered too late. The platform we envisioned had to combine continuous disruption detection with actionable alternatives, not just another dashboard.</p>
+                    <p>ChainWatch Pro was built to close that gap. We design for operators who need speed with governance, and for leaders who need confidence that every intervention is measurable, auditable, and tied to business outcomes.</p>
+                </div>
+                <div class="col-lg-5">
+                    <div class="about-stat-card">
+                        <h3 class="h5 mb-3">Company Snapshot</h3>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><strong>Founded:</strong> 2023</li>
+                            <li class="mb-2"><strong>Headquarters:</strong> Ahmedabad, India</li>
+                            <li class="mb-2"><strong>Team:</strong> 35+</li>
+                            <li class="mb-2"><strong>Customers:</strong> 500+ teams</li>
+                            <li class="mb-0"><strong>Shipments Monitored:</strong> 2.4M+</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section" style="background: var(--color-light-blue);">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="section-heading">Our Core Philosophy</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <article class="about-pillar-card h-100">
+                        <h3 class="h4">Visibility Before Reaction</h3>
+                        <p class="mb-0">Every shipment must be continuously observable. "No news is not good news" and the absence of data is itself a risk signal that requires investigation.</p>
+                    </article>
+                </div>
+                <div class="col-lg-4">
+                    <article class="about-pillar-card h-100">
+                        <h3 class="h4">Intelligence Before Action</h3>
+                        <p class="mb-0">Decisions must be grounded in scored risk data, not intuition. We quantify uncertainty and provide confidence-ranked recommendations teams can explain and trust.</p>
+                    </article>
+                </div>
+                <div class="col-lg-4">
+                    <article class="about-pillar-card h-100">
+                        <h3 class="h4">Speed Before Precision</h3>
+                        <p class="mb-0">A 90% accurate rerouting recommendation in 5 minutes is more valuable than a 99% accurate one in 3 hours. We optimize for decision velocity where it matters most.</p>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="section-heading">The team behind ChainWatch Pro</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <article class="team-card">
+                        <span class="team-avatar avatar-blue">AR</span>
+                        <h3 class="h5 mb-1">Aarav Reddy</h3>
+                        <p class="text-muted mb-2">Chief Executive Officer</p>
+                        <p class="mb-0">Former global supply chain operator with 15+ years across electronics and industrial manufacturing networks. Focused on turning resilience into a measurable operating advantage.</p>
+                    </article>
+                </div>
+                <div class="col-md-6">
+                    <article class="team-card">
+                        <span class="team-avatar avatar-green">MS</span>
+                        <h3 class="h5 mb-1">Maya Srinivasan</h3>
+                        <p class="text-muted mb-2">Chief Technology Officer</p>
+                        <p class="mb-0">AI/ML engineering leader with deep experience in prediction systems and large-scale data platforms. Leads Gemini-powered intelligence models and platform reliability architecture.</p>
+                    </article>
+                </div>
+                <div class="col-md-6">
+                    <article class="team-card">
+                        <span class="team-avatar avatar-orange">VK</span>
+                        <h3 class="h5 mb-1">Vikram Khanna</h3>
+                        <p class="text-muted mb-2">Head of Product</p>
+                        <p class="mb-0">Logistics operations specialist turned product strategist. Designs workflow-first experiences that reduce planning friction in high-volume, multi-carrier environments.</p>
+                    </article>
+                </div>
+                <div class="col-md-6">
+                    <article class="team-card">
+                        <span class="team-avatar avatar-blue">SN</span>
+                        <h3 class="h5 mb-1">Sonal Nambiar</h3>
+                        <p class="text-muted mb-2">Head of Customer Success</p>
+                        <p class="mb-0">3PL industry expert focused on operational adoption and measurable outcomes. Partners with customer teams to scale proactive logistics playbooks globally.</p>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section" style="background: var(--color-light-blue);">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="section-heading">Our Values</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <article class="value-card">
+                        <h3 class="h5">Customer Obsession</h3>
+                        <p class="mb-0">We measure success by customer outcomes, not feature volume. Every roadmap decision is tied to reducing real operational pain and response latency.</p>
+                    </article>
+                </div>
+                <div class="col-md-6">
+                    <article class="value-card">
+                        <h3 class="h5">Transparency First</h3>
+                        <p class="mb-0">Risk scores, recommendations, and platform behavior should be explainable. Trust is built when teams understand why the system is advising action.</p>
+                    </article>
+                </div>
+                <div class="col-md-6">
+                    <article class="value-card">
+                        <h3 class="h5">Build for Scale</h3>
+                        <p class="mb-0">From product architecture to support operations, we design for growth without compromising reliability. Complex networks require resilient systems and disciplined execution.</p>
+                    </article>
+                </div>
+                <div class="col-md-6">
+                    <article class="value-card">
+                        <h3 class="h5">Global by Design</h3>
+                        <p class="mb-0">Supply chains are borderless and volatile. We build with global lanes, modes, compliance needs, and multilingual operational realities in mind from day one.</p>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="public-section bg-white">
+        <div class="container text-center">
+            <h2 class="section-heading">Powering proactive operations at:</h2>
+            <div class="logo-strip mb-3">
+                <span class="logo-item">GlobalFreight Co.</span>
+                <span class="logo-item">AsiaLink Logistics</span>
+                <span class="logo-item">ManuTech Industries</span>
+                <span class="logo-item">SwiftCommerce</span>
+                <span class="logo-item">PacificShip 3PL</span>
+                <span class="logo-item">EuroRoute Forwarding</span>
+            </div>
+            <p class="text-muted mb-0">"ChainWatch Pro became our disruption command center within two weeks, and our escalation volume dropped immediately." - VP Operations, multinational retail network</p>
+        </div>
+    </section>
+
+    <section class="public-section" style="background: var(--color-light-blue);">
+        <div class="container">
+            <div class="about-stat-card text-center">
+                <h2 class="h3">We're hiring logistics-obsessed engineers and operators.</h2>
+                <p class="text-muted">If you care about resilient supply chains, practical AI, and meaningful product impact, we'd love to meet you.</p>
+                <a href="/contact" class="btn btn-action-blue">Contact Us</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

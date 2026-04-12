@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import render_field, render_select %}
+
+{% block body_class %}public-page demo-page{% endblock %}
+
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/public.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% include "partials/public_nav.html" %}
+
+<main>
+    {% if submitted %}
+    <section class="thankyou-state">
+        <div class="container">
+            <div class="thankyou-card">
+                <div class="checkmark-wrap">
+                    <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+                </div>
+                <h1 class="h2 mb-2">Your demo request is confirmed!</h1>
+                <p class="text-muted mb-4">One of our supply chain specialists will reach out within 4 business hours to schedule your personalized walkthrough.</p>
+                <div class="text-start mx-auto" style="max-width: 560px;">
+                    <h2 class="h5">What to expect:</h2>
+                    <ul>
+                        <li>45-minute live platform walkthrough</li>
+                        <li>Custom demo based on your industry and use case</li>
+                        <li>Pricing and implementation discussion tailored to your team</li>
+                    </ul>
+                </div>
+                <a href="/features" class="btn btn-action-blue">In the meantime, explore our features -></a>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    <section class="demo-shell">
+        <div class="container">
+            <div class="row g-4 align-items-stretch">
+                <div class="col-lg-5">
+                    <aside class="demo-info-card">
+                        <h2 class="mb-3">See ChainWatch Pro in action.</h2>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="bi bi-check2-circle"></i> 45-minute live walkthrough</li>
+                            <li class="mb-2"><i class="bi bi-check2-circle"></i> Customized to your industry and use case</li>
+                            <li class="mb-2"><i class="bi bi-check2-circle"></i> See real disruption scenarios handled live</li>
+                            <li class="mb-0"><i class="bi bi-check2-circle"></i> Q&A with a supply chain specialist</li>
+                        </ul>
+                        <blockquote class="mb-3" style="border-left: 3px solid rgba(255,255,255,0.35); padding-left: 10px; font-style: italic;">"The demo was practical and tailored to our lanes. We saw how a live disruption would have been detected a full day earlier than our old workflow."</blockquote>
+                        <p class="small mb-0">Prefer to try first? <a href="/register" class="text-white fw-semibold">Start your free 14-day trial instantly -></a></p>
+                    </aside>
+                </div>
+                <div class="col-lg-7">
+                    <div class="demo-form-card">
+                        <h2 class="h3 mb-3">Request Your Personalized Demo</h2>
+                        <form method="POST" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div class="row g-3">
+                                <div class="col-md-6">{{ render_field(form.first_name, placeholder='First name') }}</div>
+                                <div class="col-md-6">{{ render_field(form.last_name, placeholder='Last name') }}</div>
+                                <div class="col-md-6">{{ render_field(form.work_email, placeholder='you@company.com') }}</div>
+                                <div class="col-md-6">{{ render_field(form.company_name, placeholder='Company name') }}</div>
+                                <div class="col-md-6">{{ render_field(form.job_title, placeholder='Your role') }}</div>
+                                <div class="col-md-6">{{ render_field(form.phone, placeholder='+91... (optional)') }}</div>
+                                <div class="col-md-6">{{ render_select(form.company_size) }}</div>
+                                <div class="col-md-6">{{ render_select(form.monthly_shipments) }}</div>
+                                <div class="col-md-6">{{ render_select(form.primary_use_case) }}</div>
+                                <div class="col-md-6">{{ render_select(form.preferred_demo_time) }}</div>
+                                <div class="col-12">{{ render_field(form.message, placeholder='Share current challenges or systems to help us tailor the walkthrough.') }}</div>
+                                <div class="col-12 d-grid"><button type="submit" class="btn btn-action-blue">Request My Demo -></button></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</main>
+
+{% include "partials/public_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/public.js') }}"></script>
+{% endblock %}

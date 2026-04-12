@@ -1,0 +1,50 @@
+{% extends "app_base.html" %}
+
+{% block title %}Dashboard | ChainWatch Pro{% endblock %}
+
+{% block app_content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-light-blue">
+            <div class="card-body p-4">
+                <h2 class="mb-2">Welcome to ChainWatch Pro</h2>
+                <p class="mb-0 text-muted">Your account foundation is active. Continue onboarding to configure carriers, shipments, and alerting workflows.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h4>Organisation</h4>
+                <p class="mb-1"><strong>Name:</strong> {{ current_org.name if current_org else '-' }}</p>
+                <p class="mb-1"><strong>Plan:</strong> {{ current_org.subscription_plan|title if current_org else '-' }}</p>
+                <p class="mb-0"><strong>Status:</strong> {{ current_org.subscription_status|title if current_org else '-' }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h4>Shipment Capacity</h4>
+                <p class="mb-0 text-muted">
+                    {% if current_org and current_org.shipment_limit is none %}
+                    Unlimited shipments on Enterprise plan.
+                    {% elif current_org %}
+                    {{ current_org.shipment_limit }} shipments available in this tier.
+                    {% else %}
+                    Sign in to view subscription limits.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h4>Unread Alerts</h4>
+                <p class="display-6 mb-0 text-navy">{{ unread_alert_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
