@@ -38,11 +38,6 @@ htmlcov/
 *.log
 celerybeat-schedule
 
-# Flask local data
-instance/
-*.sqlite3
-*.db
-
 # Generated uploads/reports
 static/uploads/
 static/reports/

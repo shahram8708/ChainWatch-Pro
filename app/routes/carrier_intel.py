@@ -24,7 +24,7 @@ PERIOD_TO_MONTHS = {
     "365d": 12,
 }
 
-ACTIVE_SHIPMENT_STATUSES = ["pending", "in_transit", "delayed", "at_customs"]
+ACTIVE_SHIPMENT_STATUSES = ["pending", "in_transit", "delayed", "at_customs", "delivered"]
 
 
 def _coerce_uuid(value: str | None) -> uuid.UUID | None:

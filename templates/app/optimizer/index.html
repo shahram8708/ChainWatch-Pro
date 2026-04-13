@@ -142,6 +142,66 @@
     </div>
 </section>
 
+<section class="optimizer-card card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Recent Optimizer History</h2>
+            <span class="badge text-bg-light">{{ recent_optimization_history | length }} Shipments</span>
+        </div>
+
+        {% if recent_optimization_history %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Shipment</th>
+                        <th>Lane</th>
+                        <th>Status</th>
+                        <th>Current DRS</th>
+                        <th>Total Options</th>
+                        <th>Last Optimized</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_optimization_history %}
+                    {% set is_selected_row = selected_shipment and selected_shipment.id == item.shipment_id %}
+                    {% set drs_score = item.drs_score | float %}
+                    <tr class="{% if is_selected_row %}table-primary{% endif %}">
+                        <td>
+                            <div class="fw-semibold">{{ item.external_reference or item.shipment_id }}</div>
+                            <div class="small text-muted">{{ item.shipment_id }}</div>
+                        </td>
+                        <td>{{ item.origin_port_code }} <i class="bi bi-arrow-right"></i> {{ item.destination_port_code }}</td>
+                        <td>
+                            <span class="badge text-bg-light">{{ item.shipment_status | replace('_', ' ') | title }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {% if drs_score >= 80 %}text-bg-danger{% elif drs_score >= 60 %}text-bg-warning{% else %}text-bg-success{% endif %}">
+                                {{ '%.1f' | format(drs_score) }}
+                            </span>
+                        </td>
+                        <td>{{ item.total_recommendations }}</td>
+                        <td>{{ item.last_optimized_at | format_datetime }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('optimizer.index', shipment_id=item.shipment_id) }}" class="btn btn-sm {% if is_selected_row %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                Open
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-clock-history text-muted" style="font-size: 32px;"></i>
+            <p class="text-muted mb-0 mt-2">No optimizer history yet. Run route analysis for any shipment to populate this table.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
 {% if selected_shipment %}
 {% set drs_score = (latest_drs.drs_total if latest_drs else selected_shipment.disruption_risk_score) | float %}
 {% set has_pending = recommendations | selectattr('status', 'equalto', 'pending') | list | length > 0 %}

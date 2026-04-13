@@ -61,6 +61,37 @@ def index():
     selector_form = OptimizerShipmentSelectorForm(request.args)
     selector_form.set_shipment_choices(at_risk_shipments)
 
+    optimization_history_subquery = (
+        db.session.query(
+            RouteRecommendation.shipment_id.label("shipment_id"),
+            db.func.max(RouteRecommendation.created_at).label("last_optimized_at"),
+            db.func.count(RouteRecommendation.id).label("total_recommendations"),
+        )
+        .join(Shipment, Shipment.id == RouteRecommendation.shipment_id)
+        .filter(
+            Shipment.organisation_id == current_user.organisation_id,
+            Shipment.is_archived.is_(False),
+        )
+        .group_by(RouteRecommendation.shipment_id)
+        .subquery()
+    )
+
+    recent_optimization_history = (
+        db.session.query(
+            Shipment.id.label("shipment_id"),
+            Shipment.external_reference.label("external_reference"),
+            Shipment.origin_port_code.label("origin_port_code"),
+            Shipment.destination_port_code.label("destination_port_code"),
+            Shipment.status.label("shipment_status"),
+            Shipment.disruption_risk_score.label("drs_score"),
+            optimization_history_subquery.c.last_optimized_at,
+            optimization_history_subquery.c.total_recommendations,
+        )
+        .join(optimization_history_subquery, optimization_history_subquery.c.shipment_id == Shipment.id)
+        .order_by(optimization_history_subquery.c.last_optimized_at.desc())
+        .all()
+    )
+
     selected_shipment = None
     selected_shipment_id = _coerce_uuid(request.args.get("shipment_id"))
     if selected_shipment_id:
@@ -104,6 +135,7 @@ def index():
         "app/optimizer/index.html",
         selector_form=selector_form,
         at_risk_shipments=at_risk_shipments,
+        recent_optimization_history=recent_optimization_history,
         selected_shipment=selected_shipment,
         recommendations=recommendations,
         latest_drs=latest_drs,

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from statistics import mean
 from typing import Any
 from urllib.parse import quote
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 SUPPORTED_API_TYPES = {"MANUAL", "REST", "SOAP", "EDI"}
 ACTIVE_SHIPMENT_STATUSES = {"pending", "in_transit", "delayed", "at_customs"}
+ANALYTICS_SHIPMENT_STATUSES = {"pending", "in_transit", "delayed", "at_customs", "delivered"}
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -677,10 +678,253 @@ def _load_performance_rows_for_carrier(carrier_id, organisation_id, db_session, 
     return []
 
 
+def _analytics_window_start(months: int, reference_now: datetime | None = None) -> datetime:
+    now = reference_now or datetime.utcnow()
+    return now - timedelta(days=max(int(months or 1), 1) * 31)
+
+
+def _shipment_reference_timestamp(shipment: Shipment) -> datetime | None:
+    return shipment.actual_arrival or shipment.estimated_arrival or shipment.updated_at or shipment.created_at
+
+
+def _shipment_outcome_metrics(shipment: Shipment, reference_now: datetime | None = None) -> tuple[bool, float]:
+    now = reference_now or datetime.utcnow()
+    estimated_arrival = shipment.estimated_arrival
+    actual_arrival = shipment.actual_arrival
+    status = (shipment.status or "").strip().lower()
+
+    if estimated_arrival and actual_arrival:
+        delay_hours = max((actual_arrival - estimated_arrival).total_seconds() / 3600.0, 0.0)
+        return actual_arrival <= estimated_arrival, delay_hours
+
+    if estimated_arrival:
+        overdue_hours = (now - estimated_arrival).total_seconds() / 3600.0
+        if status == "delayed":
+            return False, max(overdue_hours, 2.0)
+        if overdue_hours > 0:
+            return False, overdue_hours
+        return True, 0.0
+
+    return status not in {"delayed", "cancelled"}, 0.0
+
+
+def _load_shipments_for_carrier_analytics(carrier_id, organisation_id, db_session, months=3):
+    org_uuid = _coerce_uuid(organisation_id)
+    carrier_uuid = _coerce_uuid(carrier_id)
+    if org_uuid is None or carrier_uuid is None:
+        return []
+
+    base_rows = (
+        db_session.query(Shipment)
+        .filter(
+            Shipment.organisation_id == org_uuid,
+            Shipment.carrier_id == carrier_uuid,
+            Shipment.is_archived.is_(False),
+            Shipment.status.in_(list(ANALYTICS_SHIPMENT_STATUSES)),
+        )
+        .all()
+    )
+
+    if not base_rows:
+        return []
+
+    window_start = _analytics_window_start(months)
+    filtered = [
+        shipment
+        for shipment in base_rows
+        if (_shipment_reference_timestamp(shipment) or datetime.utcnow()) >= window_start
+    ]
+
+    if filtered:
+        return filtered
+    return base_rows
+
+
+def _shipment_trend_points_for_carrier(carrier_id, organisation_id, db_session, months=12):
+    rows = _load_shipments_for_carrier_analytics(carrier_id, organisation_id, db_session, months)
+    if not rows:
+        return []
+
+    reference_now = datetime.utcnow()
+    grouped: dict[tuple[int, int], dict[str, float]] = defaultdict(
+        lambda: {
+            "total_shipments": 0,
+            "on_time_count": 0,
+            "delayed_count": 0,
+            "delay_hours_sum": 0.0,
+        }
+    )
+
+    for shipment in rows:
+        timestamp = _shipment_reference_timestamp(shipment) or reference_now
+        key = (timestamp.year, timestamp.month)
+        on_time, delay_hours = _shipment_outcome_metrics(shipment, reference_now)
+
+        bucket = grouped[key]
+        bucket["total_shipments"] += 1
+        bucket["on_time_count"] += 1 if on_time else 0
+        if delay_hours > 0:
+            bucket["delayed_count"] += 1
+            bucket["delay_hours_sum"] += delay_hours
+
+    points: list[dict[str, Any]] = []
+    for year, month in sorted(grouped.keys()):
+        bucket = grouped[(year, month)]
+        total_shipments = int(bucket["total_shipments"])
+        delayed_count = int(bucket["delayed_count"])
+        avg_delay = (bucket["delay_hours_sum"] / delayed_count) if delayed_count else 0.0
+        otd_rate = ((bucket["on_time_count"] / total_shipments) * 100.0) if total_shipments else 0.0
+
+        points.append(
+            {
+                "period": f"{year:04d}-{month:02d}",
+                "otd_rate": round(otd_rate, 2),
+                "total_shipments": total_shipments,
+                "avg_delay_hours": round(avg_delay, 2),
+            }
+        )
+
+    return points
+
+
+def _shipment_lane_breakdown_for_carrier(carrier_id, organisation_id, db_session, months=3):
+    rows = _load_shipments_for_carrier_analytics(carrier_id, organisation_id, db_session, months)
+    if not rows:
+        return []
+
+    reference_now = datetime.utcnow()
+    grouped: dict[str, dict[str, float]] = defaultdict(
+        lambda: {
+            "total_shipments": 0,
+            "on_time_count": 0,
+            "delayed_count": 0,
+            "delay_hours_sum": 0.0,
+            "reliability_sum": 0.0,
+        }
+    )
+
+    for shipment in rows:
+        lane = f"{_port_code_to_region(shipment.origin_port_code)} -> {_port_code_to_region(shipment.destination_port_code)}"
+        on_time, delay_hours = _shipment_outcome_metrics(shipment, reference_now)
+        reliability = max(0.0, min(100.0, 100.0 - _safe_float(shipment.disruption_risk_score, 0.0)))
+
+        bucket = grouped[lane]
+        bucket["total_shipments"] += 1
+        bucket["on_time_count"] += 1 if on_time else 0
+        if delay_hours > 0:
+            bucket["delayed_count"] += 1
+            bucket["delay_hours_sum"] += delay_hours
+        bucket["reliability_sum"] += reliability
+
+    lane_rows: list[dict[str, Any]] = []
+    for lane, values in grouped.items():
+        total_shipments = int(values["total_shipments"])
+        if total_shipments <= 0:
+            continue
+
+        delayed_count = int(values["delayed_count"])
+        avg_delay_hours = (values["delay_hours_sum"] / delayed_count) if delayed_count else 0.0
+        otd_rate = (values["on_time_count"] / total_shipments) * 100.0
+        crs_score = values["reliability_sum"] / total_shipments
+
+        lane_rows.append(
+            {
+                "lane": lane,
+                "otd_rate": round(otd_rate, 2),
+                "total_shipments": total_shipments,
+                "avg_delay_hours": round(avg_delay_hours, 2),
+                "crs_score": round(crs_score, 2),
+            }
+        )
+
+    lane_rows.sort(key=lambda item: item["total_shipments"], reverse=True)
+    return lane_rows
+
+
+def _compute_trend_direction_from_shipments(carrier_id, organisation_id, db_session, months=3):
+    months = max(int(months or 1), 1)
+    now = datetime.utcnow()
+    current_start = _analytics_window_start(months, now)
+    prior_start = _analytics_window_start(months * 2, now)
+
+    rows = _load_shipments_for_carrier_analytics(carrier_id, organisation_id, db_session, months * 2)
+    if not rows:
+        return "neutral"
+
+    current_total = 0
+    current_on_time = 0
+    prior_total = 0
+    prior_on_time = 0
+
+    for shipment in rows:
+        timestamp = _shipment_reference_timestamp(shipment)
+        if timestamp is None:
+            continue
+
+        on_time, _ = _shipment_outcome_metrics(shipment, now)
+        if timestamp >= current_start:
+            current_total += 1
+            current_on_time += 1 if on_time else 0
+        elif prior_start <= timestamp < current_start:
+            prior_total += 1
+            prior_on_time += 1 if on_time else 0
+
+    if current_total <= 0 or prior_total <= 0:
+        return "neutral"
+
+    current_otd = (current_on_time / current_total) * 100.0
+    prior_otd = (prior_on_time / prior_total) * 100.0
+    if current_otd > prior_otd + 0.5:
+        return "up"
+    if current_otd < prior_otd - 0.5:
+        return "down"
+    return "neutral"
+
+
+def _shipment_summary_for_carrier(carrier: Carrier, organisation_id, db_session, months=3):
+    rows = _load_shipments_for_carrier_analytics(carrier.id, organisation_id, db_session, months)
+    if not rows:
+        return None
+
+    reference_now = datetime.utcnow()
+    shipments_count = len(rows)
+    on_time_count = 0
+    delayed_count = 0
+    delay_hours_sum = 0.0
+    reliability_sum = 0.0
+
+    for shipment in rows:
+        on_time, delay_hours = _shipment_outcome_metrics(shipment, reference_now)
+        on_time_count += 1 if on_time else 0
+        if delay_hours > 0:
+            delayed_count += 1
+            delay_hours_sum += delay_hours
+        reliability_sum += max(0.0, min(100.0, 100.0 - _safe_float(shipment.disruption_risk_score, 0.0)))
+
+    otd_rate = (on_time_count / shipments_count) * 100.0 if shipments_count else 0.0
+    avg_delay_hours = (delay_hours_sum / delayed_count) if delayed_count else 0.0
+    crs_score = (reliability_sum / shipments_count) if shipments_count else 0.0
+    trend = _compute_trend_direction_from_shipments(carrier.id, organisation_id, db_session, months)
+
+    return {
+        "carrier_id": str(carrier.id),
+        "carrier_name": carrier.name,
+        "mode": carrier.mode,
+        "otd_rate": round(otd_rate, 2),
+        "avg_delay_hours": round(avg_delay_hours, 2),
+        "crs_score": round(crs_score, 2),
+        "shipments_count": shipments_count,
+        "trend": trend,
+    }
+
+
 def get_carrier_otd_trend(carrier_id, organisation_id, db_session, months=12):
     """Return monthly OTD trend points for one carrier."""
 
     rows = _load_performance_rows_for_carrier(carrier_id, organisation_id, db_session, months)
+    if not rows:
+        return _shipment_trend_points_for_carrier(carrier_id, organisation_id, db_session, months)
+
     points: list[dict[str, Any]] = []
 
     for row in rows:
@@ -700,6 +944,8 @@ def get_carrier_lane_breakdown(carrier_id, organisation_id, db_session, months=3
     """Return lane-level performance stats for a carrier."""
 
     rows = _load_performance_rows_for_carrier(carrier_id, organisation_id, db_session, months)
+    if not rows:
+        return _shipment_lane_breakdown_for_carrier(carrier_id, organisation_id, db_session, months)
 
     grouped: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
@@ -810,6 +1056,8 @@ def _compute_trend_direction_for_carrier(carrier_id, organisation_id, db_session
     current_rows, prior_rows = _load_trend_rows(CarrierPerformance.organisation_id == organisation_id)
     if not current_rows:
         current_rows, prior_rows = _load_trend_rows(CarrierPerformance.organisation_id.is_(None))
+    if not current_rows:
+        return _compute_trend_direction_from_shipments(carrier_id, organisation_id, db_session, months)
 
     def weighted_otd(rows: list[CarrierPerformance]) -> float | None:
         if not rows:
@@ -868,6 +1116,9 @@ def get_all_carriers_comparison(organisation_id, db_session, months=3):
     for carrier in carriers:
         rows = _load_performance_rows_for_carrier(carrier.id, org_uuid, db_session, months)
         if not rows:
+            shipment_summary = _shipment_summary_for_carrier(carrier, org_uuid, db_session, months)
+            if shipment_summary:
+                summaries.append(shipment_summary)
             continue
 
         shipments_count = sum(int(row.total_shipments or 0) for row in rows)
